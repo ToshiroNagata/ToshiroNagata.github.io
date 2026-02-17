@@ -13,7 +13,6 @@ Aquí compartiré mis investigaciones sobre **seguridad ofensiva**, **malware de
 ### Un poco de código
 
 ```
-
 def hola_mundo():
     print("Hack the Planet!")
 
