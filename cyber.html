@@ -1,0 +1,355 @@
+---
+layout: null
+permalink: /cyber/
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tnagata-CyberOps | Red Team Operations</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary-red: #ff0000; --dark-red: #8b0000; --accent-red: #ff3333; --bg-black: #0a0a0a; --bg-dark: #1a1a1a; --text-light: #e0e0e0; --text-gray: #888; }
+        body { font-family: 'Courier New', monospace; background-color: var(--bg-black); color: var(--text-light); line-height: 1.6; overflow-x: hidden; }
+        /* Fondo animado con partículas */
+        .bg-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); }
+        .particle { position: absolute; width: 2px; height: 2px; background: var(--primary-red); opacity: 0.3; animation: float 20s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0) translateX(0); } 25% { transform: translateY(-100vh) translateX(50px); } 50% { transform: translateY(-50vh) translateX(-30px); } 75% { transform: translateY(-75vh) translateX(20px); } }
+        /* Header */
+        header { position: fixed; top: 0; width: 100%; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--primary-red); z-index: 1000; padding: 1rem 0; }
+        nav { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; }
+        /* Botón de regreso al Blog (Agregado para ti) */
+        .back-btn { border: 1px solid var(--primary-red); padding: 5px 15px; color: white; text-decoration: none; font-size: 0.8rem; margin-right: 15px; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-red); text-shadow: 0 0 10px var(--primary-red); letter-spacing: 2px; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { color: var(--text-light); text-decoration: none; transition: color 0.3s; position: relative; }
+        .nav-links a:hover { color: var(--primary-red); }
+        .nav-links a::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px; background: var(--primary-red); transition: width 0.3s; }
+        .nav-links a:hover::after { width: 100%; }
+        /* Hero Section */
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; position: relative; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,0,0,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>') center/cover; }
+        .hero h1 { font-size: 4rem; margin-bottom: 1rem; color: var(--primary-red); text-shadow: 0 0 20px var(--primary-red); animation: glitch 3s infinite; }
+        @keyframes glitch { 0%, 90%, 100% { transform: translate(0); } 92% { transform: translate(-2px, 2px); } 94% { transform: translate(2px, -2px); } 96% { transform: translate(-2px, -2px); } }
+        .hero h2 { font-size: 1.5rem; color: var(--text-gray); margin-bottom: 2rem; font-weight: normal; }
+        .terminal-line { font-family: 'Courier New', monospace; color: var(--accent-red); font-size: 1.2rem; margin-bottom: 1rem; }
+        .typing { overflow: hidden; border-right: 2px solid var(--primary-red); white-space: nowrap; animation: typing 3s steps(40) infinite, blink 0.7s infinite; }
+        @keyframes typing { 0%, 100% { width: 0; } 50% { width: 100%; } }
+        @keyframes blink { 50% { border-color: transparent; } }
+        /* Sections */
+        section { max-width: 1200px; margin: 5rem auto; padding: 0 2rem; }
+        .section-title { font-size: 2.5rem; color: var(--primary-red); margin-bottom: 3rem; text-align: center; position: relative; display: inline-block; width: 100%; }
+        .section-title::before { content: '>'; margin-right: 1rem; color: var(--accent-red); }
+        .section-title::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 100px; height: 2px; background: var(--primary-red); box-shadow: 0 0 10px var(--primary-red); }
+        /* About Section */
+        .about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+        .about-text { background: rgba(26, 26, 26, 0.8); padding: 2rem; border: 1px solid var(--dark-red); border-radius: 5px; box-shadow: 0 0 20px rgba(255, 0, 0, 0.1); }
+        .about-text p { margin-bottom: 1rem; color: var(--text-light); }
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .stat-box { background: rgba(255, 0, 0, 0.1); padding: 1.5rem; border: 1px solid var(--primary-red); border-radius: 5px; text-align: center; transition: transform 0.3s, box-shadow 0.3s; }
+        .stat-box:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(255, 0, 0, 0.3); }
+        .stat-number { font-size: 2rem; color: var(--primary-red); font-weight: bold; }
+        .stat-label { color: var(--text-gray); font-size: 0.9rem; }
+        /* Skills Section */
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+        .skill-category { background: rgba(26, 26, 26, 0.8); padding: 2rem; border: 1px solid var(--dark-red); border-radius: 5px; transition: transform 0.3s; }
+        .skill-category:hover { transform: translateY(-10px); border-color: var(--primary-red); box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2); }
+        .skill-category h3 { color: var(--primary-red); margin-bottom: 1rem; font-size: 1.3rem; }
+        .skill-category ul { list-style: none; }
+        .skill-category li { padding: 0.5rem 0; color: var(--text-light); position: relative; padding-left: 1.5rem; }
+        .skill-category li::before { content: '▸'; position: absolute; left: 0; color: var(--primary-red); }
+        /* Projects Section */
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
+        .project-card { background: rgba(26, 26, 26, 0.9); border: 1px solid var(--dark-red); border-radius: 5px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; }
+        .project-card:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 0, 0, 0.3); border-color: var(--primary-red); }
+        .project-header { background: linear-gradient(135deg, var(--dark-red), var(--bg-black)); padding: 1.5rem; border-bottom: 1px solid var(--primary-red); }
+        .project-header h3 { color: var(--primary-red); font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .project-type { color: var(--text-gray); font-size: 0.9rem; }
+        .project-content { padding: 1.5rem; }
+        .project-content p { color: var(--text-light); margin-bottom: 1rem; }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag { background: rgba(255, 0, 0, 0.2); color: var(--primary-red); padding: 0.3rem 0.8rem; border-radius: 3px; font-size: 0.8rem; border: 1px solid var(--primary-red); }
+        /* Contact Section */
+        .contact-content { text-align: center; background: rgba(26, 26, 26, 0.8); padding: 3rem; border: 1px solid var(--dark-red); border-radius: 5px; }
+        .contact-links { display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; flex-wrap: wrap; }
+        .contact-link { display: inline-block; padding: 1rem 2rem; background: rgba(255, 0, 0, 0.1); border: 2px solid var(--primary-red); color: var(--primary-red); text-decoration: none; border-radius: 5px; transition: all 0.3s; font-weight: bold; }
+        .contact-link:hover { background: var(--primary-red); color: var(--bg-black); transform: translateY(-3px); box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4); }
+        /* Footer */
+        footer { text-align: center; padding: 2rem; background: rgba(10, 10, 10, 0.95); border-top: 1px solid var(--primary-red); color: var(--text-gray); }
+        /* Responsive */
+        @media (max-width: 768px) { .hero h1 { font-size: 2.5rem; } .about-content { grid-template-columns: 1fr; } .nav-links { flex-direction: column; gap: 1rem; } .skills-grid, .projects-grid { grid-template-columns: 1fr; } }
+        /* Scroll indicator */
+        .scroll-indicator { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); width: 30px; height: 50px; border: 2px solid var(--primary-red); border-radius: 20px; opacity: 0.7; }
+        .scroll-indicator::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--primary-red); border-radius: 50%; animation: scroll 2s infinite; }
+        @keyframes scroll { 0% { top: 8px; opacity: 1; } 100% { top: 24px; opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+    <header>
+        <nav>
+            <a href="/" class="back-btn">← Volver al Blog</a>
+            <div class="logo">Tnagata-CyberOps</div>
+            <ul class="nav-links">
+                <li><a href="#about">Sobre Mí</a></li>
+                <li><a href="#skills">Habilidades</a></li>
+                <li><a href="#projects">Proyectos</a></li>
+                <li><a href="#contact">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Tnagata-CyberOps</h1>
+        <h2>Red Team Operations | Offensive Security</h2>
+        <div class="terminal-line">
+            <span class="typing">root@cyberops:~# whoami</span>
+        </div>
+        <div class="scroll-indicator"></div>
+    </section>
+
+    <section id="about">
+        <h2 class="section-title">Sobre Mí</h2>
+        <div class="about-content">
+            <div class="about-text">
+                <p>Profesional dedicado a la seguridad ofensiva y operaciones de Red Team. Mi pasión reside en descubrir vulnerabilidades, desarrollar exploits y mejorar la postura de seguridad de las organizaciones desde una perspectiva adversarial.</p>
+                <p>Especializado en pruebas de penetración, ingeniería social, evasión de defensas y desarrollo de herramientas personalizadas. El arte del sigilo digital y la persistencia operacional son mi filosofía de trabajo.</p>
+                <p>Creyente en el aprendizaje continuo y la comunidad de seguridad. Cada sistema comprometido es una lección, cada defensa evadida es un recordatorio de que la seguridad es un proceso, no un estado.</p>
+            </div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Sistemas Evaluados</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Ejercicios Red Team</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">1000+</div>
+                    <div class="stat-label">Vulnerabilidades</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Mindset Operacional</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills">
+        <h2 class="section-title">Arsenal Técnico</h2>
+        <div class="skills-grid">
+            <div class="skill-category">
+                <h3>Penetration Testing</h3>
+                <ul>
+                    <li>Web Application Security</li>
+                    <li>Network Penetration Testing</li>
+                    <li>Wireless Security Assessment</li>
+                    <li>Mobile Application Testing</li>
+                    <li>API Security Testing</li>
+                </ul>
+            </div>
+            <div class="skill-category">
+                <h3>Red Team Operations</h3>
+                <ul>
+                    <li>Adversary Emulation</li>
+                    <li>Phishing Campaigns</li>
+                    <li>Physical Security Testing</li>
+                    <li>Social Engineering</li>
+                    <li>Persistence Techniques</li>
+                </ul>
+            </div>
+            <div class="skill-category">
+                <h3>Exploit Development</h3>
+                <ul>
+                    <li>Buffer Overflow Exploitation</li>
+                    <li>Custom Payload Creation</li>
+                    <li>Shellcode Development</li>
+                    <li>Post-Exploitation Tools</li>
+                    <li>Evasion Techniques</li>
+                </ul>
+            </div>
+            <div class="skill-category">
+                <h3>Herramientas & Frameworks</h3>
+                <ul>
+                    <li>Metasploit / Cobalt Strike</li>
+                    <li>Burp Suite / OWASP ZAP</li>
+                    <li>Nmap / Masscan</li>
+                    <li>BloodHound / PowerShell Empire</li>
+                    <li>Custom Python/Go Tools</li>
+                </ul>
+            </div>
+            <div class="skill-category">
+                <h3>Sistemas Operativos</h3>
+                <ul>
+                    <li>Kali Linux / Parrot OS</li>
+                    <li>Windows Internals</li>
+                    <li>Active Directory Attacks</li>
+                    <li>Linux Privilege Escalation</li>
+                    <li>macOS Security</li>
+                </ul>
+            </div>
+            <div class="skill-category">
+                <h3>Metodologías</h3>
+                <ul>
+                    <li>OWASP Testing Guide</li>
+                    <li>MITRE ATT&CK Framework</li>
+                    <li>PTES / OSSTMM</li>
+                    <li>Kill Chain Analysis</li>
+                    <li>Threat Intelligence</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2 class="section-title">Operaciones Destacadas</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Corporate Network Breach</h3>
+                    <span class="project-type">Red Team Exercise</span>
+                </div>
+                <div class="project-content">
+                    <p>Compromiso completo de red corporativa desde acceso inicial mediante phishing hasta dominio total del Active Directory. Evasión exitosa de EDR y persistencia de 30 días sin detección.</p>
+                    <div class="tags">
+                        <span class="tag">Active Directory</span>
+                        <span class="tag">Lateral Movement</span>
+                        <span class="tag">EDR Evasion</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Web Application Pentest</h3>
+                    <span class="project-type">Security Assessment</span>
+                </div>
+                <div class="project-content">
+                    <p>Evaluación exhaustiva de aplicación web empresarial. Identificación de SQL Injection, XSS, IDOR y vulnerabilidades lógicas que permitieron acceso a datos sensibles.</p>
+                    <div class="tags">
+                        <span class="tag">OWASP Top 10</span>
+                        <span class="tag">API Testing</span>
+                        <span class="tag">Auth Bypass</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Custom Malware Development</h3>
+                    <span class="project-type">Tool Development</span>
+                </div>
+                <div class="project-content">
+                    <p>Desarrollo de implante personalizado con capacidades de evasión AV/EDR, comunicación C2 encriptada y módulos de post-explotación. Usado en ejercicios autorizados.</p>
+                    <div class="tags">
+                        <span class="tag">C/C++</span>
+                        <span class="tag">Go</span>
+                        <span class="tag">AV Evasion</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Physical Security Assessment</h3>
+                    <span class="project-type">Red Team</span>
+                </div>
+                <div class="project-content">
+                    <p>Evaluación de seguridad física incluyendo bypassing de controles de acceso, clonación de credenciales RFID y acceso no autorizado a áreas restringidas.</p>
+                    <div class="tags">
+                        <span class="tag">Physical</span>
+                        <span class="tag">Social Engineering</span>
+                        <span class="tag">RFID</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Cloud Infrastructure Audit</h3>
+                    <span class="project-type">Cloud Security</span>
+                </div>
+                <div class="project-content">
+                    <p>Auditoría de seguridad de infraestructura AWS. Explotación de misconfiguraciones IAM, S3 buckets expuestos y escalada de privilegios en servicios cloud.</p>
+                    <div class="tags">
+                        <span class="tag">AWS</span>
+                        <span class="tag">IAM</span>
+                        <span class="tag">Cloud</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3>Wireless Network Attack</h3>
+                    <span class="project-type">Wireless Security</span>
+                </div>
+                <div class="project-content">
+                    <p>Evaluación de seguridad wireless. Cracking de WPA2-Enterprise, Evil Twin attacks y captura de credenciales corporativas mediante rogue access points.</p>
+                    <div class="tags">
+                        <span class="tag">WiFi</span>
+                        <span class="tag">WPA2</span>
+                        <span class="tag">Evil Twin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2 class="section-title">Contacto</h2>
+        <div class="contact-content">
+            <p>¿Interesado en colaboraciones, ejercicios de Red Team o simplemente hablar de seguridad ofensiva?</p>
+            <p>Siempre abierto a nuevos desafíos y conversaciones con profesionales de la industria.</p>
+            <div class="contact-links">
+                <a href="mailto:contact@tnagata-cyberops.com" class="contact-link">Email</a>
+                <a href="#" class="contact-link">LinkedIn</a>
+                <a href="#" class="contact-link">GitHub</a>
+                <a href="#" class="contact-link">Twitter</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Tnagata-CyberOps | Red Team Operations</p>
+        <p>Todas las actividades realizadas con autorización explícita y con fines legítimos</p>
+    </footer>
+
+    <script>
+        const bgAnimation = document.getElementById('bgAnimation');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            bgAnimation.appendChild(particle);
+        }
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            });
+        });
+        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        document.querySelectorAll('.skill-category, .project-card, .stat-box').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
