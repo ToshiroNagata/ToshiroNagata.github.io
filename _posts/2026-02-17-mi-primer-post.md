@@ -12,9 +12,12 @@ Aquí compartiré mis investigaciones sobre **seguridad ofensiva**, **malware de
 
 ### Un poco de código
 
-```python
+``` python
+
 def hola_mundo():
     print("Hack the Planet!")
 
 if __name__ == "__main__":
     hola_mundo()
+```
+
