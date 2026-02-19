@@ -1,0 +1,92 @@
+---
+layout: post
+title: "MCP 101 - Kali Linux: Automatizando Seguridad Ofensiva con Agentes de IA"
+date: 2026-02-19
+categories: [offsec, mcp, ai]
+tags: [kali, roo-code, mcp, pentest, gemini, vscode]
+---
+
+# MCP 101 - Kali Linux: Automatizando Seguridad Ofensiva con Agentes de IA
+
+## Introducción
+
+El panorama de la seguridad ofensiva está evolucionando rápidamente. Los investigadores ya no solo ejecutan herramientas manualmente: hoy es posible orquestar agentes de inteligencia artificial que interactúen directamente con nuestra infraestructura de pentesting. En este blog exploraremos cómo configurar un entorno basado en **Model Context Protocol (MCP)** que nos permita, desde un simple chat en VS Code, ejecutar herramientas sobre un objetivo real, pasando por Kali Linux como servidor de operaciones.
+
+---
+
+## ¿Qué es MCP y por qué nos importa?
+
+**Model Context Protocol (MCP)** es un protocolo abierto que permite a los modelos de lenguaje (LLMs) interactuar con herramientas y sistemas externos de forma estructurada. En lugar de que el modelo simplemente genere texto, MCP le permite **ejecutar acciones reales**: correr comandos, llamar APIs, leer archivos, y en nuestro caso, lanzar herramientas de seguridad ofensiva.
+
+En un contexto de investigación, esto significa que podemos hablar con un agente en lenguaje natural y que este, de forma autónoma o guiada, ejecute `nmap`, `msfconsole`, `hydra` u otras herramientas sobre nuestro objetivo.
+
+---
+
+## Arquitectura del Laboratorio
+
+Nuestro laboratorio está compuesto por **tres máquinas virtuales** con roles bien definidos:
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│   [Windows VM]          [Kali Linux VM]             │
+│   VS Code +        ──►  Kali MCP Server        ──►  [Metasploitable 2]
+│   Roo Code             (ejecuta herramientas)        (objetivo / víctima)
+│   (cliente MCP)                                     │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+| Máquina          | Rol                          | Descripción                                                                 |
+|------------------|------------------------------|-----------------------------------------------------------------------------|
+| **Windows**      | Cliente / Interfaz           | VS Code con Roo Code. Aquí el investigador escribe las instrucciones.       |
+| **Kali Linux**   | Servidor MCP                 | Ejecuta el servidor MCP y corre las herramientas de seguridad sobre el objetivo. |
+| **Metasploitable 2** | Objetivo / Víctima       | Máquina vulnerable intencionalmente, usada como blanco de nuestras pruebas. |
+
+El flujo es el siguiente: el investigador **habla desde Windows** usando Roo Code, este se comunica con el **servidor MCP local**, que a su vez llama a **Kali Linux**, y Kali ejecuta las herramientas sobre **Metasploitable 2**.
+
+---
+
+## Parte 1: Configuración en Windows
+
+### 1.1 Instalación de Roo Code en VS Code
+
+El primer paso es instalar la extensión **Roo Code** en Visual Studio Code. Roo Code es una extensión que actúa como interfaz de agente de IA dentro del editor, permitiéndonos conectarnos a proveedores de LLMs y a servidores MCP.
+
+Para instalarla, abrimos VS Code, navegamos a la pestaña de **Extensions** (`Ctrl+Shift+X`), buscamos `roo` y seleccionamos **Roo Code** de la empresa `roocode.com`.
+
+> 📸 **[IMAGEN 1 AQUÍ]** — *Pantalla del Marketplace de VS Code mostrando Roo Code instalado.*
+
+---
+
+### 1.2 Configurar el Proveedor de IA: Google Gemini
+
+Una vez instalada la extensión, necesitamos configurar qué modelo de lenguaje usará Roo Code para razonar y tomar decisiones. En este caso utilizamos **Google Gemini**, aprovechando su generosa capa gratuita y su gran ventana de contexto.
+
+Desde el panel de Roo Code, accedemos a **Settings → Providers** y seleccionamos **Google Gemini** como API Provider. El sistema nos indicará que debemos proveer una API Key válida para continuar.
+
+> 📸 **[IMAGEN 2 AQUÍ]** — *Panel de configuración de Roo Code mostrando Google Gemini como proveedor seleccionado y el campo de API Key pendiente.*
+
+---
+
+### 1.3 Obtener la API Key de Google Gemini
+
+Para obtener la clave de API, navegamos a **[aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)**. Desde esta página podemos gestionar todas nuestras claves de acceso a los modelos de Gemini.
+
+> 📸 **[IMAGEN 3 AQUÍ]** — *Página "Claves de API" de Google AI Studio, mostrando una clave existente y el botón "Crear clave de API".*
+
+En nuestro caso crearemos una clave nueva específica para este proyecto. Al hacer clic en **"Crear clave de API"**, nos aparece un diálogo donde asignamos un nombre descriptivo. Utilizamos la nomenclatura `MCP-Kali-tnb1` para identificarla claramente, y la asociamos al proyecto GCP correspondiente (`MCP-tnb1`).
+
+> 📸 **[IMAGEN 4 AQUÍ]** — *Diálogo "Crea una clave nueva" con el nombre `MCP-Kali-tnb1` y el proyecto `MCP-tnb1` seleccionado.*
+
+Una vez creada, la clave aparece listada en el dashboard de AI Studio. Notamos que opera bajo el **nivel gratuito**, lo cual es suficiente para nuestro laboratorio. Para copiarla, usamos el icono de copia que aparece al lado derecho de la entrada.
+
+> 📸 **[IMAGEN 5 AQUÍ]** — *Listado de claves mostrando `MCP-Kali-tnb1` creada el 17 feb 2026, con el botón de copiar resaltado.*
+
+Con la clave copiada, volvemos al panel de configuración de Roo Code y la pegamos en el campo **Gemini API Key**. Guardamos la configuración y el error de clave inválida desaparece.
+
+---
+
+> ⚠️ **Nota de seguridad:** Nunca expongas tu API Key en repositorios públicos. Usa variables de entorno o el almacenamiento seguro de VSCode (Secret Storage), tal como lo hace Roo Code internamente.
+
+---
+
