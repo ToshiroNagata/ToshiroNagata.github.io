@@ -6,8 +6,6 @@ categories: [offsec, mcp, ai]
 tags: [kali, mcp, pentest, gemini]
 ---
 
-# MCP 101 - Kali Linux: Automating Offensive Security with AI Agents
-
 ## Introduction
 
 The offensive security landscape is evolving fast. Researchers no longer just run tools manually — today it is possible to orchestrate AI agents that interact directly with our pentesting infrastructure. In this post we will walk through how to set up an environment based on the **Model Context Protocol (MCP)** that lets us, from a simple chat interface in VS Code, execute tools against a live target by routing through Kali Linux as the operations server.
@@ -57,7 +55,7 @@ Once the extension is installed, we need to configure which language model Roo C
 
 From the Roo Code panel, go to **Settings → Providers** and select **Google Gemini** as the API Provider. The system will prompt you to supply a valid API Key to proceed.
 
-> 📸 **[IMAGE 2 HERE]** — *Roo Code settings panel showing Google Gemini selected as the provider with the API Key field pending.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_2.png) — *Roo Code settings panel showing Google Gemini selected as the provider with the API Key field pending.*
 
 ---
 
