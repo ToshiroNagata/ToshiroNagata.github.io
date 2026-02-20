@@ -1,4 +1,5 @@
 ---
+layout: post
 title: "MCP 101 - Kali Linux: Automatizando Seguridad Ofensiva con Agentes de IA"
 date: 2026-02-19
 categories: [offsec, mcp, ai]
@@ -41,7 +42,17 @@ Nuestro laboratorio está compuesto por **tres máquinas virtuales** con roles b
 | **Kali Linux**   | Servidor MCP                 | Ejecuta el servidor MCP y corre las herramientas de seguridad sobre el objetivo. |
 | **Metasploitable 2** | Objetivo / Víctima       | Máquina vulnerable intencionalmente, usada como blanco de nuestras pruebas. |
 
-El flujo es el siguiente: el investigador **habla desde Windows** usando Roo Code, este se comunica con el **servidor MCP local**, que a su vez llama a **Kali Linux**, y Kali ejecuta las herramientas sobre **Metasploitable 2**.
+| Máquina              | Rol                          | Descripción                                                                                                 |
+|----------------------|------------------------------|-------------------------------------------------------------------------------------------------------------|
+| **Windows** | Cliente MCP / Interfaz       | Ejecuta VS Code con Roo Code. Es el "cerebro" donde el investigador escribe las instrucciones al agente IA. |
+| **Kali Linux** | Servidor MCP / Ejecutor      | Recibe las llamadas del cliente Windows por la red y ejecuta las herramientas ofensivas reales.             |
+| **Metasploitable 2** | Objetivo / Víctima           | Máquina vulnerable intencionalmente, aislada en nuestra red para recibir los ataques.                       |
+
+
+
+
+El flujo es el siguiente: 
+el investigador envía instrucciones desde Windows usando Roo Code (que actúa como el Cliente MCP). Este cliente se conecta a través de la red al Servidor MCP remoto alojado en Kali Linux. Finalmente, es este servidor en Kali el que ejecuta las herramientas ofensivas reales contra Metasploitable 2
 
 ---
 
@@ -88,4 +99,9 @@ Con la clave copiada, volvemos al panel de configuración de Roo Code y la pegam
 > ⚠️ **Nota de seguridad:** Nunca expongas tu API Key en repositorios públicos. Usa variables de entorno o el almacenamiento seguro de VSCode (Secret Storage), tal como lo hace Roo Code internamente.
 
 ---
+
+
+
+—
+
 
