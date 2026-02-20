@@ -113,7 +113,12 @@ Once downloaded and extracted, the directory contains among other files the `req
 
 ### 2.2 Registering the MCP Server in Roo Code (`mcp_settings.json`)
 
-With the files in place locally, the next step is registering the MCP server inside Roo Code. This is done by editing the extension's global **`mcp_settings.json`** file, located at:
+With the files in place locally, the next step is registering the MCP server inside Roo Code. This is done by editing the extension's global **`mcp_settings.json`** file.
+
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_7.png) *VS Code showing the configured `mcp_settings.json` with the `kali` server active in Roo Code's MCP Servers panel, alongside the terminal showing the extracted project files.*
+
+
+located at:
 
 ```
 C:\Users\<user>\AppData\Roaming\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\mcp_settings.json
@@ -151,7 +156,7 @@ Breaking down each parameter:
 
 The design is elegant: from Roo Code's perspective, the `mcp_server.py` process is simply a local MCP server communicating over stdin/stdout. Internally, that process acts as a proxy, forwarding tool requests as HTTP REST calls to the Flask server on Kali.
 
-> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_7.png) *VS Code showing the configured `mcp_settings.json` with the `kali` server active in Roo Code's MCP Servers panel, alongside the terminal showing the extracted project files.*
+
 
 ---
 
