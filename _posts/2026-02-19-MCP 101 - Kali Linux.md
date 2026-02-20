@@ -55,7 +55,7 @@ Once the extension is installed, we need to configure which language model Roo C
 
 From the Roo Code panel, go to **Settings → Providers** and select **Google Gemini** as the API Provider. The system will prompt you to supply a valid API Key to proceed.
 
-> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_2.png) — *Roo Code settings panel showing Google Gemini selected as the provider with the API Key field pending.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_2.png)  *Roo Code settings panel showing Google Gemini selected as the provider with the API Key field pending.*
 
 ---
 
@@ -63,15 +63,15 @@ From the Roo Code panel, go to **Settings → Providers** and select **Google Ge
 
 To get the API key, navigate to **[aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)**. From this page you can manage all your Gemini API access keys.
 
-> 📸 **[IMAGE 3 HERE]** — *Google AI Studio "API Keys" page showing an existing key and the "Create API Key" button.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_3.png) *Google AI Studio "API Keys" page showing an existing key and the "Create API Key" button.*
 
 We will create a new key specifically for this project. Clicking **"Create API Key"** brings up a dialog where we assign a descriptive name. We use the naming convention `MCP-Kali-tnb1` for clear identification, and associate it with the corresponding GCP project (`MCP-tnb1`).
 
-> 📸 **[IMAGE 4 HERE]** — *"Create a new key" dialog with the name `MCP-Kali-tnb1` and the `MCP-tnb1` project selected.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_4.png)*"Create a new key" dialog with the name `MCP-Kali-tnb1` and the `MCP-tnb1` project selected.*
 
 Once created, the key appears listed in the AI Studio dashboard. Note that it operates under the **free tier**, which is sufficient for our lab. To copy it, use the copy icon on the right side of the entry.
 
-> 📸 **[IMAGE 5 HERE]** — *Key listing showing `MCP-Kali-tnb1` created Feb 17 2026, with the copy button highlighted.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_5.png)*Key listing showing `MCP-Kali-tnb1` created Feb 17 2026, with the copy button highlighted.*
 
 With the key copied, return to the Roo Code settings panel, paste it into the **Gemini API Key** field, and save. The invalid-key error disappears.
 
@@ -105,7 +105,7 @@ The project's internal architecture consists of two main Python scripts:
 
 Download the repository directly from GitHub. We opted for **Download ZIP** to simplify installation on the Windows machine, though `git clone` works equally well.
 
-> 📸 **[IMAGE 6 HERE]** — *GitHub repository `Wh0am123/MCP-Kali-Server` with the clone/download menu open.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_6.png) *GitHub repository `Wh0am123/MCP-Kali-Server` with the clone/download menu open.*
 
 Once downloaded and extracted, the directory contains among other files the `requirements.txt` with the necessary dependencies and `mcp-kali-server.json`, a reference configuration file for importing the server into Roo Code.
 
@@ -151,7 +151,7 @@ Breaking down each parameter:
 
 The design is elegant: from Roo Code's perspective, the `mcp_server.py` process is simply a local MCP server communicating over stdin/stdout. Internally, that process acts as a proxy, forwarding tool requests as HTTP REST calls to the Flask server on Kali.
 
-> 📸 **[IMAGE 7 HERE]** — *VS Code showing the configured `mcp_settings.json` with the `kali` server active in Roo Code's MCP Servers panel, alongside the terminal showing the extracted project files.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_7.png) *VS Code showing the configured `mcp_settings.json` with the `kali` server active in Roo Code's MCP Servers panel, alongside the terminal showing the extracted project files.*
 
 ---
 
@@ -179,7 +179,7 @@ The server confirms startup with these key messages:
 
 The IP `192.168.70.2` corresponds to Kali's `eth0` interface, confirmed with `ifconfig`. This is exactly the address we set in the `--server` parameter of `mcp_settings.json` on Windows.
 
-> 📸 **[IMAGE 8 HERE]** — *Kali terminal showing the Flask server starting on `0.0.0.0:5000` and `ifconfig` output confirming IP `192.168.70.2`.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_8.png) *Kali terminal showing the Flask server starting on `0.0.0.0:5000` and `ifconfig` output confirming IP `192.168.70.2`.*
 
 ---
 
@@ -195,7 +195,7 @@ We verify its IP address with `ifconfig`:
 eth0  inet addr: 192.168.69.4
 ```
 
-> 📸 **[IMAGE 9 HERE]** — *Metasploitable 2 console showing `ifconfig` with IP `192.168.69.4` assigned to `eth0`.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_9.png) *Metasploitable 2 console showing `ifconfig` with IP `192.168.69.4` assigned to `eth0`.*
 
 With this, we have the complete network map of our lab:
 
@@ -245,7 +245,7 @@ The Kali server log confirms the actual command execution:
 [INFO] 192.168.69.3 -- "POST /api/tools/nmap HTTP/1.1" 200
 ```
 
-> 📸 **[IMAGE 13 HERE]** — *Split view: Roo Code on Windows showing the task in progress and the `nmap_scan` parameters, and the Kali terminal showing execution logs in real time.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_13.png) *Split view: Roo Code on Windows showing the task in progress and the `nmap_scan` parameters, and the Kali terminal showing execution logs in real time.*
 
 ---
 
@@ -259,6 +259,6 @@ The LLM (Gemini) acts strictly as the logical engine of the operation. Its role 
 
 It is important to emphasize that the AI model does not execute code itself. It is the server hosted on Kali Linux that is responsible for running the `searchsploit` binary at the OS level and returning its `stdout` to the client. The model then receives this text and consolidates it into a structured report.
 
-> 📸 **[IMAGE 16 HERE]** — *Roo Code panel showing the "Task Completed" report with a summary of open ports, detected versions, and vulnerability findings obtained via Searchsploit.*
+> ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_16.png) *Roo Code panel showing the "Task Completed" report with a summary of open ports, detected versions, and vulnerability findings obtained via Searchsploit.*
 
 By analyzing the results returned from the local exploit database — identifying, for example, the vsftpd backdoor or the exposed shell on port 1524 — the agent correlates services with public vulnerabilities. This profiles the target's attack surface and delivers the entry vectors needed to begin the exploitation phase.
