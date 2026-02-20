@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "MCP 101 - Kali Linux: Automating Offensive Security with AI Agents"
+title: "MCP 101 - Kali Linux: Intro to Offensive Security with AI Agents"
 date: 2026-02-19
 categories: [offsec, mcp, ai]
 tags: [kali, mcp, pentest, gemini]
@@ -48,8 +48,7 @@ The first step is installing the **Roo Code** extension in Visual Studio Code. R
 
 To install it, open VS Code, go to the **Extensions** tab (`Ctrl+Shift+X`), search for `roo`, and select **Roo Code** by `roocode.com`.
 
-> 📸 **[IMAGE 1 HERE]** — *VS Code Marketplace showing Roo Code installed.*
-
+![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_1.png)
 ---
 
 ### 1.2 Configuring the AI Provider: Google Gemini
