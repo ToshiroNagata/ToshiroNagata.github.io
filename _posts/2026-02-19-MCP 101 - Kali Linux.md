@@ -1,107 +1,267 @@
 ---
 layout: post
-title: "MCP 101 - Kali Linux: Automatizando Seguridad Ofensiva con Agentes de IA"
+title: "MCP 101 - Kali Linux: Automating Offensive Security with AI Agents"
 date: 2026-02-19
 categories: [offsec, mcp, ai]
-tags: [kali, roo-code, mcp, pentest, gemini, vscode]
+tags: [kali, mcp, pentest, gemini]
 ---
 
-# MCP 101 - Kali Linux: Automatizando Seguridad Ofensiva con Agentes de IA
+# MCP 101 - Kali Linux: Automating Offensive Security with AI Agents
 
-## Introducción
+## Introduction
 
-El panorama de la seguridad ofensiva está evolucionando rápidamente. Los investigadores ya no solo ejecutan herramientas manualmente: hoy es posible orquestar agentes de inteligencia artificial que interactúen directamente con nuestra infraestructura de pentesting. En este blog exploraremos cómo configurar un entorno basado en **Model Context Protocol (MCP)** que nos permita, desde un simple chat en VS Code, ejecutar herramientas sobre un objetivo real, pasando por Kali Linux como servidor de operaciones.
-
----
-
-## ¿Qué es MCP y por qué nos importa?
-
-**Model Context Protocol (MCP)** es un protocolo abierto que permite a los modelos de lenguaje (LLMs) interactuar con herramientas y sistemas externos de forma estructurada. En lugar de que el modelo simplemente genere texto, MCP le permite **ejecutar acciones reales**: correr comandos, llamar APIs, leer archivos, y en nuestro caso, lanzar herramientas de seguridad ofensiva.
-
-En un contexto de investigación, esto significa que podemos hablar con un agente en lenguaje natural y que este, de forma autónoma o guiada, ejecute `nmap`, `msfconsole`, `hydra` u otras herramientas sobre nuestro objetivo.
+The offensive security landscape is evolving fast. Researchers no longer just run tools manually — today it is possible to orchestrate AI agents that interact directly with our pentesting infrastructure. In this post we will walk through how to set up an environment based on the **Model Context Protocol (MCP)** that lets us, from a simple chat interface in VS Code, execute tools against a live target by routing through Kali Linux as the operations server.
 
 ---
 
-## Arquitectura del Laboratorio
+## What is MCP and Why Should We Care?
 
-Nuestro laboratorio está compuesto por **tres máquinas virtuales** con roles bien definidos:
+**Model Context Protocol (MCP)** is an open protocol that allows large language models (LLMs) to interact with external tools and systems in a structured way. Instead of the model simply generating text, MCP enables it to **execute real actions**: run commands, call APIs, read files, and in our case, launch offensive security tools.
+
+In a research context, this means we can talk to an agent in natural language and have it — autonomously or guided — execute `nmap`, `msfconsole`, `hydra`, or other tools against our target.
+
+---
+
+## Lab Architecture
+
+Our lab is composed of **three virtual machines**, each with a well-defined role:
+
+![MCP Architecture Flow](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_MCP_flujo.jpg)
+_Architecture flow between Windows client and Kali server_
+
+
+| Machine              | Role                          | Description                                                                                                       |
+|----------------------|-------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| **Windows**          | MCP Client / Interface        | Runs VS Code with Roo Code. The "brain" where the researcher writes instructions to the AI agent.                 |
+| **Kali Linux**       | MCP Server / Executor         | Receives calls from the Windows client over the network and executes the actual offensive tools.                  |
+| **Metasploitable 2** | Target / Victim               | An intentionally vulnerable machine, isolated on our lab network to receive the attacks.                          |
+
+The flow works as follows: the researcher sends instructions from Windows using Roo Code (acting as the MCP Client). That client connects over the network to the remote MCP Server hosted on Kali Linux. Finally, it is that Kali server that executes the real offensive tools against Metasploitable 2.
+
+---
+
+## Part 1: Windows Setup
+
+### 1.1 Installing Roo Code in VS Code
+
+The first step is installing the **Roo Code** extension in Visual Studio Code. Roo Code is an extension that acts as an AI agent interface inside the editor, letting us connect to LLM providers and MCP servers.
+
+To install it, open VS Code, go to the **Extensions** tab (`Ctrl+Shift+X`), search for `roo`, and select **Roo Code** by `roocode.com`.
+
+> 📸 **[IMAGE 1 HERE]** — *VS Code Marketplace showing Roo Code installed.*
+
+---
+
+### 1.2 Configuring the AI Provider: Google Gemini
+
+Once the extension is installed, we need to configure which language model Roo Code will use for reasoning and decision-making. In this case we use **Google Gemini**, taking advantage of its generous free tier and large context window.
+
+From the Roo Code panel, go to **Settings → Providers** and select **Google Gemini** as the API Provider. The system will prompt you to supply a valid API Key to proceed.
+
+> 📸 **[IMAGE 2 HERE]** — *Roo Code settings panel showing Google Gemini selected as the provider with the API Key field pending.*
+
+---
+
+### 1.3 Obtaining the Google Gemini API Key
+
+To get the API key, navigate to **[aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)**. From this page you can manage all your Gemini API access keys.
+
+> 📸 **[IMAGE 3 HERE]** — *Google AI Studio "API Keys" page showing an existing key and the "Create API Key" button.*
+
+We will create a new key specifically for this project. Clicking **"Create API Key"** brings up a dialog where we assign a descriptive name. We use the naming convention `MCP-Kali-tnb1` for clear identification, and associate it with the corresponding GCP project (`MCP-tnb1`).
+
+> 📸 **[IMAGE 4 HERE]** — *"Create a new key" dialog with the name `MCP-Kali-tnb1` and the `MCP-tnb1` project selected.*
+
+Once created, the key appears listed in the AI Studio dashboard. Note that it operates under the **free tier**, which is sufficient for our lab. To copy it, use the copy icon on the right side of the entry.
+
+> 📸 **[IMAGE 5 HERE]** — *Key listing showing `MCP-Kali-tnb1` created Feb 17 2026, with the copy button highlighted.*
+
+With the key copied, return to the Roo Code settings panel, paste it into the **Gemini API Key** field, and save. The invalid-key error disappears.
+
+---
+
+### 1.4 How Does the Agent Reason? (The Decision Flow)
+
+Before moving on to server configuration, it is critical to understand how these components interact.
+
+When we write an instruction in Roo Code (e.g., *"scan this IP"*), the reasoning flow is as follows:
+
+1. **The Contextual Prompt:** Roo Code packages our instruction as text along with the context of the MCP tools it has been configured with (in our case, the Kali tools).
+2. **The Brain (Gemini):** This package is sent to the Google Gemini API. The language model processes our request, understands we need to perform a scan, and reads in its context that a tool called `nmap_scan` is available.
+3. **Function Calling:** Gemini does **not** execute the scan. Instead, it responds to Roo Code saying: *"To complete this task, I need you to execute the `nmap_scan` tool with parameters X and Y."*
+4. **Execution:** Roo Code receives this structured response and is the one that dispatches the order over the MCP protocol to our Kali machine.
+
+> The LLM never touches our local network or the target — it acts purely as a tactical advisor telling our local client which buttons to press.
+
+---
+
+## Part 2: Downloading and Configuring the MCP Server on Windows
+
+### 2.1 The MCP-Kali-Server Repository
+
+The central component of this lab is **MCP-Kali-Server**, an open source project available on GitHub under the user `Wh0am123`. This server acts as the bridge between the LLM world and the actual Kali Linux tooling.
+
+The project's internal architecture consists of two main Python scripts:
+
+- **`kali_server.py`**: A Flask server that exposes REST endpoints. This is the process that runs on the Kali machine and receives instructions via HTTP to execute tools such as `nmap`, `hydra`, `nikto`, etc.
+- **`mcp_server.py`**: The MCP client that runs on Windows. This process speaks the MCP protocol with Roo Code locally (stdio), and translates tool calls into HTTP requests directed at the Flask server on Kali.
+
+Download the repository directly from GitHub. We opted for **Download ZIP** to simplify installation on the Windows machine, though `git clone` works equally well.
+
+> 📸 **[IMAGE 6 HERE]** — *GitHub repository `Wh0am123/MCP-Kali-Server` with the clone/download menu open.*
+
+Once downloaded and extracted, the directory contains among other files the `requirements.txt` with the necessary dependencies and `mcp-kali-server.json`, a reference configuration file for importing the server into Roo Code.
+
+---
+
+### 2.2 Registering the MCP Server in Roo Code (`mcp_settings.json`)
+
+With the files in place locally, the next step is registering the MCP server inside Roo Code. This is done by editing the extension's global **`mcp_settings.json`** file, located at:
+
 ```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│   [Windows VM]          [Kali Linux VM]             │
-│   VS Code +        ──►  Kali MCP Server        ──►  [Metasploitable 2]
-│   Roo Code             (ejecuta herramientas)        (objetivo / víctima)
-│   (cliente MCP)                                     │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+C:\Users\<user>\AppData\Roaming\Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\mcp_settings.json
 ```
 
-| Máquina          | Rol                          | Descripción                                                                 |
-|------------------|------------------------------|-----------------------------------------------------------------------------|
-| **Windows**      | Cliente / Interfaz           | VS Code con Roo Code. Aquí el investigador escribe las instrucciones.       |
-| **Kali Linux**   | Servidor MCP                 | Ejecuta el servidor MCP y corre las herramientas de seguridad sobre el objetivo. |
-| **Metasploitable 2** | Objetivo / Víctima       | Máquina vulnerable intencionalmente, usada como blanco de nuestras pruebas. |
+The configuration we add defines an entry called `kali` inside the `mcpServers` object. The critical parameters are:
 
-| Máquina              | Rol                          | Descripción                                                                                                 |
-|----------------------|------------------------------|-------------------------------------------------------------------------------------------------------------|
-| **Windows** | Cliente MCP / Interfaz       | Ejecuta VS Code con Roo Code. Es el "cerebro" donde el investigador escribe las instrucciones al agente IA. |
-| **Kali Linux** | Servidor MCP / Ejecutor      | Recibe las llamadas del cliente Windows por la red y ejecuta las herramientas ofensivas reales.             |
-| **Metasploitable 2** | Objetivo / Víctima           | Máquina vulnerable intencionalmente, aislada en nuestra red para recibir los ataques.                       |
+```json
+{
+  "mcpServers": {
+    "kali": {
+      "command": "C:\\Users\\tnmw001\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "args": [
+        "-u",
+        "C:\\Users\\tnmw001\\Downloads\\MCP-Kali-Server-main\\MCP-Kali-Server-main\\mcp_server.py",
+        "--server",
+        "http://192.168.70.2:5000/"
+      ],
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
 
+Breaking down each parameter:
 
+| Parameter | Value | Explanation |
+|-----------|-------|-------------|
+| `command` | Path to `python.exe` | Interpreter that will run the MCP client locally on Windows |
+| `-u` | Python flag | Forces unbuffered output, required for stdio communication with Roo Code |
+| Path to `mcp_server.py` | Local path | The MCP client running on Windows that speaks MCP with Roo Code |
+| `--server` | `http://192.168.70.2:5000/` | **IP and port of the Flask server on Kali Linux** — this is the architectural key |
+| `disabled` | `false` | Server is active |
 
+The design is elegant: from Roo Code's perspective, the `mcp_server.py` process is simply a local MCP server communicating over stdin/stdout. Internally, that process acts as a proxy, forwarding tool requests as HTTP REST calls to the Flask server on Kali.
 
-El flujo es el siguiente: 
-el investigador envía instrucciones desde Windows usando Roo Code (que actúa como el Cliente MCP). Este cliente se conecta a través de la red al Servidor MCP remoto alojado en Kali Linux. Finalmente, es este servidor en Kali el que ejecuta las herramientas ofensivas reales contra Metasploitable 2
-
----
-
-## Parte 1: Configuración en Windows
-
-### 1.1 Instalación de Roo Code en VS Code
-
-El primer paso es instalar la extensión **Roo Code** en Visual Studio Code. Roo Code es una extensión que actúa como interfaz de agente de IA dentro del editor, permitiéndonos conectarnos a proveedores de LLMs y a servidores MCP.
-
-Para instalarla, abrimos VS Code, navegamos a la pestaña de **Extensions** (`Ctrl+Shift+X`), buscamos `roo` y seleccionamos **Roo Code** de la empresa `roocode.com`.
-
-> 📸 **[IMAGEN 1 AQUÍ]** — *Pantalla del Marketplace de VS Code mostrando Roo Code instalado.*
-
----
-
-### 1.2 Configurar el Proveedor de IA: Google Gemini
-
-Una vez instalada la extensión, necesitamos configurar qué modelo de lenguaje usará Roo Code para razonar y tomar decisiones. En este caso utilizamos **Google Gemini**, aprovechando su generosa capa gratuita y su gran ventana de contexto.
-
-Desde el panel de Roo Code, accedemos a **Settings → Providers** y seleccionamos **Google Gemini** como API Provider. El sistema nos indicará que debemos proveer una API Key válida para continuar.
-
-> 📸 **[IMAGEN 2 AQUÍ]** — *Panel de configuración de Roo Code mostrando Google Gemini como proveedor seleccionado y el campo de API Key pendiente.*
+> 📸 **[IMAGE 7 HERE]** — *VS Code showing the configured `mcp_settings.json` with the `kali` server active in Roo Code's MCP Servers panel, alongside the terminal showing the extracted project files.*
 
 ---
 
-### 1.3 Obtener la API Key de Google Gemini
+## Part 3: Bringing Up the Server on Kali Linux
 
-Para obtener la clave de API, navegamos a **[aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)**. Desde esta página podemos gestionar todas nuestras claves de acceso a los modelos de Gemini.
+### 3.1 Starting the Flask Server
 
-> 📸 **[IMAGEN 3 AQUÍ]** — *Página "Claves de API" de Google AI Studio, mostrando una clave existente y el botón "Crear clave de API".*
+With the client configuration ready on Windows, we move to the **Kali Linux machine** to start the server that will receive instructions and execute the tools.
 
-En nuestro caso crearemos una clave nueva específica para este proyecto. Al hacer clic en **"Crear clave de API"**, nos aparece un diálogo donde asignamos un nombre descriptivo. Utilizamos la nomenclatura `MCP-Kali-tnb1` para identificarla claramente, y la asociamos al proyecto GCP correspondiente (`MCP-tnb1`).
+Inside the project directory, run:
 
-> 📸 **[IMAGEN 4 AQUÍ]** — *Diálogo "Crea una clave nueva" con el nombre `MCP-Kali-tnb1` y el proyecto `MCP-tnb1` seleccionado.*
+```bash
+python3 kali_server.py --ip 0.0.0.0 --port 5000
+```
 
-Una vez creada, la clave aparece listada en el dashboard de AI Studio. Notamos que opera bajo el **nivel gratuito**, lo cual es suficiente para nuestro laboratorio. Para copiarla, usamos el icono de copia que aparece al lado derecho de la entrada.
+The `--ip 0.0.0.0` flag tells the server to listen on **all available network interfaces**, not just loopback. This is mandatory for the Windows machine to reach it across the local network.
 
-> 📸 **[IMAGEN 5 AQUÍ]** — *Listado de claves mostrando `MCP-Kali-tnb1` creada el 17 feb 2026, con el botón de copiar resaltado.*
+The server confirms startup with these key messages:
 
-Con la clave copiada, volvemos al panel de configuración de Roo Code y la pegamos en el campo **Gemini API Key**. Guardamos la configuración y el error de clave inválida desaparece.
+```
+[INFO] Starting Kali Linux Tools API Server on 0.0.0.0:5000
+* Running on http://127.0.0.1:5000
+* Running on http://192.168.70.2:5000   <- This is the address reachable from Windows
+```
+
+The IP `192.168.70.2` corresponds to Kali's `eth0` interface, confirmed with `ifconfig`. This is exactly the address we set in the `--server` parameter of `mcp_settings.json` on Windows.
+
+> 📸 **[IMAGE 8 HERE]** — *Kali terminal showing the Flask server starting on `0.0.0.0:5000` and `ifconfig` output confirming IP `192.168.70.2`.*
 
 ---
 
-> ⚠️ **Nota de seguridad:** Nunca expongas tu API Key en repositorios públicos. Usa variables de entorno o el almacenamiento seguro de VSCode (Secret Storage), tal como lo hace Roo Code internamente.
+## Part 4: The Target — Metasploitable 2
+
+### 4.1 Target Environment Reconnaissance
+
+**Metasploitable 2** is an intentionally vulnerable Linux distribution designed by Rapid7 for use in offensive security training and practice environments. It is the ideal target for this lab because it concentrates a large number of services with known, documented vulnerabilities in a single machine.
+
+We verify its IP address with `ifconfig`:
+
+```
+eth0  inet addr: 192.168.69.4
+```
+
+> 📸 **[IMAGE 9 HERE]** — *Metasploitable 2 console showing `ifconfig` with IP `192.168.69.4` assigned to `eth0`.*
+
+With this, we have the complete network map of our lab:
+
+| Machine | IP | Role |
+|---|---|---|
+| Windows (Roo Code) | 192.168.70.x | Client / Researcher Interface |
+| Kali Linux (MCP Server) | 192.168.70.2 | Operations Server |
+| Metasploitable 2 | 192.168.69.4 | Target |
+
+> ⚠️ **Note:** The subnet difference (`192.168.70.x` vs `192.168.69.x`) indicates that Kali has two interfaces or that the hypervisor handles routing between segments. Either way, Kali can reach Metasploitable and accept connections from Windows.
 
 ---
 
+## Part 5: The Agent in Action — First Reconnaissance Operation
 
+### 5.1 Tasking the Agent and Running the Scan
 
-—
+With the full infrastructure up, it is time for the moment of truth. From the Roo Code interface on Windows, we give the agent the following natural language instruction:
 
+> *"Could you scan the top 3000 most used ports on the IP address 192.168.69.4, identify the software versions running, and let me know if any of these services have known vulnerabilities?"*
 
+What happens next is a concrete demonstration of this architecture's power. Before launching the scan, the agent performs an **environment enumeration phase**: it verifies which tools are available on the Kali server by checking for `nmap`, `gobuster`, `dirb`, and `nikto`. The Flask server logs on Kali confirm this:
+
+```
+[INFO] Executing command: which nmap
+[INFO] Executing command: which gobuster
+[INFO] Executing command: which dirb
+[INFO] Executing command: which nikto
+```
+
+This behavior is noteworthy: the model autonomously reasons that before executing a tool, it must verify the tool exists on the remote system. Once confirmed, the agent decides to call the `nmap_scan` tool with the following parameters:
+
+```json
+{
+  "additional_args": "--top-ports 3000",
+  "target": "192.168.69.4",
+  "scan_type": "-sV"
+}
+```
+
+The `-sV` flag is critical: it instructs nmap to perform **service version detection**, not just confirm whether a port is open. This is what will allow the agent to correlate versions against known CVEs in the next step.
+
+The Kali server log confirms the actual command execution:
+
+```
+[INFO] Executing command: nmap -sV --top-ports 3000 192.168.69.4
+[INFO] 192.168.69.3 -- "POST /api/tools/nmap HTTP/1.1" 200
+```
+
+> 📸 **[IMAGE 13 HERE]** — *Split view: Roo Code on Windows showing the task in progress and the `nmap_scan` parameters, and the Kali terminal showing execution logs in real time.*
+
+---
+
+### 5.2 Results: Vulnerability Analysis
+
+Once the scan completes, the agent processes the raw output generated by `nmap`. Since the initial execution was limited to the `-sV` flag — focused exclusively on version enumeration and banner grabbing — the results did not include direct vulnerability or CVE information.
+
+To fulfill the original prompt directive, the agent evaluates this output and autonomously decides to implement a second phase: it takes the newly discovered software versions and uses them as input to invoke `searchsploit` (the Exploit-DB command-line utility installed on Kali Linux).
+
+The LLM (Gemini) acts strictly as the logical engine of the operation. Its role is to parse the raw `nmap` output, extract the service version strings (e.g., `vsftpd 2.3.4` or `Samba 3.X`), and formulate syntactically valid queries for `searchsploit`. The agent then instructs the client (Roo Code on Windows) to send these structured queries as HTTP requests.
+
+It is important to emphasize that the AI model does not execute code itself. It is the server hosted on Kali Linux that is responsible for running the `searchsploit` binary at the OS level and returning its `stdout` to the client. The model then receives this text and consolidates it into a structured report.
+
+> 📸 **[IMAGE 16 HERE]** — *Roo Code panel showing the "Task Completed" report with a summary of open ports, detected versions, and vulnerability findings obtained via Searchsploit.*
+
+By analyzing the results returned from the local exploit database — identifying, for example, the vsftpd backdoor or the exposed shell on port 1524 — the agent correlates services with public vulnerabilities. This profiles the target's attack surface and delivers the entry vectors needed to begin the exploitation phase.
