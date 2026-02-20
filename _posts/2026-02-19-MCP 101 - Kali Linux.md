@@ -96,7 +96,7 @@ When we write an instruction in Roo Code (e.g., *"scan this IP"*), the reasoning
 
 ### 2.1 The MCP-Kali-Server Repository
 
-The central component of this lab is **[MCP-Kali-Server](https://github.com/Wh0am123/MCP-Kali-Server)**, an open source project available on GitHub under the user `Wh0am123`. This server acts as the bridge between the LLM world and the actual Kali Linux tooling.
+The central component of this lab is **[MCP-Kali-Server](https://github.com/Wh0am123/MCP-Kali-Server)**,  an open source project available on GitHub under the user `Wh0am123`. This server acts as the bridge between the LLM world and the actual Kali Linux tooling.
 
 The project's internal architecture consists of two main Python scripts:
 
