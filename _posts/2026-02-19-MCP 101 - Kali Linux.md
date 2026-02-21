@@ -269,3 +269,29 @@ It is important to emphasize that the AI model does not execute code itself. It 
 > ![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_16.png) *Roo Code panel showing the "Task Completed" report with a summary of open ports, detected versions, and vulnerability findings obtained via Searchsploit.*
 
 By analyzing the results returned from the local exploit database — identifying, for example, the vsftpd backdoor or the exposed shell on port 1524 — the agent correlates services with public vulnerabilities. This profiles the target's attack surface and delivers the entry vectors needed to begin the exploitation phase.
+
+---
+
+---
+
+## What's Next: Questions Left Unanswered
+
+### The agent doesn't always do what we expect... and that's the most interesting part
+
+Throughout this first installment we've seen the full pipeline in action: environment setup, cross-machine connectivity, autonomous reconnaissance, and vulnerability analysis. However, during our testing with **Gemini Flash**, we observed some behaviors that — far from being dismissible errors — raise technically relevant questions worth investigating properly.
+
+Two specific situations stood out:
+
+First: when asked to scan the **top 100 ports** of the target, the agent's first attempt failed. Rather than retrying with the same parameters, it **reformulated its approach** and scanned the range `1-100` instead — which is not the same thing. Why did it make that decision? Is this a limitation in how the model interprets natural language? A translation issue between the MCP server and nmap's parameter syntax? Or did the model simply reason that both approaches were equivalent when they are not?
+>![](/img/2026-02-19-MCP%20101%20-%20Kali%20Linux/wm_e1.png)
+
+
+Second: to look up known vulnerabilities in the detected services, the agent chose **`searchsploit`** over nmap's built-in NSE scripts like `--script vuln`. Both are valid approaches, but they carry very different operational implications. Why did it choose one over the other?
+
+These two decisions were not random. They reveal something about how the model reasons, how it prioritizes tooling, and how it handles failure. And that inevitably leads to the next question: **would a different model have reacted differently to the same instructions?**
+
+That is exactly what we'll be digging into next.
+
+*— To be continued in: **MCP 101 - Part 2 - Analyzing Agent Behavior: Does the Model Matter?***
+
+---
