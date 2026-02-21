@@ -10,6 +10,17 @@ tags: [kali, mcp, pentest, gemini]
 
 The offensive security landscape is evolving fast. Researchers no longer just run tools manually — today it is possible to orchestrate AI agents that interact directly with our pentesting infrastructure. In this post we will walk through how to set up an environment based on the **Model Context Protocol (MCP)** that lets us, from a simple chat interface in VS Code, execute tools against a live target by routing through Kali Linux as the operations server.
 
+<div style="padding-bottom: 56.25%; position: relative; display: block; width: 100%; margin-bottom: 1.5rem; border-radius: 8px; overflow: hidden;">
+  <iframe width="100%" height="100%"
+    src="https://www.youtube.com/embed/zcYJX0Yupwg"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="position: absolute; top: 0; left: 0;">
+  </iframe>
+</div>
+
+
 ---
 
 ## What is MCP and Why Should We Care?
