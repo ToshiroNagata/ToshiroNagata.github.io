@@ -109,6 +109,8 @@ Download the repository directly from GitHub. We opted for **Download ZIP** to s
 
 Once downloaded and extracted, the directory contains among other files the `requirements.txt` with the necessary dependencies and `mcp-kali-server.json`, a reference configuration file for importing the server into Roo Code.
 
+>`python -m pip install -r requirements.txt`
+
 ---
 
 ### 2.2 Registering the MCP Server in Roo Code (`mcp_settings.json`)
