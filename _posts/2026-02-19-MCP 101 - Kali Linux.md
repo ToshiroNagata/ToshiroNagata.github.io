@@ -4,6 +4,8 @@ title: "MCP 101 - Kali Linux: Intro to Offensive Security with AI Agents"
 date: 2026-02-19
 categories: [offsec, mcp, ai]
 tags: [kali, mcp, pentest, gemini]
+image:
+  path: /img/2026-02-19-MCP%20101%20-%20Kali%20Linux/MCP_TNB1.png
 ---
 
 ## Introduction
