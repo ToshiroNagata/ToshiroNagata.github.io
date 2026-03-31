@@ -6,6 +6,8 @@ categories: [offsec, api, web]
 tags: [owasp, api-security, pentest]
 ---
 
+
+{% raw %}
 <style>
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -423,7 +425,7 @@ footer p{font-family:var(--mono);font-size:.65rem;color:var(--text-dark)}
           <div id="bopla-response" style="background:var(--bg);border:1px solid var(--bg4);border-radius:6px;padding:14px;font-family:var(--mono);font-size:.68rem;line-height:1.9">
 <span class="t-dim">{</span>
   <span class="t-green">"name"</span>: <span class="t-yellow">"john_doe"</span>,
-  <span class="t-green">"email"</span>: <span class="t-yellow">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="147e7b7c7a5479757d783a777b79">[email&#160;protected]</a>"</span>,
+  <span class="t-green">"email"</span>: <span class="t-yellow">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3c565354527c515d5550125f5351">[email&#160;protected]</a>"</span>,
   <span id="bopla-hidden" style="display:none"><span class="t-red">"role"</span>: <span class="t-yellow">"user"</span>,         <span class="t-dim">← ⚠ CAMPO INTERNO</span>
   <span class="t-red">"balance"</span>: <span class="t-yellow">50.00</span>,       <span class="t-dim">← ⚠ CAMPO SENSIBLE</span>
   <span class="t-red">"is_admin"</span>: <span class="t-yellow">false</span>,      <span class="t-dim">← ⚠ FLAG INTERNO</span>
@@ -1230,3 +1232,4 @@ window.addEventListener('scroll',()=>{
   allNavBtns.forEach((b, i) => b.classList.toggle('active', current === 's' + (i + 1)));
 });
 </script>
+{% endraw %}
