@@ -1,0 +1,1232 @@
+---
+layout: post
+title: "OWASP API Top 10 — Laboratorio Interactivo"
+date: 2026-03-30
+categories: [offsec, api, web]
+tags: [owasp, api-security, pentest, red-team, interactive]
+---
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080808;--bg2:#0e0e0e;--bg3:#161616;--bg4:#222;--bg5:#2a2a2a;
+  --red:#ff1a1a;--red2:#cc0000;--red3:#ff4444;--red-dim:#551111;--red-glow:0 0 15px rgba(255,26,26,.5);
+  --green:#00ff41;--green2:#00cc33;--green-dim:rgba(0,255,65,.1);
+  --cyan:#00e5ff;--yellow:#ffd000;--orange:#ff6b00;--purple:#bb86fc;
+  --text:#d4d4d4;--text-dim:#777;--text-dark:#444;
+  --mono:'Fira Code',monospace;--head:'Orbitron',sans-serif;--body:'Chakra Petch',sans-serif;
+}
+html{scroll-behavior:smooth;font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden}
+::selection{background:var(--red);color:#000}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--red-dim);border-radius:3px}
+
+/* NAV */
+nav{position:sticky;top:0;left:0;right:0;z-index:100;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--red-dim);padding:0 20px}
+.nav-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;gap:12px;height:50px;overflow-x:auto}
+.nav-logo{font-family:var(--head);font-size:.7rem;color:var(--red);white-space:nowrap;letter-spacing:2px;text-shadow:var(--red-glow)}
+.nav-sep{color:var(--text-dark);font-size:.7rem}
+.nav-btn{
+  background:none;border:1px solid transparent;color:var(--text-dim);font-family:var(--mono);font-size:.65rem;
+  padding:5px 10px;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.nav-btn:hover,.nav-btn.active{color:var(--red);border-color:var(--red-dim);background:rgba(255,26,26,.05)}
+
+/* PROGRESS */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--red),var(--orange));z-index:1000;width:0;transition:width .15s}
+
+/* SECTIONS */
+.lab-section{padding:80px 20px 60px;max-width:1200px;margin:0 auto;min-height:100vh}
+.lab-section:first-of-type{padding-top:90px}
+.lab-header{display:flex;align-items:center;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.lab-num{font-family:var(--head);font-size:2.8rem;font-weight:900;color:var(--red);text-shadow:0 0 30px rgba(255,26,26,.3);line-height:1}
+.lab-title{font-family:var(--head);font-size:clamp(.9rem,2.5vw,1.4rem);font-weight:700;color:var(--text);letter-spacing:.5px}
+.lab-id{font-family:var(--mono);font-size:.7rem;color:var(--red);background:rgba(255,26,26,.1);padding:2px 8px;border-radius:3px;display:inline-block;margin-top:4px}
+.lab-desc{font-size:.85rem;color:var(--text-dim);max-width:750px;margin:12px 0 24px;line-height:1.7}
+
+/* INTERACTIVE CONTAINER */
+.sim-box{
+  background:var(--bg2);border:1px solid var(--bg4);border-radius:8px;
+  overflow:hidden;margin:20px 0;
+}
+.sim-toolbar{
+  display:flex;align-items:center;gap:8px;padding:10px 16px;
+  background:var(--bg3);border-bottom:1px solid var(--bg4);
+}
+.sim-dot{width:10px;height:10px;border-radius:50%}
+.sim-dot.r{background:#ff5f57}.sim-dot.y{background:#ffbd2e}.sim-dot.g{background:#28c840}
+.sim-label{font-family:var(--mono);font-size:.65rem;color:var(--text-dim);margin-left:auto}
+.sim-body{padding:24px;position:relative}
+
+/* FLOW DIAGRAM SVG CONTAINER */
+.flow-container{
+  width:100%;overflow-x:auto;padding:20px 0;
+}
+.flow-visual{
+  display:flex;align-items:center;gap:0;min-width:max-content;padding:10px 0;
+}
+.flow-node{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  min-width:120px;max-width:140px;cursor:pointer;transition:all .3s;position:relative;
+}
+.flow-node:hover{transform:translateY(-4px)}
+.flow-node.active .node-circle{background:var(--red);box-shadow:var(--red-glow);color:#000}
+.flow-node.done .node-circle{background:var(--green);box-shadow:0 0 15px rgba(0,255,65,.4);color:#000}
+.node-circle{
+  width:48px;height:48px;border-radius:50%;border:2px solid var(--red-dim);
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  font-family:var(--head);font-weight:900;font-size:.9rem;color:var(--red);
+  transition:all .4s;position:relative;z-index:2;
+}
+.node-label{font-family:var(--mono);font-size:.6rem;color:var(--text-dim);text-align:center;line-height:1.3;max-width:130px}
+.flow-arrow{
+  width:50px;height:2px;background:var(--red-dim);position:relative;flex-shrink:0;
+  display:flex;align-items:center;justify-content:flex-end;
+}
+.flow-arrow::after{content:'▶';color:var(--red-dim);font-size:.6rem;position:absolute;right:-2px}
+.flow-arrow.lit{background:var(--red);animation:arrowPulse 1s}
+.flow-arrow.lit::after{color:var(--red)}
+@keyframes arrowPulse{0%{opacity:.3}100%{opacity:1}}
+
+/* TERMINAL OUTPUT */
+.terminal{
+  background:#050505;border:1px solid var(--bg4);border-radius:6px;
+  padding:16px;font-family:var(--mono);font-size:.72rem;line-height:1.8;
+  max-height:350px;overflow-y:auto;margin:12px 0;white-space:pre-wrap;word-break:break-all;
+}
+.t-red{color:var(--red)}.t-green{color:var(--green)}.t-cyan{color:var(--cyan)}
+.t-yellow{color:var(--yellow)}.t-dim{color:var(--text-dim)}.t-orange{color:var(--orange)}
+.t-purple{color:var(--purple)}.t-white{color:#fff;font-weight:600}
+
+/* BUTTONS */
+.btn{
+  font-family:var(--mono);font-size:.72rem;padding:8px 18px;border-radius:4px;
+  cursor:pointer;transition:all .2s;border:1px solid;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-red{background:rgba(255,26,26,.1);border-color:var(--red-dim);color:var(--red)}
+.btn-red:hover{background:var(--red);color:#000;box-shadow:var(--red-glow)}
+.btn-green{background:rgba(0,255,65,.05);border-color:rgba(0,255,65,.3);color:var(--green)}
+.btn-green:hover{background:var(--green);color:#000}
+.btn-cyan{background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.3);color:var(--cyan)}
+.btn-cyan:hover{background:var(--cyan);color:#000}
+.btn-sm{padding:5px 12px;font-size:.65rem}
+.btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+
+/* GRID */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.sim-grid{grid-template-columns:1fr}}
+
+/* INPUT */
+.sim-input{
+  background:var(--bg);border:1px solid var(--bg4);border-radius:4px;
+  color:var(--text);font-family:var(--mono);font-size:.75rem;
+  padding:8px 12px;width:100%;outline:none;transition:border-color .2s;
+}
+.sim-input:focus{border-color:var(--red)}
+.sim-input::placeholder{color:var(--text-dark)}
+
+/* ENTITY BOXES */
+.entity{
+  border:1px solid var(--bg4);border-radius:8px;padding:16px;background:var(--bg);
+  text-align:center;transition:all .4s;position:relative;
+}
+.entity.highlight{border-color:var(--red);box-shadow:0 0 20px rgba(255,26,26,.2)}
+.entity.success{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,65,.2)}
+.entity.warn{border-color:var(--yellow);box-shadow:0 0 20px rgba(255,208,0,.2)}
+.entity-icon{font-size:2rem;margin-bottom:8px;display:block}
+.entity-name{font-family:var(--head);font-size:.7rem;color:var(--text);letter-spacing:1px}
+.entity-sub{font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-top:4px}
+
+/* PACKET ANIMATION */
+@keyframes packetMove{
+  0%{transform:translateX(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateX(var(--dist));opacity:0}
+}
+.packet{
+  position:absolute;width:12px;height:12px;border-radius:2px;
+  background:var(--red);box-shadow:var(--red-glow);z-index:10;
+}
+.packet.good{background:var(--green);box-shadow:0 0 10px rgba(0,255,65,.5)}
+
+/* STATUS BADGE */
+.status{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:.65rem;padding:3px 10px;border-radius:12px;
+}
+.status-ok{background:rgba(0,255,65,.1);color:var(--green);border:1px solid rgba(0,255,65,.2)}
+.status-fail{background:rgba(255,26,26,.1);color:var(--red);border:1px solid rgba(255,26,26,.2)}
+.status-warn{background:rgba(255,208,0,.1);color:var(--yellow);border:1px solid rgba(255,208,0,.2)}
+
+/* VISUAL DIAGRAM AREAS */
+.diagram-area{
+  background:var(--bg);border:1px solid var(--bg4);border-radius:8px;
+  padding:20px;min-height:200px;position:relative;overflow:hidden;
+}
+.diagram-title{font-family:var(--head);font-size:.65rem;color:var(--red);letter-spacing:2px;margin-bottom:16px;text-transform:uppercase}
+
+/* SERVER/CLIENT BOXES */
+.arch-box{
+  display:inline-flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 16px;border:1px solid var(--bg4);border-radius:6px;
+  background:var(--bg2);transition:all .4s;min-width:100px;
+}
+.arch-box .icon{font-size:1.5rem}
+.arch-box .label{font-family:var(--mono);font-size:.6rem;color:var(--text-dim)}
+.arch-box.attacked{border-color:var(--red);background:rgba(255,26,26,.08)}
+.arch-box.compromised{border-color:var(--red);background:rgba(255,26,26,.15);animation:pulse-border 1s infinite}
+@keyframes pulse-border{0%,100%{box-shadow:none}50%{box-shadow:0 0 15px rgba(255,26,26,.3)}}
+
+/* JWT Visualization */
+.jwt-part{
+  display:inline-block;padding:4px 8px;border-radius:3px;font-family:var(--mono);
+  font-size:.65rem;word-break:break-all;margin:2px;cursor:pointer;transition:all .2s;
+}
+.jwt-header{background:rgba(255,26,26,.15);color:var(--red);border:1px solid var(--red-dim)}
+.jwt-payload{background:rgba(187,134,252,.15);color:var(--purple);border:1px solid rgba(187,134,252,.3)}
+.jwt-sig{background:rgba(0,229,255,.15);color:var(--cyan);border:1px solid rgba(0,229,255,.3)}
+
+/* METER */
+.meter-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.meter-label{font-family:var(--mono);font-size:.6rem;color:var(--text-dim);min-width:50px}
+.meter-bar{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--bg4)}
+.meter-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.meter-fill.red{background:linear-gradient(90deg,var(--red2),var(--red))}
+.meter-fill.green{background:linear-gradient(90deg,var(--green2),var(--green))}
+
+/* SEPARATOR */
+.section-sep{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--red-dim),transparent);margin:0}
+
+/* HERO */
+.hero{text-align:center;padding:100px 20px 40px}
+.hero h1{font-family:var(--head);font-size:clamp(1.6rem,5vw,3.5rem);font-weight:900;color:var(--red);text-shadow:0 0 40px rgba(255,26,26,.25)}
+.hero h1 span{color:var(--text)}
+.hero-sub{font-size:1rem;color:var(--text-dim);margin-top:12px;font-weight:300}
+.hero-tag{font-family:var(--mono);font-size:.7rem;color:var(--red);border:1px solid var(--red-dim);display:inline-block;padding:4px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:2px}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .flow-visual{transform:scale(.85);transform-origin:left center}
+  .sim-grid{grid-template-columns:1fr}
+  .lab-num{font-size:2rem}
+}
+
+/* FOOTER */
+footer{text-align:center;padding:40px 20px;border-top:1px solid var(--bg3)}
+footer p{font-family:var(--mono);font-size:.65rem;color:var(--text-dark)}
+</style>
+
+<div id="prog"></div>
+
+<nav>
+  <div class="nav-inner">
+    <span class="nav-logo">◈ LABS://OWASP</span>
+    <span class="nav-sep">|</span>
+    <button class="nav-btn" onclick="scrollTo('#s1')">01:BOLA</button>
+    <button class="nav-btn" onclick="scrollTo('#s2')">02:AUTH</button>
+    <button class="nav-btn" onclick="scrollTo('#s3')">03:BOPLA</button>
+    <button class="nav-btn" onclick="scrollTo('#s4')">04:RESOURCE</button>
+    <button class="nav-btn" onclick="scrollTo('#s5')">05:BFLA</button>
+    <button class="nav-btn" onclick="scrollTo('#s6')">06:FLOWS</button>
+    <button class="nav-btn" onclick="scrollTo('#s7')">07:SSRF</button>
+    <button class="nav-btn" onclick="scrollTo('#s8')">08:MISCONFIG</button>
+    <button class="nav-btn" onclick="scrollTo('#s9')">09:INVENTORY</button>
+    <button class="nav-btn" onclick="scrollTo('#s10')">10:UNSAFE</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">◈ LABORATORIO INTERACTIVO ◈</div>
+  <h1>OWASP API <span>Top 10</span></h1>
+  <p class="hero-sub">10 simulaciones prácticas e interactivas — Haga clic en cada paso para visualizar el ataque en tiempo real.</p>
+</div>
+
+<!-- ======================= LAB 01: BOLA ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s1">
+  <div class="lab-header">
+    <div class="lab-num">01</div>
+    <div><div class="lab-title">Broken Object Level Authorization</div><span class="lab-id">API1:2023 — BOLA</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Un e-commerce expone un endpoint <code style="color:var(--red)">/api/users/{id}/orders</code>. El atacante está autenticado como User 101, pero cambia el ID para acceder a datos de otros usuarios. Haga clic en "Ejecutar Ataque" para simular la explotación paso a paso.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar">
+      <span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span>
+      <span class="sim-label">SIMULACIÓN BOLA — IDOR Attack</span>
+    </div>
+    <div class="sim-body">
+      <!-- Architecture diagram -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;margin-bottom:20px" id="bola-arch">
+        <div class="arch-box" id="bola-attacker">
+          <span class="icon">🔓</span>
+          <span class="label">ATACANTE</span>
+          <span style="font-family:var(--mono);font-size:.55rem;color:var(--yellow)">User ID: 101</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px" id="bola-req-area">
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--text-dark)" id="bola-req-text">— petición →</div>
+          <div style="width:100px;height:2px;background:var(--bg4);position:relative" id="bola-line1"></div>
+        </div>
+        <div class="arch-box" id="bola-api">
+          <span class="icon">⚙️</span>
+          <span class="label">API SERVER</span>
+          <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">/api/users/{id}/orders</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">— query →</div>
+          <div style="width:80px;height:2px;background:var(--bg4)"></div>
+        </div>
+        <div class="arch-box" id="bola-db">
+          <span class="icon">🗄️</span>
+          <span class="label">DATABASE</span>
+          <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">users & orders</span>
+        </div>
+      </div>
+
+      <!-- Interactive flow -->
+      <div class="flow-container">
+        <div class="flow-visual" id="bola-flow">
+          <div class="flow-node" id="bola-s1"><div class="node-circle">1</div><div class="node-label">Login legítimo como User 101</div></div>
+          <div class="flow-arrow" id="bola-a1"></div>
+          <div class="flow-node" id="bola-s2"><div class="node-circle">2</div><div class="node-label">GET /api/users/101/orders (datos propios)</div></div>
+          <div class="flow-arrow" id="bola-a2"></div>
+          <div class="flow-node" id="bola-s3"><div class="node-circle">3</div><div class="node-label">Modificar ID: /users/102/orders</div></div>
+          <div class="flow-arrow" id="bola-a3"></div>
+          <div class="flow-node" id="bola-s4"><div class="node-circle">4</div><div class="node-label">API NO valida ownership del recurso</div></div>
+          <div class="flow-arrow" id="bola-a4"></div>
+          <div class="flow-node" id="bola-s5"><div class="node-circle">5</div><div class="node-label">200 OK — Datos de víctima expuestos</div></div>
+          <div class="flow-arrow" id="bola-a5"></div>
+          <div class="flow-node" id="bola-s6"><div class="node-circle">6</div><div class="node-label">Script enumera IDs 102→999 masivamente</div></div>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div style="margin-bottom:8px;font-family:var(--mono);font-size:.65rem;color:var(--text-dim)">▸ ID de usuario a consultar:</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="btn btn-green btn-sm" onclick="bolaQuery(101)">ID: 101 (propio)</button>
+            <button class="btn btn-red btn-sm" onclick="bolaQuery(102)">ID: 102 (víctima)</button>
+            <button class="btn btn-red btn-sm" onclick="bolaQuery(103)">ID: 103 (víctima)</button>
+            <button class="btn btn-cyan btn-sm" onclick="bolaRunAll()">⚡ Enumerar 101→110</button>
+          </div>
+          <button class="btn btn-red" id="bola-run-btn" onclick="bolaAnimate()">▶ Ejecutar Flujo de Ataque</button>
+          <button class="btn btn-green btn-sm" style="margin-left:6px" onclick="bolaReset()">↺ Reset</button>
+        </div>
+        <div class="terminal" id="bola-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Esperando acción del operador...</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 02: BROKEN AUTH ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s2">
+  <div class="lab-header">
+    <div class="lab-num">02</div>
+    <div><div class="lab-title">Broken Authentication</div><span class="lab-id">API2:2023 — JWT Attack</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una API usa JWT con verificación de firma defectuosa (acepta alg:none). El atacante decodifica su token, modifica el rol a "admin" y elimina la firma. Haga clic en cada paso para ver cómo se forja el token.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar">
+      <span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span>
+      <span class="sim-label">SIMULACIÓN JWT — Algorithm Confusion Attack</span>
+    </div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="jwt-flow">
+          <div class="flow-node" id="jwt-s1"><div class="node-circle">1</div><div class="node-label">Capturar JWT del token propio</div></div>
+          <div class="flow-arrow" id="jwt-a1"></div>
+          <div class="flow-node" id="jwt-s2"><div class="node-circle">2</div><div class="node-label">Decodificar Base64 (header + payload)</div></div>
+          <div class="flow-arrow" id="jwt-a2"></div>
+          <div class="flow-node" id="jwt-s3"><div class="node-circle">3</div><div class="node-label">Cambiar alg:RS256 → alg:none</div></div>
+          <div class="flow-arrow" id="jwt-a3"></div>
+          <div class="flow-node" id="jwt-s4"><div class="node-circle">4</div><div class="node-label">Cambiar role:user → role:admin</div></div>
+          <div class="flow-arrow" id="jwt-a4"></div>
+          <div class="flow-node" id="jwt-s5"><div class="node-circle">5</div><div class="node-label">Re-encodar sin firma → Token forjado</div></div>
+          <div class="flow-arrow" id="jwt-a5"></div>
+          <div class="flow-node" id="jwt-s6"><div class="node-circle">6</div><div class="node-label">Enviar al server → Acceso admin</div></div>
+        </div>
+      </div>
+
+      <!-- JWT Visual -->
+      <div style="margin:16px 0;text-align:center">
+        <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:8px">TOKEN JWT ACTUAL:</div>
+        <div id="jwt-display" style="word-break:break-all;max-width:100%;padding:12px;background:var(--bg);border:1px solid var(--bg4);border-radius:6px;text-align:left">
+          <span class="jwt-header" id="jwt-h">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9</span><span style="color:var(--text-dark)">.</span><span class="jwt-payload" id="jwt-p">eyJzdWIiOiJ1c2VyMTAxIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MDAwMDAwMDB9</span><span style="color:var(--text-dark)">.</span><span class="jwt-sig" id="jwt-s">SflKxwRJSMeKKF2QT4fw...</span>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div id="jwt-decoded" style="background:var(--bg);border:1px solid var(--bg4);border-radius:6px;padding:12px;font-family:var(--mono);font-size:.68rem;line-height:1.8">
+            <div style="color:var(--text-dim);margin-bottom:4px">▸ HEADER:</div>
+            <div id="jwt-dec-h" style="color:var(--red)">{"alg":"RS256","typ":"JWT"}</div>
+            <div style="color:var(--text-dim);margin:8px 0 4px">▸ PAYLOAD:</div>
+            <div id="jwt-dec-p" style="color:var(--purple)">{"sub":"user101","role":"user","iat":1700000000}</div>
+            <div style="color:var(--text-dim);margin:8px 0 4px">▸ SIGNATURE:</div>
+            <div id="jwt-dec-s" style="color:var(--cyan)">SflKxwRJSMeKKF2QT4fw... (RS256 válida)</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-red btn-sm" onclick="jwtStep(1)">Paso 1: Capturar</button>
+            <button class="btn btn-red btn-sm" onclick="jwtStep(2)">Paso 2: Decodificar</button>
+            <button class="btn btn-red btn-sm" onclick="jwtStep(3)">Paso 3: alg→none</button>
+            <button class="btn btn-red btn-sm" onclick="jwtStep(4)">Paso 4: role→admin</button>
+            <button class="btn btn-red btn-sm" onclick="jwtStep(5)">Paso 5: Re-encodar</button>
+            <button class="btn btn-red btn-sm" onclick="jwtStep(6)">Paso 6: Enviar</button>
+          </div>
+          <button class="btn btn-red" style="margin-top:8px" onclick="jwtAutoPlay()">▶ Ejecutar Todo Automáticamente</button>
+          <button class="btn btn-green btn-sm" style="margin-left:6px;margin-top:8px" onclick="jwtReset()">↺ Reset</button>
+        </div>
+        <div class="terminal" id="jwt-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">JWT interceptado. Listo para manipulación...</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 03: BOPLA ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s3">
+  <div class="lab-header">
+    <div class="lab-num">03</div>
+    <div><div class="lab-title">Broken Object Property Level Authorization</div><span class="lab-id">API3:2023 — BOPLA</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una API de perfil de usuario retorna campos internos (role, balance, is_admin) que no deberían ser visibles. El atacante los descubre y luego los manipula vía Mass Assignment en un PUT request.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN BOPLA — Excessive Data + Mass Assignment</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="bopla-flow">
+          <div class="flow-node" id="bopla-s1"><div class="node-circle">1</div><div class="node-label">GET /api/me (perfil propio)</div></div>
+          <div class="flow-arrow" id="bopla-a1"></div>
+          <div class="flow-node" id="bopla-s2"><div class="node-circle">2</div><div class="node-label">Respuesta con campos ocultos expuestos</div></div>
+          <div class="flow-arrow" id="bopla-a2"></div>
+          <div class="flow-node" id="bopla-s3"><div class="node-circle">3</div><div class="node-label">Identificar: role, balance, is_admin</div></div>
+          <div class="flow-arrow" id="bopla-a3"></div>
+          <div class="flow-node" id="bopla-s4"><div class="node-circle">4</div><div class="node-label">PUT /api/me con campos inyectados</div></div>
+          <div class="flow-arrow" id="bopla-a4"></div>
+          <div class="flow-node" id="bopla-s5"><div class="node-circle">5</div><div class="node-label">role→admin, balance→$99999 ✓</div></div>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:6px">▸ RESPUESTA API (lo que ve el frontend vs lo que envía la API):</div>
+          <div id="bopla-response" style="background:var(--bg);border:1px solid var(--bg4);border-radius:6px;padding:14px;font-family:var(--mono);font-size:.68rem;line-height:1.9">
+<span class="t-dim">{</span>
+  <span class="t-green">"name"</span>: <span class="t-yellow">"john_doe"</span>,
+  <span class="t-green">"email"</span>: <span class="t-yellow">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="147e7b7c7a5479757d783a777b79">[email&#160;protected]</a>"</span>,
+  <span id="bopla-hidden" style="display:none"><span class="t-red">"role"</span>: <span class="t-yellow">"user"</span>,         <span class="t-dim">← ⚠ CAMPO INTERNO</span>
+  <span class="t-red">"balance"</span>: <span class="t-yellow">50.00</span>,       <span class="t-dim">← ⚠ CAMPO SENSIBLE</span>
+  <span class="t-red">"is_admin"</span>: <span class="t-yellow">false</span>,      <span class="t-dim">← ⚠ FLAG INTERNO</span>
+  <span class="t-red">"pwd_hash"</span>: <span class="t-yellow">"$2b$12..."</span>, <span class="t-dim">← ⚠ ¡HASH!</span>
+  </span><span class="t-green">"avatar"</span>: <span class="t-yellow">"/img/john.jpg"</span>
+<span class="t-dim">}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-red btn-sm" onclick="boplaStep(1)">1. GET /api/me</button>
+            <button class="btn btn-red btn-sm" onclick="boplaStep(2)">2. Revelar Campos</button>
+            <button class="btn btn-red btn-sm" onclick="boplaStep(3)">3. Analizar</button>
+            <button class="btn btn-red btn-sm" onclick="boplaStep(4)">4. PUT Mass Assign</button>
+            <button class="btn btn-red btn-sm" onclick="boplaStep(5)">5. Escalada!</button>
+          </div>
+          <button class="btn btn-green btn-sm" style="margin-top:8px" onclick="boplaReset()">↺ Reset</button>
+        </div>
+        <div class="terminal" id="bopla-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Interceptando API responses con Burp Suite...</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 04: RESOURCE CONSUMPTION ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s4">
+  <div class="lab-header">
+    <div class="lab-num">04</div>
+    <div><div class="lab-title">Unrestricted Resource Consumption</div><span class="lab-id">API4:2023</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Un endpoint de listado de productos no limita el parámetro page_size. El atacante envía page_size=1000000 y solicitudes masivas, agotando la memoria del servidor hasta provocar un crash.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN DoS — Resource Exhaustion</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="res-flow">
+          <div class="flow-node" id="res-s1"><div class="node-circle">1</div><div class="node-label">Descubrir endpoint sin rate limit</div></div>
+          <div class="flow-arrow" id="res-a1"></div>
+          <div class="flow-node" id="res-s2"><div class="node-circle">2</div><div class="node-label">Enviar page_size= 1000000</div></div>
+          <div class="flow-arrow" id="res-a2"></div>
+          <div class="flow-node" id="res-s3"><div class="node-circle">3</div><div class="node-label">Servidor asigna GB de RAM</div></div>
+          <div class="flow-arrow" id="res-a3"></div>
+          <div class="flow-node" id="res-s4"><div class="node-circle">4</div><div class="node-label">Repetir x1000 concurrentemente</div></div>
+          <div class="flow-arrow" id="res-a4"></div>
+          <div class="flow-node" id="res-s5"><div class="node-circle">5</div><div class="node-label">OOM Kill → Servicio caído ☠</div></div>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:8px">▸ SERVIDOR TARGET — Estado en tiempo real:</div>
+          <div class="meter-row"><span class="meter-label">CPU</span><div class="meter-bar"><div class="meter-fill green" id="res-cpu" style="width:12%"></div></div><span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)" id="res-cpu-v">12%</span></div>
+          <div class="meter-row"><span class="meter-label">RAM</span><div class="meter-bar"><div class="meter-fill green" id="res-ram" style="width:23%"></div></div><span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)" id="res-ram-v">23%</span></div>
+          <div class="meter-row"><span class="meter-label">DISCO</span><div class="meter-bar"><div class="meter-fill green" id="res-disk" style="width:45%"></div></div><span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)" id="res-disk-v">45%</span></div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
+            <span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)">Requests enviados:</span>
+            <span style="font-family:var(--head);font-size:1.2rem;color:var(--red)" id="res-count">0</span>
+            <span id="res-status" class="status status-ok">● ONLINE</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-red" id="res-atk-btn" onclick="resAttack()">⚡ Lanzar Ataque DoS</button>
+            <button class="btn btn-green btn-sm" onclick="resReset()">↺ Reset Servidor</button>
+          </div>
+        </div>
+        <div class="terminal" id="res-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Target identificado. Rate limiting: NINGUNO.</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 05: BFLA ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s5">
+  <div class="lab-header">
+    <div class="lab-num">05</div>
+    <div><div class="lab-title">Broken Function Level Authorization</div><span class="lab-id">API5:2023 — BFLA</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una API tiene endpoints de usuario y admin. El middleware verifica el rol para GET pero olvida verificarlo para DELETE. El atacante, con rol "user", puede eliminar cuentas como si fuera admin.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN BFLA — Privilege Escalation por Método HTTP</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="bfla-flow">
+          <div class="flow-node" id="bfla-s1"><div class="node-circle">1</div><div class="node-label">Login como role:user</div></div>
+          <div class="flow-arrow" id="bfla-a1"></div>
+          <div class="flow-node" id="bfla-s2"><div class="node-circle">2</div><div class="node-label">GET /api/users/102 → 200 OK</div></div>
+          <div class="flow-arrow" id="bfla-a2"></div>
+          <div class="flow-node" id="bfla-s3"><div class="node-circle">3</div><div class="node-label">Descubrir /api/admin/users</div></div>
+          <div class="flow-arrow" id="bfla-a3"></div>
+          <div class="flow-node" id="bfla-s4"><div class="node-circle">4</div><div class="node-label">DELETE /api/admin/users/102</div></div>
+          <div class="flow-arrow" id="bfla-a4"></div>
+          <div class="flow-node" id="bfla-s5"><div class="node-circle">5</div><div class="node-label">200 OK — Usuario eliminado ☠</div></div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:10px">▸ Probar diferentes métodos HTTP con rol "user" — observe cuáles son bloqueados y cuáles no:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-green btn-sm" onclick="bflaTest('GET','/api/users/102','allowed')">GET /api/users/102</button>
+        <button class="btn btn-red btn-sm" onclick="bflaTest('DELETE','/api/admin/users/102','vuln')">DELETE /api/admin/users/102</button>
+        <button class="btn btn-red btn-sm" onclick="bflaTest('PUT','/api/admin/users/102','vuln')">PUT /api/admin/users/102</button>
+        <button class="btn btn-red btn-sm" onclick="bflaTest('POST','/api/admin/users/create','vuln')">POST /api/admin/users/create</button>
+        <button class="btn btn-cyan btn-sm" onclick="bflaTest('GET','/api/admin/dashboard','blocked')">GET /api/admin/dashboard</button>
+      </div>
+      <div class="terminal" id="bfla-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Sesión activa como role:user. Probando endpoints...</span>
+</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 06: BUSINESS FLOWS ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s6">
+  <div class="lab-header">
+    <div class="lab-num">06</div>
+    <div><div class="lab-title">Unrestricted Access to Sensitive Business Flows</div><span class="lab-id">API6:2023 — Business Logic Abuse</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una app de ride-sharing tiene un programa de referidos que da $10 de crédito por cada amigo registrado. El atacante automatiza el registro de cuentas falsas para acumular crédito ilimitado.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN — Referral Program Abuse Bot</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="biz-flow">
+          <div class="flow-node" id="biz-s1"><div class="node-circle">1</div><div class="node-label">Analizar API de referidos</div></div>
+          <div class="flow-arrow" id="biz-a1"></div>
+          <div class="flow-node" id="biz-s2"><div class="node-circle">2</div><div class="node-label">Script genera emails temporales</div></div>
+          <div class="flow-arrow" id="biz-a2"></div>
+          <div class="flow-node" id="biz-s3"><div class="node-circle">3</div><div class="node-label">POST /api/register con referral_code</div></div>
+          <div class="flow-arrow" id="biz-a3"></div>
+          <div class="flow-node" id="biz-s4"><div class="node-circle">4</div><div class="node-label">+$10 crédito por cada registro</div></div>
+          <div class="flow-arrow" id="biz-a4"></div>
+          <div class="flow-node" id="biz-s5"><div class="node-circle">5</div><div class="node-label">Repetir x1000 → $10,000 en wallet</div></div>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:8px">▸ Panel del Atacante — Wallet & Bot Status:</div>
+          <div style="background:var(--bg);border:1px solid var(--bg4);border-radius:8px;padding:16px;text-align:center">
+            <div style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim)">CRÉDITO ACUMULADO</div>
+            <div style="font-family:var(--head);font-size:2.5rem;font-weight:900;color:var(--green)" id="biz-wallet">$0.00</div>
+            <div style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim);margin-top:4px">Cuentas falsas creadas: <span id="biz-accounts" style="color:var(--red)">0</span></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:12px">
+            <button class="btn btn-red" id="biz-btn" onclick="bizAttack()">⚡ Iniciar Bot de Referidos</button>
+            <button class="btn btn-green btn-sm" onclick="bizReset()">↺ Reset</button>
+          </div>
+        </div>
+        <div class="terminal" id="biz-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Referral code obtenido: REF-ATK-7X92. Bot listo...</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 07: SSRF ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s7">
+  <div class="lab-header">
+    <div class="lab-num">07</div>
+    <div><div class="lab-title">Server Side Request Forgery</div><span class="lab-id">API7:2023 — SSRF</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una API de red social permite subir foto de perfil por URL. El servidor descarga la imagen internamente. El atacante envía una URL apuntando al servicio de metadata de AWS (169.254.169.254) para robar credenciales IAM.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN SSRF — Cloud Credential Theft via Image Upload</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="ssrf-flow">
+          <div class="flow-node" id="ssrf-s1"><div class="node-circle">1</div><div class="node-label">Endpoint: POST /api/profile/picture</div></div>
+          <div class="flow-arrow" id="ssrf-a1"></div>
+          <div class="flow-node" id="ssrf-s2"><div class="node-circle">2</div><div class="node-label">Enviar URL: 169.254.169.254</div></div>
+          <div class="flow-arrow" id="ssrf-a2"></div>
+          <div class="flow-node" id="ssrf-s3"><div class="node-circle">3</div><div class="node-label">Servidor hace GET a la URL internamente</div></div>
+          <div class="flow-arrow" id="ssrf-a3"></div>
+          <div class="flow-node" id="ssrf-s4"><div class="node-circle">4</div><div class="node-label">AWS Metadata retorna credenciales IAM</div></div>
+          <div class="flow-arrow" id="ssrf-a4"></div>
+          <div class="flow-node" id="ssrf-s5"><div class="node-circle">5</div><div class="node-label">Credenciales expuestas al atacante</div></div>
+        </div>
+      </div>
+
+      <div class="sim-grid">
+        <div>
+          <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:6px">▸ Ingrese la URL de "imagen de perfil":</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="btn btn-green btn-sm" onclick="ssrfSend('https://img.example.com/avatar.jpg')">URL legítima ✓</button>
+            <button class="btn btn-red btn-sm" onclick="ssrfSend('http://169.254.169.254/latest/meta-data/iam/security-credentials/')">⚡ AWS Metadata</button>
+            <button class="btn btn-red btn-sm" onclick="ssrfSend('http://10.0.0.1:6379/')">⚡ Redis Interno</button>
+            <button class="btn btn-red btn-sm" onclick="ssrfSend('http://10.0.0.5:3306/')">⚡ MySQL Interno</button>
+          </div>
+
+          <!-- Network diagram -->
+          <div class="diagram-area" id="ssrf-diagram">
+            <div class="diagram-title">Red Interna del Target</div>
+            <div style="display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap;gap:12px">
+              <div class="arch-box" id="ssrf-ext"><span class="icon">🌐</span><span class="label">INTERNET</span></div>
+              <div style="font-size:.8rem;color:var(--text-dark)">→</div>
+              <div class="arch-box" id="ssrf-fw" style="border-color:var(--yellow)"><span class="icon">🛡️</span><span class="label">FIREWALL</span></div>
+              <div style="font-size:.8rem;color:var(--text-dark)">→</div>
+              <div class="arch-box" id="ssrf-api"><span class="icon">⚙️</span><span class="label">API SERVER</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">10.0.0.2</span></div>
+              <div style="font-size:.8rem;color:var(--text-dark)">→</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="arch-box" id="ssrf-meta"><span class="icon">☁️</span><span class="label">AWS METADATA</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">169.254.169.254</span></div>
+                <div class="arch-box" id="ssrf-redis"><span class="icon">🔴</span><span class="label">REDIS</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">10.0.0.1:6379</span></div>
+                <div class="arch-box" id="ssrf-mysql"><span class="icon">🐬</span><span class="label">MySQL</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">10.0.0.5:3306</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="terminal" id="ssrf-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Endpoint de upload detectado. Seleccione URL a inyectar...</span>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 08: MISCONFIG ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s8">
+  <div class="lab-header">
+    <div class="lab-num">08</div>
+    <div><div class="lab-title">Security Misconfiguration</div><span class="lab-id">API8:2023</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Un auditor evalúa la configuración de una API en producción. Revise cada configuración y observe qué vulnerabilidades introduce cada misconfiguration. Haga clic en cada toggle para ver el impacto.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">AUDIT — Security Configuration Scanner</span></div>
+    <div class="sim-body">
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:12px">▸ Haga clic en cada configuración para ver el resultado del análisis:</div>
+      <div id="misconfig-list" style="display:flex;flex-direction:column;gap:8px">
+        <!-- rendered by JS -->
+      </div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+        <span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)">Resultado del Audit:</span>
+        <span id="mc-score" style="font-family:var(--head);font-size:1.5rem;font-weight:900;color:var(--red)">0/7</span>
+        <span id="mc-verdict" class="status status-fail">● INSEGURO</span>
+      </div>
+      <div class="terminal" id="mc-term" style="margin-top:12px"><span class="t-dim">scanner@audit:~$ </span><span class="t-green">Iniciando audit de configuración...</span>
+</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 09: INVENTORY ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s9">
+  <div class="lab-header">
+    <div class="lab-num">09</div>
+    <div><div class="lab-title">Improper Inventory Management</div><span class="lab-id">API9:2023</span></div>
+  </div>
+  <p class="lab-desc">Escenario: El atacante descubre que aunque /api/v3/ tiene MFA y rate limiting, la versión antigua /api/v1/ sigue activa sin controles de seguridad. Los tokens de v1 funcionan en v3.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN — Shadow API & Version Discovery</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="inv-flow">
+          <div class="flow-node" id="inv-s1"><div class="node-circle">1</div><div class="node-label">Detectar v3 como versión actual</div></div>
+          <div class="flow-arrow" id="inv-a1"></div>
+          <div class="flow-node" id="inv-s2"><div class="node-circle">2</div><div class="node-label">Fuzzing: probar /v1/ y /v2/</div></div>
+          <div class="flow-arrow" id="inv-a2"></div>
+          <div class="flow-node" id="inv-s3"><div class="node-circle">3</div><div class="node-label">/v1/ responde 200 — sin MFA!</div></div>
+          <div class="flow-arrow" id="inv-a3"></div>
+          <div class="flow-node" id="inv-s4"><div class="node-circle">4</div><div class="node-label">Brute-force login en /v1/</div></div>
+          <div class="flow-arrow" id="inv-a4"></div>
+          <div class="flow-node" id="inv-s5"><div class="node-circle">5</div><div class="node-label">Token v1 funciona en v3 ☠</div></div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:8px">▸ Escanear versiones de API — haga clic para probar cada endpoint:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-cyan btn-sm" onclick="invScan('/api/v3/login','secured')">Probar /api/v3/login</button>
+        <button class="btn btn-red btn-sm" onclick="invScan('/api/v2/login','partial')">Probar /api/v2/login</button>
+        <button class="btn btn-red btn-sm" onclick="invScan('/api/v1/login','vulnerable')">Probar /api/v1/login</button>
+        <button class="btn btn-red btn-sm" onclick="invScan('/api/v1/debug','exposed')">Probar /api/v1/debug</button>
+        <button class="btn btn-red btn-sm" onclick="invScan('/api/internal/health','internal')">Probar /api/internal/health</button>
+      </div>
+      <div class="terminal" id="inv-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Iniciando descubrimiento de versiones de API...</span>
+</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= LAB 10: UNSAFE CONSUMPTION ======================= -->
+<div class="section-sep"></div>
+<section class="lab-section" id="s10">
+  <div class="lab-header">
+    <div class="lab-num">10</div>
+    <div><div class="lab-title">Unsafe Consumption of APIs</div><span class="lab-id">API10:2023 — Supply Chain</span></div>
+  </div>
+  <p class="lab-desc">Escenario: Una API de e-commerce enriquece direcciones de negocio usando un servicio de terceros. El atacante compromete ese servicio y almacena un payload SQLi en el campo "business_name". Cuando la API víctima consulta el servicio, el payload se ejecuta en su base de datos.</p>
+
+  <div class="sim-box">
+    <div class="sim-toolbar"><span class="sim-dot r"></span><span class="sim-dot y"></span><span class="sim-dot g"></span><span class="sim-label">SIMULACIÓN — Supply Chain Attack via Third-Party API</span></div>
+    <div class="sim-body">
+      <div class="flow-container">
+        <div class="flow-visual" id="unsafe-flow">
+          <div class="flow-node" id="unsafe-s1"><div class="node-circle">1</div><div class="node-label">Atacante compromete API de terceros</div></div>
+          <div class="flow-arrow" id="unsafe-a1"></div>
+          <div class="flow-node" id="unsafe-s2"><div class="node-circle">2</div><div class="node-label">Inyecta SQLi en campo business_name</div></div>
+          <div class="flow-arrow" id="unsafe-a2"></div>
+          <div class="flow-node" id="unsafe-s3"><div class="node-circle">3</div><div class="node-label">API víctima consulta servicio de terceros</div></div>
+          <div class="flow-arrow" id="unsafe-a3"></div>
+          <div class="flow-node" id="unsafe-s4"><div class="node-circle">4</div><div class="node-label">Dato insertado en SQL sin sanitizar</div></div>
+          <div class="flow-arrow" id="unsafe-a4"></div>
+          <div class="flow-node" id="unsafe-s5"><div class="node-circle">5</div><div class="node-label">SQLi ejecutado → DB exfiltrada ☠</div></div>
+        </div>
+      </div>
+
+      <!-- Visual architecture -->
+      <div class="diagram-area" style="margin-bottom:16px">
+        <div class="diagram-title">Cadena de Suministro — Supply Chain</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap">
+          <div class="arch-box" id="uc-attacker" style="border-color:var(--red)"><span class="icon">💀</span><span class="label">ATACANTE</span></div>
+          <div style="font-size:.8rem;color:var(--red)">⟶ compromete</div>
+          <div class="arch-box" id="uc-third"><span class="icon">🏢</span><span class="label">API TERCEROS</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Geocoding Service</span></div>
+          <div style="font-size:.8rem;color:var(--text-dark)" id="uc-arrow2">⟵ consulta</div>
+          <div class="arch-box" id="uc-victim"><span class="icon">🎯</span><span class="label">API VÍCTIMA</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">E-Commerce</span></div>
+          <div style="font-size:.8rem;color:var(--text-dark)">⟶</div>
+          <div class="arch-box" id="uc-db"><span class="icon">🗄️</span><span class="label">DATABASE</span><span style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">PostgreSQL</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn btn-red" onclick="unsafeAttack()">▶ Ejecutar Ataque Supply Chain</button>
+        <button class="btn btn-green btn-sm" onclick="unsafeReset()">↺ Reset</button>
+      </div>
+      <div class="terminal" id="unsafe-term"><span class="t-dim">root@attacker:~$ </span><span class="t-green">Acceso obtenido al panel admin del Geocoding Service...</span>
+</div>
+    </div>
+  </div>
+</section>
+
+<footer><p style="color:var(--red)">OWASP API Security Top 10 — 2023</p><p>Laboratorio Interactivo | Red Team Briefing | Open-Sec</p></footer>
+
+<script>
+
+// ═══════ UTILITIES ═══════
+function scrollTo(sel){document.querySelector(sel).scrollIntoView({behavior:'smooth'})}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function typeIn(termId,text,cls='t-white'){
+  const t=document.getElementById(termId);
+  t.innerHTML+=`\n<span class="${cls}">${text}</span>`;
+  t.scrollTop=t.scrollHeight;
+}
+function activateStep(prefix,n){
+  const node=document.getElementById(`${prefix}-s${n}`);
+  if(node)node.classList.add('active');
+  const arrow=document.getElementById(`${prefix}-a${n-1}`);
+  if(arrow)arrow.classList.add('lit');
+}
+function doneStep(prefix,n){
+  const node=document.getElementById(`${prefix}-s${n}`);
+  if(node){node.classList.remove('active');node.classList.add('done')}
+}
+function resetFlow(prefix,count){
+  for(let i=1;i<=count;i++){
+    const n=document.getElementById(`${prefix}-s${i}`);
+    if(n){n.classList.remove('active','done')}
+    const a=document.getElementById(`${prefix}-a${i}`);
+    if(a)a.classList.remove('lit');
+  }
+  const a0=document.getElementById(`${prefix}-a0`);if(a0)a0.classList.remove('lit');
+}
+
+// Progress bar
+window.addEventListener('scroll',()=>{
+  const s=window.scrollY,h=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('prog').style.width=(s/h*100)+'%';
+});
+
+// ═══════ LAB 01: BOLA ═══════
+async function bolaAnimate(){
+  bolaReset();
+  const t='bola-term';
+  document.getElementById('bola-run-btn').disabled=true;
+  for(let i=1;i<=6;i++){
+    activateStep('bola',i);
+    if(i===1){typeIn(t,'[STEP 1] Autenticación exitosa como User 101','t-green');
+      document.getElementById('bola-attacker').classList.add('attacked');}
+    if(i===2){typeIn(t,'[STEP 2] GET /api/users/101/orders → 200 OK','t-cyan');typeIn(t,'  → {"orders":[{"id":501,"item":"Laptop","total":"$1200"}]}','t-dim');}
+    if(i===3){typeIn(t,'[STEP 3] ⚡ Modificando ID: 101 → 102','t-red');
+      document.getElementById('bola-req-text').textContent='GET /users/102/orders →';
+      document.getElementById('bola-req-text').style.color='var(--red)';}
+    if(i===4){typeIn(t,'[STEP 4] API ejecuta: SELECT * FROM orders WHERE user_id=102','t-yellow');typeIn(t,'  ⚠ NO verifica si user_id=102 pertenece al token de auth (user 101)','t-red');}
+    if(i===5){typeIn(t,'[STEP 5] 200 OK — DATOS DE LA VÍCTIMA:','t-red');typeIn(t,'  → {"orders":[{"id":780,"item":"iPhone 15","total":"$999"},{"id":781,"item":"AirPods","total":"$249"}]}','t-orange');
+      document.getElementById('bola-api').classList.add('compromised');}
+    if(i===6){typeIn(t,'[STEP 6] Iniciando enumeración masiva: IDs 103→999...','t-red');typeIn(t,'  → 897 registros de usuario exfiltrados en 14 segundos','t-orange');}
+    await sleep(1200);
+    doneStep('bola',i);
+  }
+  document.getElementById('bola-run-btn').disabled=false;
+}
+function bolaQuery(id){
+  const t='bola-term';
+  if(id===101){typeIn(t,`\nGET /api/users/${id}/orders → 200 OK`,'t-green');typeIn(t,'  → {"orders":[{"id":501,"item":"Laptop","total":"$1200"}]}  [DATOS PROPIOS ✔]','t-green');}
+  else{typeIn(t,`\nGET /api/users/${id}/orders → 200 OK`,'t-red');typeIn(t,`  → {"orders":[...]} [⚠ BOLA: Datos de User ${id} accedidos sin autorización]`,'t-red');
+    document.getElementById('bola-api').classList.add('compromised');}
+}
+async function bolaRunAll(){
+  const t='bola-term';
+  typeIn(t,'\n⚡ Iniciando enumeración automatizada...','t-red');
+  for(let i=101;i<=110;i++){
+    await sleep(300);
+    const color=i===101?'t-green':'t-red';
+    const tag=i===101?'[PROPIO ✔]':'[⚠ BOLA]';
+    typeIn(t,`  GET /api/users/${i}/orders → 200 OK ${tag}`,color);
+  }
+  typeIn(t,'\n✓ 10/10 cuentas accedidas. 9 registros no autorizados exfiltrados.','t-orange');
+}
+function bolaReset(){
+  resetFlow('bola',6);
+  document.getElementById('bola-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">Esperando acción del operador...</span>\n';
+  document.querySelectorAll('#bola-arch .arch-box').forEach(b=>b.classList.remove('attacked','compromised'));
+  document.getElementById('bola-req-text').textContent='— petición →';
+  document.getElementById('bola-req-text').style.color='var(--text-dark)';
+}
+
+// ═══════ LAB 02: JWT ═══════
+let jwtState=0;
+async function jwtStep(step){
+  const t='jwt-term';
+  if(step===1){
+    activateStep('jwt',1);
+    typeIn(t,'\n[STEP 1] JWT capturado del header Authorization:','t-cyan');
+    typeIn(t,'  Bearer eyJhbGciOiJSUzI1NiIs...','t-dim');
+    await sleep(400);doneStep('jwt',1);
+  }
+  if(step===2){
+    activateStep('jwt',2);
+    typeIn(t,'\n[STEP 2] Decodificando Base64...','t-cyan');
+    typeIn(t,'  Header:  {"alg":"RS256","typ":"JWT"}','t-red');
+    typeIn(t,'  Payload: {"sub":"user101","role":"user","iat":1700000000}','t-purple');
+    typeIn(t,'  Sig:     SflKxwRJSMeKKF2QT4fw... (firma RS256)','t-cyan');
+    document.getElementById('jwt-h').style.boxShadow='0 0 10px rgba(255,26,26,.4)';
+    document.getElementById('jwt-p').style.boxShadow='0 0 10px rgba(187,134,252,.4)';
+    await sleep(400);doneStep('jwt',2);
+  }
+  if(step===3){
+    activateStep('jwt',3);
+    typeIn(t,'\n[STEP 3] ⚡ Cambiando algoritmo: RS256 → none','t-red');
+    document.getElementById('jwt-dec-h').innerHTML='{"alg":"<span style="color:var(--red);font-weight:700;text-shadow:var(--red-glow)">none</span>","typ":"JWT"}';
+    document.getElementById('jwt-h').innerHTML='eyJhbGciOiI<span style="color:#fff;font-weight:700">bm9uZQ</span>iLCJ0eXAiOiJKV1QifQ';
+    await sleep(400);doneStep('jwt',3);
+  }
+  if(step===4){
+    activateStep('jwt',4);
+    typeIn(t,'\n[STEP 4] ⚡ Cambiando role: user → admin','t-red');
+    document.getElementById('jwt-dec-p').innerHTML='{"sub":"user101","role":"<span style="color:var(--red);font-weight:700;text-shadow:var(--red-glow)">admin</span>","iat":1700000000}';
+    document.getElementById('jwt-p').innerHTML='eyJzdWIiOiJ1c2VyMTAxIiwicm9sZSI6I<span style="color:#fff;font-weight:700">mFkbWlu</span>IiwiaWF0IjoxNzAwMDAwMDAw';
+    await sleep(400);doneStep('jwt',4);
+  }
+  if(step===5){
+    activateStep('jwt',5);
+    typeIn(t,'\n[STEP 5] Re-encodando JWT sin firma...','t-yellow');
+    document.getElementById('jwt-dec-s').innerHTML='<span style="color:var(--red)">[ FIRMA ELIMINADA — VACÍA ]</span>';
+    document.getElementById('jwt-s').innerHTML='<span style="color:var(--red);text-decoration:line-through">SflKxwRJSMeKKF2QT4fw...</span>';
+    typeIn(t,'  Token forjado: eyJhbGciOiJub25lIi...eyJyb2xlIjoiYWRtaW4iLi4u.','t-orange');
+    await sleep(400);doneStep('jwt',5);
+  }
+  if(step===6){
+    activateStep('jwt',6);
+    typeIn(t,'\n[STEP 6] Enviando token forjado al servidor...','t-red');
+    typeIn(t,'  GET /api/admin/users HTTP/1.1','t-cyan');
+    typeIn(t,'  Authorization: Bearer [TOKEN FORJADO]','t-cyan');
+    await sleep(600);
+    typeIn(t,'\n  ⚡ 200 OK — ACCESO ADMINISTRATIVO CONCEDIDO','t-red');
+    typeIn(t,'  → {"users":[{"id":1,"name":"admin","email":"admin@corp.com"},...]}\n','t-orange');
+    doneStep('jwt',6);
+  }
+}
+async function jwtAutoPlay(){jwtReset();for(let i=1;i<=6;i++){await jwtStep(i);await sleep(800);}}
+function jwtReset(){
+  resetFlow('jwt',6);
+  document.getElementById('jwt-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">JWT interceptado. Listo para manipulación...</span>\n';
+  document.getElementById('jwt-dec-h').innerHTML='{"alg":"RS256","typ":"JWT"}';
+  document.getElementById('jwt-dec-p').innerHTML='{"sub":"user101","role":"user","iat":1700000000}';
+  document.getElementById('jwt-dec-s').innerHTML='SflKxwRJSMeKKF2QT4fw... (RS256 válida)';
+  document.getElementById('jwt-h').innerHTML='eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9';
+  document.getElementById('jwt-h').style.boxShadow='';
+  document.getElementById('jwt-p').innerHTML='eyJzdWIiOiJ1c2VyMTAxIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MDAwMDAwMDB9';
+  document.getElementById('jwt-p').style.boxShadow='';
+  document.getElementById('jwt-s').innerHTML='SflKxwRJSMeKKF2QT4fw...';
+}
+
+// ═══════ LAB 03: BOPLA ═══════
+async function boplaStep(step){
+  const t='bopla-term';
+  if(step===1){activateStep('bopla',1);typeIn(t,'\n[STEP 1] GET /api/me → Interceptando respuesta con Burp...','t-cyan');await sleep(300);doneStep('bopla',1);}
+  if(step===2){
+    activateStep('bopla',2);
+    document.getElementById('bopla-hidden').style.display='inline';
+    typeIn(t,'\n[STEP 2] ⚠ CAMPOS INTERNOS DETECTADOS EN RESPUESTA:','t-red');
+    typeIn(t,'  → role: "user"       [CAMPO MODIFICABLE?]','t-orange');
+    typeIn(t,'  → balance: 50.00     [CAMPO FINANCIERO]','t-orange');
+    typeIn(t,'  → is_admin: false    [FLAG DE PRIVILEGIOS]','t-orange');
+    typeIn(t,'  → pwd_hash: "$2b$..."[¡HASH DE CONTRASEÑA!]','t-red');
+    await sleep(300);doneStep('bopla',2);
+  }
+  if(step===3){activateStep('bopla',3);typeIn(t,'\n[STEP 3] Analizando campos escribibles via PUT...','t-yellow');typeIn(t,'  → Enviando PUT con campo "test":"probe" → 200 OK (acepta campos extra)','t-orange');await sleep(300);doneStep('bopla',3);}
+  if(step===4){
+    activateStep('bopla',4);
+    typeIn(t,'\n[STEP 4] ⚡ MASS ASSIGNMENT ATTACK:','t-red');
+    typeIn(t,'  PUT /api/me','t-cyan');
+    typeIn(t,'  {"name":"john","role":"admin","balance":99999,"is_admin":true}','t-red');
+    await sleep(500);
+    typeIn(t,'\n  → 200 OK — ¡TODOS LOS CAMPOS ACEPTADOS!','t-red');
+    await sleep(300);doneStep('bopla',4);
+  }
+  if(step===5){
+    activateStep('bopla',5);
+    typeIn(t,'\n[STEP 5] ✓ ESCALADA DE PRIVILEGIOS EXITOSA:','t-red');
+    typeIn(t,'  → role: "admin" ✓','t-green');
+    typeIn(t,'  → balance: $99,999.00 ✓','t-green');
+    typeIn(t,'  → is_admin: true ✓','t-green');
+    typeIn(t,'\n  ☠ Control total de la cuenta obtenido.','t-red');
+    doneStep('bopla',5);
+  }
+}
+function boplaReset(){
+  resetFlow('bopla',5);
+  document.getElementById('bopla-hidden').style.display='none';
+  document.getElementById('bopla-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">Interceptando API responses con Burp Suite...</span>\n';
+}
+
+// ═══════ LAB 04: RESOURCE ═══════
+let resInterval=null;
+async function resAttack(){
+  if(resInterval)return;
+  const t='res-term';
+  typeIn(t,'\n⚡ LANZANDO ATAQUE DE AGOTAMIENTO DE RECURSOS...','t-red');
+  typeIn(t,'  Target: GET /api/products?page_size=1000000','t-cyan');
+  let count=0,cpu=12,ram=23;
+  document.getElementById('res-atk-btn').disabled=true;
+  resInterval=setInterval(()=>{
+    count+=Math.floor(Math.random()*50)+20;
+    cpu=Math.min(100,cpu+Math.random()*8);
+    ram=Math.min(100,ram+Math.random()*6);
+    document.getElementById('res-count').textContent=count;
+    document.getElementById('res-cpu').style.width=cpu+'%';
+    document.getElementById('res-cpu-v').textContent=Math.round(cpu)+'%';
+    document.getElementById('res-ram').style.width=ram+'%';
+    document.getElementById('res-ram-v').textContent=Math.round(ram)+'%';
+    if(cpu>60){document.getElementById('res-cpu').classList.replace('green','red')}
+    if(ram>60){document.getElementById('res-ram').classList.replace('green','red')}
+    if(count%200<50)typeIn(t,`  [${count} reqs] CPU:${Math.round(cpu)}% RAM:${Math.round(ram)}% — ${ram>80?'⚠ CRITICAL':'procesando...'}`,ram>80?'t-red':'t-yellow');
+    if(ram>=98){
+      clearInterval(resInterval);resInterval=null;
+      document.getElementById('res-status').className='status status-fail';
+      document.getElementById('res-status').innerHTML='● OFFLINE ☠';
+      typeIn(t,'\n  ☠ OOM KILL — SERVICIO CAÍDO','t-red');
+      typeIn(t,'  ☠ Todos los usuarios legítimos perdieron acceso','t-red');
+      typeIn(t,'  ☠ Denegación de servicio exitosa.\n','t-orange');
+      document.getElementById('res-atk-btn').disabled=false;
+    }
+  },200);
+}
+function resReset(){
+  if(resInterval){clearInterval(resInterval);resInterval=null}
+  document.getElementById('res-count').textContent='0';
+  ['res-cpu','res-ram','res-disk'].forEach(id=>{
+    document.getElementById(id).classList.replace('red','green');
+  });
+  document.getElementById('res-cpu').style.width='12%';document.getElementById('res-cpu-v').textContent='12%';
+  document.getElementById('res-ram').style.width='23%';document.getElementById('res-ram-v').textContent='23%';
+  document.getElementById('res-disk').style.width='45%';document.getElementById('res-disk-v').textContent='45%';
+  document.getElementById('res-status').className='status status-ok';
+  document.getElementById('res-status').innerHTML='● ONLINE';
+  document.getElementById('res-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">Target identificado. Rate limiting: NINGUNO.</span>\n';
+  document.getElementById('res-atk-btn').disabled=false;
+}
+
+// ═══════ LAB 05: BFLA ═══════
+function bflaTest(method,path,result){
+  const t='bfla-term';
+  if(result==='allowed'){
+    typeIn(t,`\n${method} ${path}`,'t-cyan');typeIn(t,'  → 200 OK [Acceso permitido — función pública ✔]','t-green');
+  }else if(result==='blocked'){
+    typeIn(t,`\n${method} ${path}`,'t-cyan');typeIn(t,'  → 403 Forbidden [Rol "user" bloqueado correctamente ✔]','t-green');
+  }else{
+    typeIn(t,`\n${method} ${path}`,'t-red');
+    typeIn(t,`  → 200 OK [⚠ BFLA: Método ${method} NO VERIFICÓ EL ROL]`,'t-red');
+    if(method==='DELETE')typeIn(t,'  ☠ Usuario 102 ELIMINADO por un usuario sin privilegios admin','t-orange');
+    if(method==='PUT')typeIn(t,'  ☠ Usuario 102 MODIFICADO — role cambiado a "admin"','t-orange');
+    if(method==='POST')typeIn(t,'  ☠ Nuevo usuario admin creado sin autorización','t-orange');
+  }
+}
+
+// ═══════ LAB 06: BUSINESS FLOWS ═══════
+let bizInterval=null;
+async function bizAttack(){
+  if(bizInterval)return;
+  const t='biz-term';let accts=0;let wallet=0;
+  document.getElementById('biz-btn').disabled=true;
+  typeIn(t,'\n⚡ BOT DE REFERIDOS INICIADO...','t-red');
+  // Animate flow
+  for(let i=1;i<=5;i++){activateStep('biz',i);await sleep(400);doneStep('biz',i);}
+  bizInterval=setInterval(()=>{
+    accts++;wallet+=10;
+    const email=`fake${accts}@tempmail${Math.floor(Math.random()*999)}.com`;
+    document.getElementById('biz-wallet').textContent='$'+wallet.toFixed(2);
+    document.getElementById('biz-accounts').textContent=accts;
+    if(accts%5===0)typeIn(t,`  [${accts}] POST /api/register {email:"${email}",ref:"REF-ATK-7X92"} → +$10`,'t-orange');
+    if(accts>=50){
+      clearInterval(bizInterval);bizInterval=null;
+      typeIn(t,`\n✓ Bot finalizado. ${accts} cuentas falsas creadas.`,'t-red');
+      typeIn(t,`✓ Wallet del atacante: $${wallet.toFixed(2)}`,'t-red');
+      typeIn(t,'✓ Crédito puede ser convertido en viajes gratuitos o vendido.\n','t-orange');
+      document.getElementById('biz-btn').disabled=false;
+    }
+  },150);
+}
+function bizReset(){
+  if(bizInterval){clearInterval(bizInterval);bizInterval=null}
+  resetFlow('biz',5);
+  document.getElementById('biz-wallet').textContent='$0.00';
+  document.getElementById('biz-accounts').textContent='0';
+  document.getElementById('biz-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">Referral code obtenido: REF-ATK-7X92. Bot listo...</span>\n';
+  document.getElementById('biz-btn').disabled=false;
+}
+
+// ═══════ LAB 07: SSRF ═══════
+async function ssrfSend(url){
+  const t='ssrf-term';
+  // Reset highlights
+  ['ssrf-api','ssrf-meta','ssrf-redis','ssrf-mysql','ssrf-fw'].forEach(id=>document.getElementById(id).classList.remove('attacked','compromised'));
+
+  typeIn(t,`\nPOST /api/profile/upload_picture`,'t-cyan');
+  typeIn(t,`  {"picture_url":"${url}"}`,'t-yellow');
+
+  // Animate flow
+  for(let i=1;i<=5;i++){activateStep('ssrf',i);await sleep(600);doneStep('ssrf',i);}
+
+  if(url.includes('example.com')){
+    typeIn(t,'\n  → 200 OK — Imagen descargada correctamente','t-green');
+    typeIn(t,'  → Avatar actualizado. [Flujo legítimo ✔]','t-green');
+    return;
+  }
+
+  document.getElementById('ssrf-api').classList.add('attacked');
+
+  if(url.includes('169.254')){
+    document.getElementById('ssrf-meta').classList.add('compromised');
+    typeIn(t,'\n  ⚡ Servidor realizó GET a http://169.254.169.254/...','t-red');
+    typeIn(t,'  ⚡ AWS METADATA SERVICE RESPONDIÓ:','t-red');
+    typeIn(t,'  {','t-orange');
+    typeIn(t,'    "AccessKeyId": "AKIAIOSFODNN7EXAMPLE",','t-orange');
+    typeIn(t,'    "SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",','t-orange');
+    typeIn(t,'    "Token": "AQoDYXdzEJr...",','t-orange');
+    typeIn(t,'    "Expiration": "2024-01-15T00:25:00Z"','t-orange');
+    typeIn(t,'  }','t-orange');
+    typeIn(t,'\n  ☠ CREDENCIALES IAM EXFILTRADAS — Acceso total al entorno AWS','t-red');
+  }else if(url.includes('6379')){
+    document.getElementById('ssrf-redis').classList.add('compromised');
+    typeIn(t,'\n  ⚡ Servidor realizó GET a http://10.0.0.1:6379/','t-red');
+    typeIn(t,'  → Respuesta en ~50ms = PUERTO ABIERTO','t-yellow');
+    typeIn(t,'  → Redis detectado sin autenticación','t-orange');
+    typeIn(t,'  ☠ Atacante puede inyectar comandos Redis vía SSRF','t-red');
+  }else if(url.includes('3306')){
+    document.getElementById('ssrf-mysql').classList.add('compromised');
+    typeIn(t,'\n  ⚡ Servidor realizó GET a http://10.0.0.5:3306/','t-red');
+    typeIn(t,'  → Respuesta en ~45ms = PUERTO ABIERTO','t-yellow');
+    typeIn(t,'  → MySQL detectado — versión filtrada en banner','t-orange');
+    typeIn(t,'  ☠ Port scan interno completado vía SSRF','t-red');
+  }
+}
+
+// ═══════ LAB 08: MISCONFIG ═══════
+const misconfigs=[
+  {name:'CORS Policy',bad:'Access-Control-Allow-Origin: *',fix:'Restringir a dominios específicos',impact:'Cualquier sitio malicioso puede realizar peticiones autenticadas a la API, robando datos del usuario.'},
+  {name:'Error Messages',bad:'Stack traces expuestos en producción',fix:'Mensajes genéricos + logs internos',impact:'Se expone: motor de DB, rutas de archivos, versión de framework, estructura de tablas.'},
+  {name:'Swagger/OpenAPI',bad:'Documentación pública sin auth',fix:'Proteger /swagger con autenticación',impact:'El atacante obtiene un mapa completo de todos los endpoints, parámetros y schemas de la API.'},
+  {name:'HTTP Methods',bad:'TRACE, OPTIONS habilitados con info',fix:'Deshabilitar métodos innecesarios',impact:'TRACE permite Cross-Site Tracing. OPTIONS puede filtrar endpoints internos disponibles.'},
+  {name:'TLS/SSL Config',bad:'TLS 1.0 + ciphers débiles activos',fix:'TLS 1.2+ con ciphers modernos',impact:'Tráfico interceptable. Downgrade attacks posibles. Credenciales en tránsito vulnerables.'},
+  {name:'Security Headers',bad:'Sin HSTS, CSP, X-Content-Type',fix:'Agregar todos los security headers',impact:'Vulnerable a clickjacking, XSS reflejado, MIME type confusion, y downgrade a HTTP.'},
+  {name:'Default Credentials',bad:'admin/admin en servicios internos',fix:'Rotar credenciales + políticas de complejidad',impact:'Acceso directo al panel administrativo sin necesidad de explotar vulnerabilidades.'},
+];
+(function renderMC(){
+  const list=document.getElementById('misconfig-list');
+  misconfigs.forEach((mc,i)=>{
+    list.innerHTML+=`
+      <div id="mc-item-${i}" onclick="mcToggle(${i})" style="background:var(--bg);border:1px solid var(--bg4);border-radius:6px;padding:14px;cursor:pointer;transition:all .3s">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="mc-icon-${i}" style="font-size:1.2rem">🔴</span>
+            <span style="font-family:var(--mono);font-size:.72rem;color:var(--text)">${mc.name}</span>
+          </div>
+          <span id="mc-status-${i}" class="status status-fail">● VULNERABLE</span>
+        </div>
+        <div id="mc-detail-${i}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg4)">
+          <div style="font-family:var(--mono);font-size:.62rem;color:var(--red);margin-bottom:6px">✗ Actual: ${mc.bad}</div>
+          <div style="font-family:var(--mono);font-size:.62rem;color:var(--green);margin-bottom:6px">✓ Correcto: ${mc.fix}</div>
+          <div style="font-family:var(--mono);font-size:.62rem;color:var(--orange)">⚠ Impacto: ${mc.impact}</div>
+        </div>
+      </div>`;
+  });
+})();
+const mcState=new Array(misconfigs.length).fill(false);
+let mcFixed=0;
+function mcToggle(i){
+  const det=document.getElementById(`mc-detail-${i}`);
+  const icon=document.getElementById(`mc-icon-${i}`);
+  const st=document.getElementById(`mc-status-${i}`);
+  const item=document.getElementById(`mc-item-${i}`);
+  mcState[i]=!mcState[i];
+  det.style.display=mcState[i]?'block':'none';
+  if(mcState[i]){
+    typeIn('mc-term',`\n[SCAN] ${misconfigs[i].name}: ⚠ ${misconfigs[i].bad}`,'t-red');
+    typeIn('mc-term',`  → Impacto: ${misconfigs[i].impact}`,'t-orange');
+    item.style.borderColor='var(--red-dim)';
+  }
+}
+
+// ═══════ LAB 09: INVENTORY ═══════
+async function invScan(path,type){
+  const t='inv-term';
+  typeIn(t,`\nGET ${path}`,'t-cyan');
+  await sleep(500);
+  if(type==='secured'){
+    typeIn(t,'  → 200 OK — MFA requerido ✔, Rate limiting activo ✔','t-green');
+    typeIn(t,'  → Versión actual con todos los controles de seguridad.','t-green');
+  }else if(type==='partial'){
+    typeIn(t,'  → 200 OK — MFA: NO ⚠, Rate limiting: básico','t-yellow');
+    typeIn(t,'  → Versión parcialmente protegida. Algunos controles ausentes.','t-orange');
+  }else if(type==='vulnerable'){
+    typeIn(t,'  → 200 OK — MFA: NO ⚠, Rate limiting: NINGUNO ⚠','t-red');
+    typeIn(t,'  → ⚡ VERSIÓN ANTIGUA SIN PROTECCIÓN','t-red');
+    typeIn(t,'  → Brute-force de credenciales posible sin restricciones','t-orange');
+    typeIn(t,'  → Token generado en /v1/ es válido en /v3/ ☠','t-red');
+    // animate flow
+    for(let i=1;i<=5;i++){activateStep('inv',i);await sleep(400);doneStep('inv',i);}
+  }else if(type==='exposed'){
+    typeIn(t,'  → 200 OK — ⚡ ENDPOINT DE DEBUG EXPUESTO','t-red');
+    typeIn(t,'  → {"env":"production","db_host":"10.0.0.5","db_pass":"Pr0d_s3cr3t!","api_keys":{...}}','t-orange');
+    typeIn(t,'  → ☠ Credenciales de producción filtradas vía debug endpoint','t-red');
+  }else if(type==='internal'){
+    typeIn(t,'  → 200 OK — ⚡ API INTERNA ACCESIBLE DESDE INTERNET','t-red');
+    typeIn(t,'  → {"status":"healthy","uptime":"45d","version":"3.2.1","internal_services":[...]}','t-orange');
+    typeIn(t,'  → ☠ Información de infraestructura interna expuesta','t-red');
+  }
+}
+
+// ═══════ LAB 10: UNSAFE CONSUMPTION ═══════
+async function unsafeAttack(){
+  unsafeReset();
+  const t='unsafe-term';
+
+  // Step 1
+  activateStep('unsafe',1);
+  document.getElementById('uc-third').classList.add('attacked');
+  typeIn(t,'\n[STEP 1] Atacante obtiene acceso al panel admin del Geocoding Service','t-red');
+  typeIn(t,'  → Credenciales encontradas: admin@geocoding-svc.com / Geo2023!','t-orange');
+  await sleep(1000);doneStep('unsafe',1);
+
+  // Step 2
+  activateStep('unsafe',2);
+  document.getElementById('uc-third').classList.add('compromised');
+  typeIn(t,"\n[STEP 2] Inyectando payload SQLi en registro de negocio...",'t-red');
+  typeIn(t,"  UPDATE businesses SET name=\"'; DROP TABLE users;--\" WHERE id=42;",'t-orange');
+  await sleep(1000);doneStep('unsafe',2);
+
+  // Step 3
+  activateStep('unsafe',3);
+  document.getElementById('uc-victim').classList.add('attacked');
+  typeIn(t,'\n[STEP 3] API víctima consulta servicio de terceros para enriquecer dirección','t-cyan');
+  typeIn(t,"  GET geocoding-svc.com/api/business/42 → {\"name\":\"'; DROP TABLE users;--\"}",'t-yellow');
+  await sleep(1000);doneStep('unsafe',3);
+
+  // Step 4
+  activateStep('unsafe',4);
+  typeIn(t,'\n[STEP 4] API víctima inserta dato en SQL SIN SANITIZAR:','t-red');
+  typeIn(t,"  query = f\"INSERT INTO local_businesses (name) VALUES ('{response.name}')\"","t-orange");
+  typeIn(t,"  → SQL ejecutado: INSERT INTO local_businesses (name) VALUES (''; DROP TABLE users;--')",'t-red');
+  await sleep(1000);doneStep('unsafe',4);
+
+  // Step 5
+  activateStep('unsafe',5);
+  document.getElementById('uc-db').classList.add('compromised');
+  typeIn(t,'\n[STEP 5] ☠ SQL INJECTION EJECUTADA:','t-red');
+  typeIn(t,'  → Tabla "users" ELIMINADA','t-red');
+  typeIn(t,'  → 48,000 registros de usuarios destruidos','t-orange');
+  typeIn(t,'  → Datos exfiltrados a servidor del atacante vía DNS tunneling','t-orange');
+  typeIn(t,'\n  ☠ SUPPLY CHAIN ATTACK COMPLETADO — la API víctima NUNCA fue atacada directamente.\n','t-red');
+  doneStep('unsafe',5);
+}
+function unsafeReset(){
+  resetFlow('unsafe',5);
+  ['uc-attacker','uc-third','uc-victim','uc-db'].forEach(id=>document.getElementById(id).classList.remove('attacked','compromised'));
+  document.getElementById('unsafe-term').innerHTML='<span class="t-dim">root@attacker:~$ </span><span class="t-green">Acceso obtenido al panel admin del Geocoding Service...</span>\n';
+}
+
+// ═══════ NAV ACTIVE STATE ═══════
+const allSections=document.querySelectorAll('.lab-section');
+const allNavBtns=document.querySelectorAll('.nav-btn');
+window.addEventListener('scroll',()=>{
+
+  let current = '';
+  allSections.forEach(s => {
+    if (s.getBoundingClientRect().top < 150) current = s.id;
+  });
+  allNavBtns.forEach((b, i) => b.classList.toggle('active', current === 's' + (i + 1)));
+});
+</script>
