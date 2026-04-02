@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Protocols Lab — REST vs SOAP vs GraphQL vs gRPC | Red Team Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060608;--bg2:#0c0c10;--bg3:#14141a;--bg4:#1e1e28;--bg5:#2a2a36;
+  --red:#ff1a1a;--red2:#cc0000;--red-dim:#441111;--red-glow:0 0 15px rgba(255,26,26,.5);
+  --green:#00ff41;--green2:#00cc33;--cyan:#00e5ff;--yellow:#ffd000;--orange:#ff6b00;--purple:#bb86fc;--pink:#ff4da6;
+  --rest-color:#00e5ff;--soap-color:#ff6b00;--gql-color:#e535ab;--grpc-color:#00c853;
+  --text:#d0d0d8;--text-dim:#6e6e80;--text-dark:#3a3a4a;
+  --mono:'Fira Code',monospace;--head:'Orbitron',sans-serif;--body:'Chakra Petch',sans-serif;
+}
+html{scroll-behavior:smooth;font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;line-height:1.7}
+::selection{background:var(--red);color:#000}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--red-dim);border-radius:3px}
+
+/* ═══ NAV ═══ */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(6,6,8,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--bg4);padding:0 20px}
+.nav-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;gap:10px;height:48px;overflow-x:auto}
+.nav-logo{font-family:var(--head);font-size:.65rem;color:var(--red);white-space:nowrap;letter-spacing:2px;text-shadow:var(--red-glow)}
+.n-sep{color:var(--text-dark)}
+.nbtn{background:none;border:1px solid transparent;color:var(--text-dim);font-family:var(--mono);font-size:.62rem;padding:5px 10px;border-radius:3px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.nbtn:hover,.nbtn.act{border-color:var(--red-dim);color:var(--red)}
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--rest-color),var(--gql-color),var(--grpc-color));z-index:1000;width:0;transition:width .1s}
+
+/* ═══ SECTIONS ═══ */
+.sec{padding:80px 20px 60px;max-width:1250px;margin:0 auto}
+.sec:first-of-type{padding-top:90px}
+.sec-head{text-align:center;margin-bottom:40px}
+.sec-tag{font-family:var(--mono);font-size:.7rem;color:var(--red);letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
+.sec-tag::before,.sec-tag::after{content:'';width:30px;height:1px;background:var(--red-dim)}
+.sec-title{font-family:var(--head);font-size:clamp(1.2rem,3.5vw,2.2rem);font-weight:900;color:var(--text)}
+.sec-title span{color:var(--red)}
+.sec-sub{color:var(--text-dim);font-size:.9rem;max-width:750px;margin:10px auto 0}
+.sep{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--bg4),transparent)}
+
+/* ═══ HERO ═══ */
+.hero{text-align:center;padding:100px 20px 30px}
+.hero-tag{font-family:var(--mono);font-size:.7rem;color:var(--red);border:1px solid var(--red-dim);display:inline-block;padding:4px 16px;border-radius:20px;letter-spacing:2px;margin-bottom:16px}
+.hero h1{font-family:var(--head);font-size:clamp(1.5rem,5vw,3.2rem);font-weight:900;color:var(--red);text-shadow:0 0 40px rgba(255,26,26,.2)}
+.hero h1 span{color:var(--text)}
+.hero-sub{font-size:.95rem;color:var(--text-dim);margin-top:10px}
+
+/* ═══ PROTOCOL CARDS ═══ */
+.proto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0}
+@media(max-width:900px){.proto-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:550px){.proto-grid{grid-template-columns:1fr}}
+.proto-card{
+  background:var(--bg2);border:1px solid var(--bg4);border-radius:10px;padding:20px;
+  cursor:pointer;transition:all .35s;position:relative;overflow:hidden;text-align:center;
+}
+.proto-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:all .3s}
+.proto-card:hover{transform:translateY(-4px)}
+.proto-card[data-p="rest"]::before{background:var(--rest-color)}
+.proto-card[data-p="soap"]::before{background:var(--soap-color)}
+.proto-card[data-p="gql"]::before{background:var(--gql-color)}
+.proto-card[data-p="grpc"]::before{background:var(--grpc-color)}
+.proto-card[data-p="rest"]:hover{border-color:var(--rest-color);box-shadow:0 0 30px rgba(0,229,255,.1)}
+.proto-card[data-p="soap"]:hover{border-color:var(--soap-color);box-shadow:0 0 30px rgba(255,107,0,.1)}
+.proto-card[data-p="gql"]:hover{border-color:var(--gql-color);box-shadow:0 0 30px rgba(229,53,171,.1)}
+.proto-card[data-p="grpc"]:hover{border-color:var(--grpc-color);box-shadow:0 0 30px rgba(0,200,83,.1)}
+.pc-icon{font-size:2.2rem;margin-bottom:8px;display:block}
+.pc-name{font-family:var(--head);font-size:.85rem;font-weight:700;letter-spacing:1px}
+.pc-full{font-family:var(--mono);font-size:.55rem;color:var(--text-dim);margin-top:2px}
+.pc-year{font-family:var(--mono);font-size:.55rem;color:var(--text-dark);margin-top:4px}
+.pc-fmt{font-family:var(--mono);font-size:.6rem;margin-top:8px;padding:3px 10px;border-radius:12px;display:inline-block}
+
+/* ═══ SIM BOX ═══ */
+.sim{background:var(--bg2);border:1px solid var(--bg4);border-radius:10px;overflow:hidden;margin:20px 0}
+.sim-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--bg4)}
+.sd{width:10px;height:10px;border-radius:50%}.sd.r{background:#ff5f57}.sd.y{background:#ffbd2e}.sd.g{background:#28c840}
+.sim-lbl{font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-left:auto}
+.sim-body{padding:24px}
+
+/* ═══ TERMINAL ═══ */
+.term{background:#050508;border:1px solid var(--bg4);border-radius:6px;padding:14px;font-family:var(--mono);font-size:.68rem;line-height:1.9;max-height:380px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.t-r{color:var(--red)}.t-g{color:var(--green)}.t-c{color:var(--cyan)}.t-y{color:var(--yellow)}.t-o{color:var(--orange)}.t-p{color:var(--purple)}.t-pk{color:var(--pink)}.t-d{color:var(--text-dim)}.t-w{color:#fff;font-weight:600}
+
+/* ═══ BUTTONS ═══ */
+.btn{font-family:var(--mono);font-size:.68rem;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .2s;border:1px solid;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:rgba(255,26,26,.08);border-color:var(--red-dim);color:var(--red)}.btn-r:hover{background:var(--red);color:#000;box-shadow:var(--red-glow)}
+.btn-rest{background:rgba(0,229,255,.06);border-color:rgba(0,229,255,.3);color:var(--rest-color)}.btn-rest:hover{background:var(--rest-color);color:#000}
+.btn-soap{background:rgba(255,107,0,.06);border-color:rgba(255,107,0,.3);color:var(--soap-color)}.btn-soap:hover{background:var(--soap-color);color:#000}
+.btn-gql{background:rgba(229,53,171,.06);border-color:rgba(229,53,171,.3);color:var(--gql-color)}.btn-gql:hover{background:var(--gql-color);color:#000}
+.btn-grpc{background:rgba(0,200,83,.06);border-color:rgba(0,200,83,.3);color:var(--grpc-color)}.btn-grpc:hover{background:var(--grpc-color);color:#000}
+.btn-sm{padding:5px 10px;font-size:.6rem}
+
+/* ═══ ARCH BOXES ═══ */
+.abox{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:12px 14px;border:1px solid var(--bg4);border-radius:8px;background:var(--bg);transition:all .4s;min-width:90px}
+.abox .ico{font-size:1.6rem}.abox .lbl{font-family:var(--mono);font-size:.55rem;color:var(--text-dim)}
+.abox.lit-rest{border-color:var(--rest-color);box-shadow:0 0 15px rgba(0,229,255,.2)}
+.abox.lit-soap{border-color:var(--soap-color);box-shadow:0 0 15px rgba(255,107,0,.2)}
+.abox.lit-gql{border-color:var(--gql-color);box-shadow:0 0 15px rgba(229,53,171,.2)}
+.abox.lit-grpc{border-color:var(--grpc-color);box-shadow:0 0 15px rgba(0,200,83,.2)}
+
+/* ═══ FLOW VISUAL ═══ */
+.fv{display:flex;align-items:center;gap:0;overflow-x:auto;padding:10px 0;justify-content:center}
+.fn{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:110px;max-width:130px;cursor:default;transition:all .3s}
+.fn .nc{width:42px;height:42px;border-radius:50%;border:2px solid var(--bg5);background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:900;font-size:.8rem;color:var(--text-dim);transition:all .4s}
+.fn .nl{font-family:var(--mono);font-size:.55rem;color:var(--text-dim);text-align:center;line-height:1.3}
+.fn.on .nc{color:#000}
+.fa{width:40px;height:2px;background:var(--bg5);position:relative;flex-shrink:0}
+.fa::after{content:'▶';position:absolute;right:-3px;top:-7px;font-size:.5rem;color:var(--bg5)}
+.fa.lit{background:var(--red)}.fa.lit::after{color:var(--red)}
+
+/* protocol-specific node coloring */
+.fn.on[data-c="rest"] .nc{background:var(--rest-color);border-color:var(--rest-color);box-shadow:0 0 12px rgba(0,229,255,.4)}
+.fn.on[data-c="soap"] .nc{background:var(--soap-color);border-color:var(--soap-color);box-shadow:0 0 12px rgba(255,107,0,.4)}
+.fn.on[data-c="gql"] .nc{background:var(--gql-color);border-color:var(--gql-color);box-shadow:0 0 12px rgba(229,53,171,.4)}
+.fn.on[data-c="grpc"] .nc{background:var(--grpc-color);border-color:var(--grpc-color);box-shadow:0 0 12px rgba(0,200,83,.4)}
+
+/* ═══ GRID LAYOUTS ═══ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* ═══ COMPARISON BARS ═══ */
+.cbar{display:flex;align-items:center;gap:8px;margin:6px 0}
+.cbar-l{font-family:var(--mono);font-size:.55rem;color:var(--text-dim);min-width:75px;text-align:right}
+.cbar-t{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--bg4)}
+.cbar-f{height:100%;border-radius:4px;transition:width 1s ease}
+.cbar-v{font-family:var(--mono);font-size:.55rem;min-width:30px}
+
+/* ═══ TAB SYSTEM ═══ */
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{font-family:var(--mono);font-size:.62rem;padding:6px 14px;border:1px solid var(--bg4);border-radius:4px;background:var(--bg2);color:var(--text-dim);cursor:pointer;transition:all .2s}
+.tab:hover{border-color:var(--red-dim);color:var(--text)}
+.tab.on{background:rgba(255,26,26,.1);border-color:var(--red);color:var(--red)}
+.tpanel{display:none}.tpanel.on{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ PACKET ANIM ═══ */
+.pkt-track{position:relative;height:24px;margin:8px 0}
+.pkt-line{position:absolute;top:50%;left:0;right:0;height:2px;transform:translateY(-50%)}
+.pkt{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:14px;border-radius:3px;font-family:var(--mono);font-size:.45rem;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;opacity:0}
+@keyframes pktGo{0%{left:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:calc(100% - 30px);opacity:0}}
+@keyframes pktBack{0%{right:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{right:calc(100% - 30px);opacity:0}}
+
+/* ═══ MISC ═══ */
+.tag{font-family:var(--mono);font-size:.55rem;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:4px}
+.tag-rest{background:rgba(0,229,255,.1);color:var(--rest-color);border:1px solid rgba(0,229,255,.2)}
+.tag-soap{background:rgba(255,107,0,.1);color:var(--soap-color);border:1px solid rgba(255,107,0,.2)}
+.tag-gql{background:rgba(229,53,171,.1);color:var(--gql-color);border:1px solid rgba(229,53,171,.2)}
+.tag-grpc{background:rgba(0,200,83,.1);color:var(--grpc-color);border:1px solid rgba(0,200,83,.2)}
+
+.hl{padding:16px;background:var(--bg);border:1px solid var(--bg4);border-radius:8px}
+
+footer{text-align:center;padding:40px 20px;border-top:1px solid var(--bg3)}
+footer p{font-family:var(--mono);font-size:.6rem;color:var(--text-dark)}
+footer .r{color:var(--red)}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<nav>
+<div class="nav-inner">
+  <span class="nav-logo">◈ API://PROTOCOLS</span><span class="n-sep">|</span>
+  <button class="nbtn" onclick="sTo('#overview')">OVERVIEW</button>
+  <button class="nbtn" onclick="sTo('#how')">CÓMO FUNCIONAN</button>
+  <button class="nbtn" onclick="sTo('#live')">SIMULADOR LIVE</button>
+  <button class="nbtn" onclick="sTo('#compare')">COMPARATIVA</button>
+  <button class="nbtn" onclick="sTo('#when')">CUÁNDO USAR</button>
+</div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero">
+  <div class="hero-tag">◈ RED TEAM ACADEMY — FUNDAMENTOS ◈</div>
+  <h1>REST <span>vs</span> SOAP <span>vs</span> GraphQL <span>vs</span> gRPC</h1>
+  <p class="hero-sub">Laboratorio interactivo: observe en tiempo real cómo se comunica cada protocolo. Haga clic, simule y compare.</p>
+</div>
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="sep"></div>
+<section class="sec" id="overview">
+  <div class="sec-head">
+    <div class="sec-tag">// OVERVIEW</div>
+    <h2 class="sec-title">Los 4 <span>Protocolos</span></h2>
+    <p class="sec-sub">Cada protocolo define cómo un cliente se comunica con un servidor. Haga clic en cada tarjeta para ver un resumen rápido.</p>
+  </div>
+
+  <div class="proto-grid">
+    <div class="proto-card" data-p="rest" onclick="showQuick('rest')">
+      <span class="pc-icon">🌐</span>
+      <div class="pc-name" style="color:var(--rest-color)">REST</div>
+      <div class="pc-full">Representational State Transfer</div>
+      <div class="pc-year">Roy Fielding · 2000</div>
+      <div class="pc-fmt tag-rest" style="font-size:.55rem">JSON · HTTP/1.1</div>
+    </div>
+    <div class="proto-card" data-p="soap" onclick="showQuick('soap')">
+      <span class="pc-icon">📦</span>
+      <div class="pc-name" style="color:var(--soap-color)">SOAP</div>
+      <div class="pc-full">Simple Object Access Protocol</div>
+      <div class="pc-year">Microsoft · 1998</div>
+      <div class="pc-fmt tag-soap" style="font-size:.55rem">XML · HTTP/SMTP/TCP</div>
+    </div>
+    <div class="proto-card" data-p="gql" onclick="showQuick('gql')">
+      <span class="pc-icon">◆</span>
+      <div class="pc-name" style="color:var(--gql-color)">GraphQL</div>
+      <div class="pc-full">Graph Query Language</div>
+      <div class="pc-year">Facebook · 2015</div>
+      <div class="pc-fmt tag-gql" style="font-size:.55rem">JSON · HTTP POST</div>
+    </div>
+    <div class="proto-card" data-p="grpc" onclick="showQuick('grpc')">
+      <span class="pc-icon">⚡</span>
+      <div class="pc-name" style="color:var(--grpc-color)">gRPC</div>
+      <div class="pc-full">Google Remote Procedure Call</div>
+      <div class="pc-year">Google · 2015</div>
+      <div class="pc-fmt tag-grpc" style="font-size:.55rem">Protobuf · HTTP/2</div>
+    </div>
+  </div>
+  <div class="term" id="quick-term" style="min-height:100px"><span class="t-d">system@academy:~$ </span><span class="t-g">Haga clic en una tarjeta para ver el resumen...</span>
+</div>
+</section>
+
+<!-- ═══════════ HOW THEY WORK ═══════════ -->
+<div class="sep"></div>
+<section class="sec" id="how">
+  <div class="sec-head">
+    <div class="sec-tag">// CÓMO FUNCIONAN</div>
+    <h2 class="sec-title">Anatomía de una <span>Petición</span></h2>
+    <p class="sec-sub">Mismo escenario en los 4 protocolos: "Obtener datos del usuario con ID 42". Observe cómo cada uno estructura la solicitud y la respuesta de forma diferente.</p>
+  </div>
+
+  <!-- REST -->
+  <div class="sim" id="how-rest">
+    <div class="sim-bar"><span class="sd r"></span><span class="sd y"></span><span class="sd g"></span><span class="sim-lbl" style="color:var(--rest-color)">REST — GET /api/users/42</span></div>
+    <div class="sim-body">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="abox" id="r-cli"><span class="ico">💻</span><span class="lbl">CLIENTE</span></div>
+        <div style="flex:1;max-width:300px;min-width:150px">
+          <div class="pkt-track" id="r-pkt-track">
+            <div class="pkt-line" style="background:var(--rest-color)"></div>
+          </div>
+          <div style="text-align:center;font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">HTTP/1.1 · JSON</div>
+        </div>
+        <div class="abox" id="r-srv"><span class="ico">⚙️</span><span class="lbl">API SERVER</span></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--rest-color);margin-bottom:6px">▸ REQUEST:</div>
+          <div class="hl" id="r-req" style="border-color:rgba(0,229,255,.15)">
+            <div style="font-family:var(--mono);font-size:.65rem;line-height:1.8">
+<span style="color:var(--rest-color);font-weight:700">GET</span> <span style="color:var(--yellow)">/api/users/42</span> <span class="t-d">HTTP/1.1</span>
+<span class="t-d">Host:</span> api.example.com
+<span class="t-d">Authorization:</span> Bearer eyJhbG...
+<span class="t-d">Accept:</span> application/json</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ El recurso está en la URL. El verbo HTTP (GET) define la acción. Sin body.</div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--rest-color);margin-bottom:6px">▸ RESPONSE:</div>
+          <div class="hl" id="r-res" style="border-color:rgba(0,229,255,.15)">
+            <div style="font-family:var(--mono);font-size:.65rem;line-height:1.8">
+<span class="t-g">HTTP/1.1 200 OK</span>
+<span class="t-d">Content-Type:</span> application/json
+{
+  <span style="color:var(--rest-color)">"id"</span>: 42,
+  <span style="color:var(--rest-color)">"name"</span>: <span class="t-y">"John Doe"</span>,
+  <span style="color:var(--rest-color)">"email"</span>: <span class="t-y">"john@example.com"</span>,
+  <span style="color:var(--rest-color)">"role"</span>: <span class="t-y">"admin"</span>,
+  <span style="color:var(--rest-color)">"orders"</span>: <span class="t-y">[...]</span>  <span class="t-d">← TODO el objeto</span>
+}</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ Retorna el objeto COMPLETO con TODOS sus campos. JSON ligero.</div>
+        </div>
+      </div>
+      <button class="btn btn-rest btn-sm" style="margin-top:12px" onclick="animProto('rest')">▶ Simular Petición REST</button>
+      <div class="fv" id="f-rest" style="margin-top:12px">
+        <div class="fn" data-c="rest" id="fr1"><div class="nc">1</div><div class="nl">Cliente construye URL con recurso</div></div>
+        <div class="fa" id="fa-r1"></div>
+        <div class="fn" data-c="rest" id="fr2"><div class="nc">2</div><div class="nl">Envía GET HTTP/1.1 con headers</div></div>
+        <div class="fa" id="fa-r2"></div>
+        <div class="fn" data-c="rest" id="fr3"><div class="nc">3</div><div class="nl">Servidor mapea URL a recurso en DB</div></div>
+        <div class="fa" id="fa-r3"></div>
+        <div class="fn" data-c="rest" id="fr4"><div class="nc">4</div><div class="nl">Serializa objeto completo a JSON</div></div>
+        <div class="fa" id="fa-r4"></div>
+        <div class="fn" data-c="rest" id="fr5"><div class="nc">5</div><div class="nl">200 OK + JSON completo al cliente</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOAP -->
+  <div class="sim" id="how-soap">
+    <div class="sim-bar"><span class="sd r"></span><span class="sd y"></span><span class="sd g"></span><span class="sim-lbl" style="color:var(--soap-color)">SOAP — POST /ws/UserService</span></div>
+    <div class="sim-body">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="abox" id="s-cli"><span class="ico">💻</span><span class="lbl">CLIENTE</span></div>
+        <div style="flex:1;max-width:300px;min-width:150px">
+          <div class="pkt-track" id="s-pkt-track">
+            <div class="pkt-line" style="background:var(--soap-color)"></div>
+          </div>
+          <div style="text-align:center;font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">HTTP/SMTP/TCP · XML (Envelope)</div>
+        </div>
+        <div class="abox" id="s-srv"><span class="ico">🏢</span><span class="lbl">SOAP SERVER</span></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--soap-color);margin-bottom:6px">▸ REQUEST (XML Envelope):</div>
+          <div class="hl" style="border-color:rgba(255,107,0,.15)">
+            <div style="font-family:var(--mono);font-size:.6rem;line-height:1.7">
+<span class="t-o">POST</span> <span class="t-y">/ws/UserService</span> <span class="t-d">HTTP/1.1</span>
+<span class="t-d">Content-Type:</span> text/xml; charset=utf-8
+<span class="t-d">SOAPAction:</span> "GetUser"
+
+<span class="t-d">&lt;?xml version="1.0"?&gt;</span>
+<span class="t-o">&lt;soap:Envelope</span> xmlns:soap="..."<span class="t-o">&gt;</span>
+  <span class="t-o">&lt;soap:Header&gt;</span>
+    <span class="t-y">&lt;auth:Token&gt;</span>abc123<span class="t-y">&lt;/auth:Token&gt;</span>
+  <span class="t-o">&lt;/soap:Header&gt;</span>
+  <span class="t-o">&lt;soap:Body&gt;</span>
+    <span class="t-y">&lt;GetUser&gt;</span>
+      <span class="t-c">&lt;UserId&gt;</span>42<span class="t-c">&lt;/UserId&gt;</span>
+    <span class="t-y">&lt;/GetUser&gt;</span>
+  <span class="t-o">&lt;/soap:Body&gt;</span>
+<span class="t-o">&lt;/soap:Envelope&gt;</span></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ SIEMPRE POST. El "qué hacer" va dentro del XML Envelope. Muy verboso.</div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--soap-color);margin-bottom:6px">▸ RESPONSE (XML Envelope):</div>
+          <div class="hl" style="border-color:rgba(255,107,0,.15)">
+            <div style="font-family:var(--mono);font-size:.6rem;line-height:1.7">
+<span class="t-g">HTTP/1.1 200 OK</span>
+<span class="t-d">Content-Type:</span> text/xml
+
+<span class="t-o">&lt;soap:Envelope</span> ...<span class="t-o">&gt;</span>
+  <span class="t-o">&lt;soap:Body&gt;</span>
+    <span class="t-y">&lt;GetUserResponse&gt;</span>
+      <span class="t-c">&lt;User&gt;</span>
+        <span class="t-c">&lt;Id&gt;</span>42<span class="t-c">&lt;/Id&gt;</span>
+        <span class="t-c">&lt;Name&gt;</span>John Doe<span class="t-c">&lt;/Name&gt;</span>
+        <span class="t-c">&lt;Email&gt;</span>john@ex.com<span class="t-c">&lt;/Email&gt;</span>
+        <span class="t-c">&lt;Role&gt;</span>admin<span class="t-c">&lt;/Role&gt;</span>
+      <span class="t-c">&lt;/User&gt;</span>
+    <span class="t-y">&lt;/GetUserResponse&gt;</span>
+  <span class="t-o">&lt;/soap:Body&gt;</span>
+<span class="t-o">&lt;/soap:Envelope&gt;</span></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ XML pesado con Envelope, Header, Body. Contrato WSDL estricto.</div>
+        </div>
+      </div>
+      <button class="btn btn-soap btn-sm" style="margin-top:12px" onclick="animProto('soap')">▶ Simular Petición SOAP</button>
+      <div class="fv" id="f-soap" style="margin-top:12px">
+        <div class="fn" data-c="soap" id="fs1"><div class="nc">1</div><div class="nl">Lee contrato WSDL del servicio</div></div>
+        <div class="fa" id="fa-s1"></div>
+        <div class="fn" data-c="soap" id="fs2"><div class="nc">2</div><div class="nl">Construye XML Envelope con Body</div></div>
+        <div class="fa" id="fa-s2"></div>
+        <div class="fn" data-c="soap" id="fs3"><div class="nc">3</div><div class="nl">POST al endpoint único del WS</div></div>
+        <div class="fa" id="fa-s3"></div>
+        <div class="fn" data-c="soap" id="fs4"><div class="nc">4</div><div class="nl">Servidor parsea XML, ejecuta acción</div></div>
+        <div class="fa" id="fa-s4"></div>
+        <div class="fn" data-c="soap" id="fs5"><div class="nc">5</div><div class="nl">Responde con XML Envelope completo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GraphQL -->
+  <div class="sim" id="how-gql">
+    <div class="sim-bar"><span class="sd r"></span><span class="sd y"></span><span class="sd g"></span><span class="sim-lbl" style="color:var(--gql-color)">GraphQL — POST /graphql</span></div>
+    <div class="sim-body">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="abox" id="g-cli"><span class="ico">💻</span><span class="lbl">CLIENTE</span></div>
+        <div style="flex:1;max-width:300px;min-width:150px">
+          <div class="pkt-track" id="g-pkt-track">
+            <div class="pkt-line" style="background:var(--gql-color)"></div>
+          </div>
+          <div style="text-align:center;font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">HTTP POST · JSON · Un solo endpoint</div>
+        </div>
+        <div class="abox" id="g-srv"><span class="ico">◆</span><span class="lbl">GraphQL SERVER</span></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--gql-color);margin-bottom:6px">▸ REQUEST (Query con campos específicos):</div>
+          <div class="hl" style="border-color:rgba(229,53,171,.15)">
+            <div style="font-family:var(--mono);font-size:.65rem;line-height:1.8">
+<span class="t-pk">POST</span> <span class="t-y">/graphql</span> <span class="t-d">HTTP/1.1</span>
+<span class="t-d">Content-Type:</span> application/json
+
+{
+  <span class="t-pk">"query"</span>: <span class="t-y">"</span>
+    <span class="t-pk">query</span> {
+      <span class="t-c">user</span>(id: <span class="t-y">42</span>) {
+        <span style="color:var(--gql-color)">name</span>      <span class="t-d">← Solo lo que necesito</span>
+        <span style="color:var(--gql-color)">email</span>     <span class="t-d">← Yo elijo los campos</span>
+      }
+    }
+  <span class="t-y">"</span>
+}</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ El CLIENTE decide qué campos recibir. Un solo endpoint /graphql para TODO.</div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--gql-color);margin-bottom:6px">▸ RESPONSE (Solo lo pedido):</div>
+          <div class="hl" style="border-color:rgba(229,53,171,.15)">
+            <div style="font-family:var(--mono);font-size:.65rem;line-height:1.8">
+<span class="t-g">HTTP/1.1 200 OK</span>
+
+{
+  <span class="t-pk">"data"</span>: {
+    <span class="t-c">"user"</span>: {
+      <span style="color:var(--gql-color)">"name"</span>: <span class="t-y">"John Doe"</span>,
+      <span style="color:var(--gql-color)">"email"</span>: <span class="t-y">"john@ex.com"</span>
+    }                  <span class="t-d">← SOLO name y email</span>
+  }                    <span class="t-d">← Sin campos extras</span>
+}</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ Retorna EXACTAMENTE lo pedido. Sin over-fetching. JSON liviano.</div>
+        </div>
+      </div>
+      <button class="btn btn-gql btn-sm" style="margin-top:12px" onclick="animProto('gql')">▶ Simular Petición GraphQL</button>
+      <div class="fv" id="f-gql" style="margin-top:12px">
+        <div class="fn" data-c="gql" id="fg1"><div class="nc">1</div><div class="nl">Cliente escribe query con campos deseados</div></div>
+        <div class="fa" id="fa-g1"></div>
+        <div class="fn" data-c="gql" id="fg2"><div class="nc">2</div><div class="nl">POST /graphql con la query en JSON body</div></div>
+        <div class="fa" id="fa-g2"></div>
+        <div class="fn" data-c="gql" id="fg3"><div class="nc">3</div><div class="nl">Servidor resuelve schema + resolvers</div></div>
+        <div class="fa" id="fa-g3"></div>
+        <div class="fn" data-c="gql" id="fg4"><div class="nc">4</div><div class="nl">Ejecuta solo las queries de campos pedidos</div></div>
+        <div class="fa" id="fa-g4"></div>
+        <div class="fn" data-c="gql" id="fg5"><div class="nc">5</div><div class="nl">Retorna JSON con exactamente lo solicitado</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- gRPC -->
+  <div class="sim" id="how-grpc">
+    <div class="sim-bar"><span class="sd r"></span><span class="sd y"></span><span class="sd g"></span><span class="sim-lbl" style="color:var(--grpc-color)">gRPC — GetUser(UserRequest{id:42})</span></div>
+    <div class="sim-body">
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="abox" id="p-cli"><span class="ico">💻</span><span class="lbl">CLIENTE</span></div>
+        <div style="flex:1;max-width:300px;min-width:150px">
+          <div class="pkt-track" id="p-pkt-track">
+            <div class="pkt-line" style="background:var(--grpc-color)"></div>
+          </div>
+          <div style="text-align:center;font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">HTTP/2 · Protocol Buffers (binario)</div>
+        </div>
+        <div class="abox" id="p-srv"><span class="ico">⚡</span><span class="lbl">gRPC SERVER</span></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--grpc-color);margin-bottom:6px">▸ PROTO DEFINITION + REQUEST:</div>
+          <div class="hl" style="border-color:rgba(0,200,83,.15)">
+            <div style="font-family:var(--mono);font-size:.6rem;line-height:1.7">
+<span class="t-d">// user.proto — Contrato de definición</span>
+<span class="t-g">service</span> UserService {
+  <span class="t-g">rpc</span> <span class="t-c">GetUser</span>(<span class="t-y">UserRequest</span>) returns (<span class="t-y">UserResponse</span>);
+}
+<span class="t-g">message</span> <span class="t-y">UserRequest</span> {
+  <span class="t-g">int32</span> id = 1;
+}
+
+<span class="t-d">// Llamada del cliente (como función local):</span>
+user = stub.<span class="t-c">GetUser</span>(UserRequest(id=<span class="t-y">42</span>))
+<span class="t-d">// Envía: 08 2A (2 bytes binarios, no texto)</span></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ Se llama como una FUNCIÓN LOCAL. El framework serializa a binario (Protobuf).</div>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.55rem;color:var(--grpc-color);margin-bottom:6px">▸ RESPONSE (Protocol Buffers binario):</div>
+          <div class="hl" style="border-color:rgba(0,200,83,.15)">
+            <div style="font-family:var(--mono);font-size:.6rem;line-height:1.7">
+<span class="t-d">// Respuesta deserializada:</span>
+<span class="t-g">UserResponse</span> {
+  id: <span class="t-y">42</span>
+  name: <span class="t-y">"John Doe"</span>
+  email: <span class="t-y">"john@example.com"</span>
+  role: <span class="t-y">ADMIN</span>   <span class="t-d">← Enum tipado</span>
+}
+
+<span class="t-d">// En la red viaja como binario:</span>
+<span class="t-o">08 2A 12 08 4A 6F 68 6E 20 44 6F 65</span>
+<span class="t-o">1A 10 6A 6F 68 6E 40 65 78 61 6D 70</span>
+<span class="t-d">// ~35 bytes vs ~180 bytes en JSON</span></div>
+          </div>
+          <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:8px">▸ Binario ultracompacto. HTTP/2 con multiplexing + streaming bidireccional.</div>
+        </div>
+      </div>
+      <button class="btn btn-grpc btn-sm" style="margin-top:12px" onclick="animProto('grpc')">▶ Simular Petición gRPC</button>
+      <div class="fv" id="f-grpc" style="margin-top:12px">
+        <div class="fn" data-c="grpc" id="fp1"><div class="nc">1</div><div class="nl">Comparte .proto (contrato) entre client/server</div></div>
+        <div class="fa" id="fa-p1"></div>
+        <div class="fn" data-c="grpc" id="fp2"><div class="nc">2</div><div class="nl">Cliente llama función: stub.GetUser(req)</div></div>
+        <div class="fa" id="fa-p2"></div>
+        <div class="fn" data-c="grpc" id="fp3"><div class="nc">3</div><div class="nl">Serializa a Protobuf binario (bytes)</div></div>
+        <div class="fa" id="fa-p3"></div>
+        <div class="fn" data-c="grpc" id="fp4"><div class="nc">4</div><div class="nl">Envía vía HTTP/2 stream multiplexado</div></div>
+        <div class="fa" id="fa-p4"></div>
+        <div class="fn" data-c="grpc" id="fp5"><div class="nc">5</div><div class="nl">Servidor deserializa + responde binario</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LIVE SIMULATOR ═══════════ -->
+<div class="sep"></div>
+<section class="sec" id="live">
+  <div class="sec-head">
+    <div class="sec-tag">// SIMULADOR EN VIVO</div>
+    <h2 class="sec-title">Misma Petición, <span>4 Protocolos</span></h2>
+    <p class="sec-sub">Ejecute la misma consulta "Obtener usuario 42" en los 4 protocolos simultáneamente y observe las diferencias en tamaño, velocidad y formato de los datos en la red.</p>
+  </div>
+
+  <div class="sim">
+    <div class="sim-bar"><span class="sd r"></span><span class="sd y"></span><span class="sd g"></span><span class="sim-lbl">RACE — Comparación en tiempo real</span></div>
+    <div class="sim-body">
+      <div style="text-align:center;margin-bottom:20px">
+        <button class="btn btn-r" id="race-btn" onclick="runRace()">⚡ Lanzar las 4 Peticiones Simultáneamente</button>
+        <button class="btn btn-sm" style="margin-left:8px;background:var(--bg3);border-color:var(--bg5);color:var(--text-dim)" onclick="resetRace()">↺ Reset</button>
+      </div>
+
+      <!-- Race lanes -->
+      <div style="display:flex;flex-direction:column;gap:14px" id="race-lanes">
+        <!-- REST lane -->
+        <div class="hl" style="border-color:rgba(0,229,255,.15);padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="tag tag-rest">REST</span>
+            <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim)">GET /api/users/42</span>
+            <span id="race-rest-status" style="margin-left:auto;font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">⏳ Esperando...</span>
+          </div>
+          <div style="height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--bg4)">
+            <div id="race-rest-bar" style="width:0;height:100%;background:var(--rest-color);border-radius:5px;transition:width .1s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span id="race-rest-size" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Payload: — </span>
+            <span id="race-rest-time" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Tiempo: — </span>
+          </div>
+        </div>
+        <!-- SOAP lane -->
+        <div class="hl" style="border-color:rgba(255,107,0,.15);padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="tag tag-soap">SOAP</span>
+            <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim)">POST /ws/UserService (XML)</span>
+            <span id="race-soap-status" style="margin-left:auto;font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">⏳ Esperando...</span>
+          </div>
+          <div style="height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--bg4)">
+            <div id="race-soap-bar" style="width:0;height:100%;background:var(--soap-color);border-radius:5px;transition:width .1s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span id="race-soap-size" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Payload: — </span>
+            <span id="race-soap-time" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Tiempo: — </span>
+          </div>
+        </div>
+        <!-- GraphQL lane -->
+        <div class="hl" style="border-color:rgba(229,53,171,.15);padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="tag tag-gql">GraphQL</span>
+            <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim)">POST /graphql {query...}</span>
+            <span id="race-gql-status" style="margin-left:auto;font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">⏳ Esperando...</span>
+          </div>
+          <div style="height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--bg4)">
+            <div id="race-gql-bar" style="width:0;height:100%;background:var(--gql-color);border-radius:5px;transition:width .1s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span id="race-gql-size" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Payload: — </span>
+            <span id="race-gql-time" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Tiempo: — </span>
+          </div>
+        </div>
+        <!-- gRPC lane -->
+        <div class="hl" style="border-color:rgba(0,200,83,.15);padding:12px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="tag tag-grpc">gRPC</span>
+            <span style="font-family:var(--mono);font-size:.55rem;color:var(--text-dim)">GetUser(id=42) via HTTP/2</span>
+            <span id="race-grpc-status" style="margin-left:auto;font-family:var(--mono);font-size:.55rem;color:var(--text-dark)">⏳ Esperando...</span>
+          </div>
+          <div style="height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--bg4)">
+            <div id="race-grpc-bar" style="width:0;height:100%;background:var(--grpc-color);border-radius:5px;transition:width .1s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span id="race-grpc-size" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Payload: — </span>
+            <span id="race-grpc-time" style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark)">Tiempo: — </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="term" id="race-term" style="margin-top:16px"><span class="t-d">system@lab:~$ </span><span class="t-g">Pulse el botón para lanzar las 4 peticiones simultáneamente...</span>
+</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ COMPARISON ═══════════ -->
+<div class="sep"></div>
+<section class="sec" id="compare">
+  <div class="sec-head">
+    <div class="sec-tag">// COMPARATIVA TÉCNICA</div>
+    <h2 class="sec-title">Diferencias <span>Clave</span></h2>
+    <p class="sec-sub">Haga clic en cada categoría para ver la comparación visual entre los 4 protocolos.</p>
+  </div>
+
+  <div class="tabs" id="cmp-tabs">
+    <button class="tab on" onclick="cmpTab(0)">Tamaño del Payload</button>
+    <button class="tab" onclick="cmpTab(1)">Endpoints</button>
+    <button class="tab" onclick="cmpTab(2)">Formato de Datos</button>
+    <button class="tab" onclick="cmpTab(3)">Verbos / Métodos</button>
+    <button class="tab" onclick="cmpTab(4)">Flexibilidad</button>
+    <button class="tab" onclick="cmpTab(5)">Streaming</button>
+    <button class="tab" onclick="cmpTab(6)">Contratos</button>
+    <button class="tab" onclick="cmpTab(7)">Transporte</button>
+  </div>
+
+  <!-- Tab 0: Payload Size -->
+  <div class="tpanel on" id="cmp-0">
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:12px">▸ Tamaño aproximado del mismo dato "User 42" viajando por la red:</div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--rest-color)">REST</span><div class="cbar-t"><div class="cbar-f" style="width:55%;background:var(--rest-color)"></div></div><span class="cbar-v" style="color:var(--rest-color)">~180B</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--soap-color)">SOAP</span><div class="cbar-t"><div class="cbar-f" style="width:95%;background:var(--soap-color)"></div></div><span class="cbar-v" style="color:var(--soap-color)">~520B</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--gql-color)">GraphQL</span><div class="cbar-t"><div class="cbar-f" style="width:30%;background:var(--gql-color)"></div></div><span class="cbar-v" style="color:var(--gql-color)">~95B</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--grpc-color)">gRPC</span><div class="cbar-t"><div class="cbar-f" style="width:12%;background:var(--grpc-color)"></div></div><span class="cbar-v" style="color:var(--grpc-color)">~35B</span></div>
+    <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dark);margin-top:12px;text-align:center">SOAP es ~15x más pesado que gRPC para el mismo dato. GraphQL solo envía lo pedido. gRPC usa binario ultracompacto.</div>
+  </div>
+
+  <!-- Tab 1: Endpoints -->
+  <div class="tpanel" id="cmp-1">
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:12px">▸ ¿Cuántos endpoints se necesitan para Users, Orders, Products?</div>
+    <div class="g4" style="text-align:center;gap:16px">
+      <div class="hl" style="border-color:rgba(0,229,255,.15)">
+        <div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:8px">REST</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--text);line-height:2">
+          GET <span class="t-c">/users</span><br>GET <span class="t-c">/users/:id</span><br>POST <span class="t-c">/users</span><br>PUT <span class="t-c">/users/:id</span><br>DELETE <span class="t-c">/users/:id</span><br>GET <span class="t-c">/orders</span><br>GET <span class="t-c">/products</span><br><span class="t-d">...y más</span>
+        </div>
+        <div style="font-family:var(--head);font-size:1.5rem;font-weight:900;color:var(--rest-color);margin-top:8px">~15+</div>
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">endpoints</div>
+      </div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15)">
+        <div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:8px">SOAP</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--text);line-height:2">
+          POST <span class="t-o">/ws/UserSvc</span><br>POST <span class="t-o">/ws/OrderSvc</span><br>POST <span class="t-o">/ws/ProductSvc</span><br><span class="t-d">La acción va</span><br><span class="t-d">dentro del XML</span><br><span class="t-d">Envelope body</span><br><span class="t-d">&nbsp;</span><br><span class="t-d">&nbsp;</span>
+        </div>
+        <div style="font-family:var(--head);font-size:1.5rem;font-weight:900;color:var(--soap-color);margin-top:8px">~3</div>
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">endpoints</div>
+      </div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15)">
+        <div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:8px">GraphQL</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--text);line-height:2">
+          POST <span class="t-pk">/graphql</span><br><span class="t-d">Todo pasa por</span><br><span class="t-d">un ÚNICO endpoint</span><br><span class="t-d">La query define</span><br><span class="t-d">qué datos pedir</span><br><span class="t-d">y qué operación</span><br><span class="t-d">&nbsp;</span><br><span class="t-d">&nbsp;</span>
+        </div>
+        <div style="font-family:var(--head);font-size:1.5rem;font-weight:900;color:var(--gql-color);margin-top:8px">1</div>
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">endpoint</div>
+      </div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15)">
+        <div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:8px">gRPC</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--text);line-height:2">
+          <span class="t-g">GetUser()</span><br><span class="t-g">CreateUser()</span><br><span class="t-g">ListOrders()</span><br><span class="t-g">GetProduct()</span><br><span class="t-d">Son funciones</span><br><span class="t-d">definidas en el</span><br><span class="t-d">.proto file</span><br><span class="t-d">&nbsp;</span>
+        </div>
+        <div style="font-family:var(--head);font-size:1.5rem;font-weight:900;color:var(--grpc-color);margin-top:8px">N funciones</div>
+        <div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">RPC methods</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Data Format -->
+  <div class="tpanel" id="cmp-2">
+    <div class="g4" style="text-align:center;gap:16px">
+      <div class="hl" style="border-color:rgba(0,229,255,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:10px">REST</div><div style="font-size:2.5rem;margin-bottom:6px">📄</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--rest-color);font-weight:700">JSON</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:4px">Texto legible por humanos. Ligero. Sin schema obligatorio.</div></div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:10px">SOAP</div><div style="font-size:2.5rem;margin-bottom:6px">📜</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--soap-color);font-weight:700">XML</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:4px">Verboso. Tags de apertura y cierre. Namespace obligatorio. WSDL.</div></div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:10px">GraphQL</div><div style="font-size:2.5rem;margin-bottom:6px">🎯</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--gql-color);font-weight:700">JSON</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:4px">JSON selectivo. Schema con tipos. Solo los campos pedidos.</div></div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:10px">gRPC</div><div style="font-size:2.5rem;margin-bottom:6px">⚡</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--grpc-color);font-weight:700">Protobuf</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim);margin-top:4px">Binario compacto. No legible. .proto define schema. Ultra rápido.</div></div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Verbs -->
+  <div class="tpanel" id="cmp-3">
+    <div class="g4" style="gap:16px">
+      <div class="hl" style="border-color:rgba(0,229,255,.15);text-align:center"><div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:10px">REST</div><div style="font-family:var(--mono);font-size:.65rem;line-height:2.2"><span style="background:rgba(0,229,255,.15);padding:2px 8px;border-radius:3px;color:var(--rest-color)">GET</span> Leer<br><span style="background:rgba(0,200,83,.15);padding:2px 8px;border-radius:3px;color:var(--green)">POST</span> Crear<br><span style="background:rgba(255,208,0,.15);padding:2px 8px;border-radius:3px;color:var(--yellow)">PUT</span> Reemplazar<br><span style="background:rgba(255,107,0,.15);padding:2px 8px;border-radius:3px;color:var(--orange)">PATCH</span> Parcial<br><span style="background:rgba(255,26,26,.15);padding:2px 8px;border-radius:3px;color:var(--red)">DELETE</span> Eliminar</div></div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15);text-align:center"><div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:10px">SOAP</div><div style="font-family:var(--mono);font-size:.65rem;line-height:2.5"><span style="background:rgba(255,107,0,.15);padding:2px 8px;border-radius:3px;color:var(--soap-color)">POST</span><br><br><span class="t-d">SIEMPRE POST</span><br><span class="t-d">La "acción" va</span><br><span class="t-d">dentro del XML</span></div></div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15);text-align:center"><div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:10px">GraphQL</div><div style="font-family:var(--mono);font-size:.65rem;line-height:2.2"><span style="background:rgba(229,53,171,.15);padding:2px 8px;border-radius:3px;color:var(--gql-color)">query</span> Leer<br><span style="background:rgba(229,53,171,.15);padding:2px 8px;border-radius:3px;color:var(--gql-color)">mutation</span> Escribir<br><span style="background:rgba(229,53,171,.15);padding:2px 8px;border-radius:3px;color:var(--gql-color)">subscription</span> Real-time<br><br><span class="t-d">Todo via POST</span></div></div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15);text-align:center"><div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:10px">gRPC</div><div style="font-family:var(--mono);font-size:.65rem;line-height:2.2"><span style="background:rgba(0,200,83,.15);padding:2px 8px;border-radius:3px;color:var(--grpc-color)">Unary</span> 1 req→1 res<br><span style="background:rgba(0,200,83,.15);padding:2px 8px;border-radius:3px;color:var(--grpc-color)">Server Stream</span><br><span style="background:rgba(0,200,83,.15);padding:2px 8px;border-radius:3px;color:var(--grpc-color)">Client Stream</span><br><span style="background:rgba(0,200,83,.15);padding:2px 8px;border-radius:3px;color:var(--grpc-color)">Bidi Stream</span><br><span class="t-d">Funciones RPC</span></div></div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Flexibility -->
+  <div class="tpanel" id="cmp-4">
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);margin-bottom:12px">▸ ¿Quién decide qué datos viajan en la respuesta?</div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--rest-color)">REST</span><div class="cbar-t"><div class="cbar-f" style="width:40%;background:var(--rest-color)"></div></div><span class="cbar-v t-c" style="font-size:.5rem">SERVIDOR decide</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--soap-color)">SOAP</span><div class="cbar-t"><div class="cbar-f" style="width:20%;background:var(--soap-color)"></div></div><span class="cbar-v t-o" style="font-size:.5rem">WSDL fijo</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--gql-color)">GraphQL</span><div class="cbar-t"><div class="cbar-f" style="width:95%;background:var(--gql-color)"></div></div><span class="cbar-v t-pk" style="font-size:.5rem">CLIENTE decide</span></div>
+    <div class="cbar"><span class="cbar-l" style="color:var(--grpc-color)">gRPC</span><div class="cbar-t"><div class="cbar-f" style="width:30%;background:var(--grpc-color)"></div></div><span class="cbar-v t-g" style="font-size:.5rem">.proto fijo</span></div>
+    <div style="margin-top:16px;font-family:var(--mono);font-size:.55rem;color:var(--text-dim);line-height:1.8">
+      <span class="t-c">REST:</span> El servidor retorna el objeto completo — el cliente recibe TODO aunque solo necesite el nombre (over-fetching).<br>
+      <span class="t-o">SOAP:</span> El contrato WSDL define estructura rígida. Ambas partes deben seguir el contrato exacto.<br>
+      <span class="t-pk">GraphQL:</span> El cliente escribe exactamente qué campos quiere — máxima flexibilidad, cero over-fetching.<br>
+      <span class="t-g">gRPC:</span> El .proto define mensajes fijos, pero los campos opcionales permiten cierta flexibilidad.
+    </div>
+  </div>
+
+  <!-- Tab 5: Streaming -->
+  <div class="tpanel" id="cmp-5">
+    <div class="g4" style="gap:16px;text-align:center">
+      <div class="hl" style="border-color:rgba(0,229,255,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:8px">REST</div><div style="font-size:1.5rem">🔄</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--red);margin:8px 0">NO NATIVO</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Request → Response. Sin streaming. Se puede emular con SSE o WebSockets pero no es parte del estándar.</div></div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:8px">SOAP</div><div style="font-size:1.5rem">🔄</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--red);margin:8px 0">NO</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Request → Response estricto. Sin soporte de streaming. Modelo síncrono de RPC sobre XML.</div></div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:8px">GraphQL</div><div style="font-size:1.5rem">📡</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--yellow);margin:8px 0">SUBSCRIPTIONS</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Subscriptions vía WebSocket para datos en tiempo real. El servidor notifica cambios al cliente.</div></div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:8px">gRPC</div><div style="font-size:1.5rem">⚡</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--green);margin:8px 0">BIDIRECCIONAL</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">4 modos: Unary, Server stream, Client stream, Bidi stream. HTTP/2 multiplexing nativo.</div></div>
+    </div>
+  </div>
+
+  <!-- Tab 6: Contracts -->
+  <div class="tpanel" id="cmp-6">
+    <div class="g4" style="gap:16px;text-align:center">
+      <div class="hl" style="border-color:rgba(0,229,255,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:8px">REST</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--yellow);margin:6px 0">OpenAPI / Swagger</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Opcional. Muchas APIs REST no tienen contrato formal. Documentación manual.</div></div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:8px">SOAP</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--green);margin:6px 0">WSDL (obligatorio)</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Contrato XML estricto. Define tipos, operaciones, mensajes. Auto-genera clientes.</div></div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:8px">GraphQL</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--green);margin:6px 0">Schema (obligatorio)</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Schema con tipos fuertes. Introspección permite descubrir toda la API automáticamente.</div></div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:8px">gRPC</div><div style="font-family:var(--mono);font-size:.6rem;color:var(--green);margin:6px 0">.proto (obligatorio)</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Protocol Buffers define mensajes y servicios. Auto-genera código en 10+ lenguajes.</div></div>
+    </div>
+  </div>
+
+  <!-- Tab 7: Transport -->
+  <div class="tpanel" id="cmp-7">
+    <div class="g4" style="gap:16px;text-align:center">
+      <div class="hl" style="border-color:rgba(0,229,255,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--rest-color);margin-bottom:8px">REST</div><div style="font-family:var(--mono);font-size:1rem;color:var(--rest-color);font-weight:700;margin:8px 0">HTTP/1.1</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Una conexión por petición. Texto plano. Sin multiplexing. Puede usar HTTP/2 pero no lo requiere.</div></div>
+      <div class="hl" style="border-color:rgba(255,107,0,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--soap-color);margin-bottom:8px">SOAP</div><div style="font-family:var(--mono);font-size:1rem;color:var(--soap-color);font-weight:700;margin:8px 0">HTTP / SMTP / TCP</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Agnóstico del transporte. Funciona sobre HTTP, email (SMTP), TCP puro, JMS. El más flexible en transporte.</div></div>
+      <div class="hl" style="border-color:rgba(229,53,171,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--gql-color);margin-bottom:8px">GraphQL</div><div style="font-family:var(--mono);font-size:1rem;color:var(--gql-color);font-weight:700;margin:8px 0">HTTP POST</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">Generalmente HTTP POST a un endpoint único. Subscriptions usan WebSocket. Agnóstico en teoría.</div></div>
+      <div class="hl" style="border-color:rgba(0,200,83,.15)"><div style="font-family:var(--head);font-size:.7rem;color:var(--grpc-color);margin-bottom:8px">gRPC</div><div style="font-family:var(--mono);font-size:1rem;color:var(--grpc-color);font-weight:700;margin:8px 0">HTTP/2</div><div style="font-family:var(--mono);font-size:.5rem;color:var(--text-dim)">REQUIERE HTTP/2. Multiplexing de streams. Header compression. Conexión persistente. Binario.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WHEN TO USE ═══════════ -->
+<div class="sep"></div>
+<section class="sec" id="when">
+  <div class="sec-head">
+    <div class="sec-tag">// CUÁNDO USAR CADA UNO</div>
+    <h2 class="sec-title">Guía de <span>Decisión</span></h2>
+    <p class="sec-sub">Haga clic en cada escenario para ver qué protocolo es el más adecuado y por qué.</p>
+  </div>
+
+  <div id="scenarios" style="display:flex;flex-direction:column;gap:10px">
+    <!-- rendered by JS -->
+  </div>
+
+  <div class="term" id="when-term" style="margin-top:20px"><span class="t-d">advisor@academy:~$ </span><span class="t-g">Seleccione un escenario para obtener la recomendación...</span>
+</div>
+</section>
+
+<footer><p class="r">API Protocols Lab — REST vs SOAP vs GraphQL vs gRPC</p><p>Red Team Academy | Open-Sec | Laboratorio Interactivo</p></footer>
+
+<script>
+// ═══ UTILS ═══
+function sTo(s){document.querySelector(s).scrollIntoView({behavior:'smooth'})}
+function sl(ms){return new Promise(r=>setTimeout(r,ms))}
+function tIn(id,txt,cls='t-w'){const t=document.getElementById(id);t.innerHTML+='\n<span class="'+cls+'">'+txt+'</span>';t.scrollTop=t.scrollHeight}
+
+// Progress
+window.addEventListener('scroll',()=>{const s=window.scrollY,h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(s/h*100)+'%'});
+
+// ═══ QUICK OVERVIEW ═══
+function showQuick(p){
+  const t='quick-term';
+  const d={
+    rest:{c:'t-c',lines:[
+      '[REST] Representational State Transfer — Roy Fielding, 2000',
+      '  ▸ Arquitectura basada en RECURSOS identificados por URLs',
+      '  ▸ Usa verbos HTTP nativos: GET, POST, PUT, PATCH, DELETE',
+      '  ▸ Formato: JSON (ligero, legible por humanos)',
+      '  ▸ Sin estado (stateless) — cada petición es independiente',
+      '  ▸ Múltiples endpoints: /users, /orders, /products...',
+      '  ▸ El más usado en APIs públicas y web moderno',
+      '  ▸ Debilidad: over-fetching (retorna TODO el objeto siempre)',
+    ]},
+    soap:{c:'t-o',lines:[
+      '[SOAP] Simple Object Access Protocol — Microsoft, 1998',
+      '  ▸ Protocolo basado en XML con estructura Envelope/Header/Body',
+      '  ▸ SIEMPRE usa POST — la operación va dentro del XML',
+      '  ▸ Contrato WSDL obligatorio (Web Services Description Language)',
+      '  ▸ Soporta WS-Security, transacciones ACID, WS-ReliableMessaging',
+      '  ▸ Transporte agnóstico: HTTP, SMTP, TCP, JMS',
+      '  ▸ Usado en: banca, gobierno, sistemas enterprise legacy',
+      '  ▸ Debilidad: MUY verboso y pesado por el XML',
+    ]},
+    gql:{c:'t-pk',lines:[
+      '[GraphQL] Graph Query Language — Facebook, 2015',
+      '  ▸ UN solo endpoint: /graphql para TODO',
+      '  ▸ El CLIENTE decide qué campos recibir (query language)',
+      '  ▸ Elimina over-fetching y under-fetching',
+      '  ▸ Schema con tipos fuertes — introspección automática',
+      '  ▸ Operaciones: query (leer), mutation (escribir), subscription (real-time)',
+      '  ▸ Usado en: Facebook, GitHub, Shopify, Yelp',
+      '  ▸ Debilidad: complejidad en caché, N+1 queries, seguridad de queries',
+    ]},
+    grpc:{c:'t-g',lines:[
+      '[gRPC] Google Remote Procedure Call — Google, 2015',
+      '  ▸ Llamadas a funciones remotas como si fueran locales (RPC)',
+      '  ▸ Formato: Protocol Buffers (binario, ultracompacto)',
+      '  ▸ REQUIERE HTTP/2: multiplexing, streams, header compression',
+      '  ▸ Soporta 4 modos de streaming (unary, server, client, bidi)',
+      '  ▸ Auto-genera código en 10+ lenguajes desde .proto',
+      '  ▸ Usado en: microservicios internos, IoT, sistemas de alto rendimiento',
+      '  ▸ Debilidad: no funciona en browsers nativamente, no legible por humanos',
+    ]}
+  };
+  const info=d[p];
+  info.lines.forEach(l=>tIn(t,l,info.c));
+  tIn(t,'','t-d');
+}
+
+// ═══ ANIMATE PROTOCOL FLOWS ═══
+async function animProto(proto){
+  const prefixes={rest:'fr',soap:'fs',gql:'fg',grpc:'fp'};
+  const arrowPrefixes={rest:'fa-r',soap:'fa-s',gql:'fa-g',grpc:'fa-p'};
+  const p=prefixes[proto],a=arrowPrefixes[proto];
+  // reset
+  for(let i=1;i<=5;i++){
+    const n=document.getElementById(p+i);if(n)n.classList.remove('on');
+    const ar=document.getElementById(a+i);if(ar)ar.classList.remove('lit');
+  }
+  // light client/server boxes
+  const boxMap={rest:['r-cli','r-srv'],soap:['s-cli','s-srv'],gql:['g-cli','g-srv'],grpc:['p-cli','p-srv']};
+  boxMap[proto].forEach(id=>document.getElementById(id).classList.add('lit-'+proto));
+
+  for(let i=1;i<=5;i++){
+    const node=document.getElementById(p+i);if(node)node.classList.add('on');
+    if(i>1){const ar=document.getElementById(a+(i-1));if(ar)ar.classList.add('lit');}
+    await sl(700);
+  }
+  // clear box highlights after
+  setTimeout(()=>boxMap[proto].forEach(id=>document.getElementById(id).classList.remove('lit-'+proto)),2000);
+}
+
+// ═══ RACE SIMULATOR ═══
+async function runRace(){
+  resetRace();
+  document.getElementById('race-btn').disabled=true;
+  const t='race-term';
+  tIn(t,'\n⚡ LANZANDO 4 PETICIONES SIMULTÁNEAS — "Obtener User 42"','t-r');
+
+  // Simulated data
+  const protos=[
+    {key:'rest',name:'REST',size:182,time:145,color:'var(--rest-color)'},
+    {key:'soap',name:'SOAP',size:524,time:230,color:'var(--soap-color)'},
+    {key:'gql',name:'GraphQL',size:97,time:130,color:'var(--gql-color)'},
+    {key:'grpc',name:'gRPC',size:38,time:65,color:'var(--grpc-color)'}
+  ];
+  const maxTime=250;
+
+  // Start all
+  const promises=protos.map(async(p)=>{
+    tIn(t,`  [${p.name}] Enviando petición...`,`t-d`);
+    const steps=20;const stepTime=p.time/steps;
+    for(let i=1;i<=steps;i++){
+      await sl(stepTime);
+      document.getElementById(`race-${p.key}-bar`).style.width=(i/steps*100)+'%';
+    }
+    document.getElementById(`race-${p.key}-status`).innerHTML=`<span style="color:${p.color}">✓ ${p.time}ms</span>`;
+    document.getElementById(`race-${p.key}-size`).innerHTML=`Payload: <span style="color:${p.color}">${p.size} bytes</span>`;
+    document.getElementById(`race-${p.key}-time`).innerHTML=`Tiempo: <span style="color:${p.color}">${p.time}ms</span>`;
+    tIn(t,`  [${p.name}] ✓ Respuesta recibida — ${p.size} bytes en ${p.time}ms`,p.key==='rest'?'t-c':p.key==='soap'?'t-o':p.key==='gql'?'t-pk':'t-g');
+  });
+
+  await Promise.all(promises);
+
+  tIn(t,'\n─── RESULTADOS ───','t-y');
+  tIn(t,'  🏆 1° gRPC    — 38 bytes,  65ms  (binario HTTP/2)','t-g');
+  tIn(t,'  🥈 2° GraphQL — 97 bytes,  130ms (solo campos pedidos)','t-pk');
+  tIn(t,'  🥉 3° REST    — 182 bytes, 145ms (JSON objeto completo)','t-c');
+  tIn(t,'  4° SOAP    — 524 bytes, 230ms (XML Envelope verboso)','t-o');
+  tIn(t,'\n  → gRPC es ~3.5x más rápido y ~14x más compacto que SOAP','t-y');
+  tIn(t,'  → GraphQL envía ~47% menos datos que REST (solo campos pedidos)','t-y');
+  document.getElementById('race-btn').disabled=false;
+}
+function resetRace(){
+  ['rest','soap','gql','grpc'].forEach(k=>{
+    document.getElementById(`race-${k}-bar`).style.width='0';
+    document.getElementById(`race-${k}-status`).innerHTML='⏳ Esperando...';
+    document.getElementById(`race-${k}-status`).style.color='var(--text-dark)';
+    document.getElementById(`race-${k}-size`).textContent='Payload: —';
+    document.getElementById(`race-${k}-time`).textContent='Tiempo: —';
+  });
+  document.getElementById('race-term').innerHTML='<span class="t-d">system@lab:~$ </span><span class="t-g">Pulse el botón para lanzar las 4 peticiones simultáneamente...</span>\n';
+}
+
+// ═══ COMPARISON TABS ═══
+function cmpTab(n){
+  document.querySelectorAll('#cmp-tabs .tab').forEach((t,i)=>t.classList.toggle('on',i===n));
+  document.querySelectorAll('.tpanel').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+
+// ═══ WHEN TO USE — SCENARIOS ═══
+const scenarios=[
+  {icon:'🌐',title:'API Pública para App Móvil + Web',rec:'rest',why:'REST es el estándar para APIs públicas. JSON ligero, cacheable, compatible con todos los frameworks frontend. Fácil de documentar con OpenAPI/Swagger.',alt:'Si se necesita controlar exactamente qué campos enviar al móvil (ahorrar datos) → GraphQL.'},
+  {icon:'🏦',title:'Sistema Bancario con Transacciones ACID',rec:'soap',why:'SOAP ofrece WS-Security, WS-ReliableMessaging, WS-AtomicTransaction. Cumple con estándares enterprise y regulatorios (PCI-DSS). WSDL como contrato formal.',alt:'Bancos modernos con microservicios internos pueden usar gRPC para comunicación service-to-service.'},
+  {icon:'📱',title:'App Móvil con Conexión Lenta / Datos Limitados',rec:'gql',why:'GraphQL permite al cliente pedir EXACTAMENTE los campos que necesita. Sin over-fetching. Ideal cuando cada byte cuenta (redes 3G, países emergentes).',alt:'Si se necesita máxima compresión → gRPC con Protobuf binario.'},
+  {icon:'⚡',title:'Microservicios Internos de Alto Rendimiento',rec:'grpc',why:'gRPC con Protocol Buffers es el más rápido y compacto. HTTP/2 con multiplexing. Streaming bidireccional. Auto-genera código en múltiples lenguajes. Ideal para service mesh.',alt:'Si se necesita debugging humano fácil → REST con JSON.'},
+  {icon:'📊',title:'Dashboard con Datos de Múltiples Fuentes',rec:'gql',why:'GraphQL permite obtener datos de users, orders, analytics EN UNA SOLA petición. Sin hacer 5 calls REST diferentes. Reduce latencia total significativamente.',alt:'Para datos en tiempo real (streaming de métricas) → gRPC bidi-stream.'},
+  {icon:'🤖',title:'Sistema IoT con Miles de Dispositivos',rec:'grpc',why:'Protobuf binario minimiza el uso de bandwidth. HTTP/2 mantiene conexiones persistentes. Streaming permite telemetría en tiempo real. Bajo overhead de CPU.',alt:'Si los dispositivos son muy limitados (no soportan HTTP/2) → REST simple o MQTT.'},
+  {icon:'🏛️',title:'Integración con Sistemas Gubernamentales Legacy',rec:'soap',why:'Muchos sistemas gubernamentales y legacy enterprise usan SOAP. WSDL permite integración contractual. WS-Security para autenticación a nivel de mensaje.',alt:'Si se está construyendo una capa nueva sobre legacy → REST como facade.'},
+  {icon:'🎮',title:'Plataforma de Gaming en Tiempo Real',rec:'grpc',why:'Streaming bidireccional nativo. Latencia mínima con binario HTTP/2. Ideal para actualización de estado de juego, matchmaking, chat en tiempo real.',alt:'GraphQL subscriptions para features que no requieren ultra-baja latencia.'},
+];
+
+(function renderScenarios(){
+  const c=document.getElementById('scenarios');
+  const colors={rest:'var(--rest-color)',soap:'var(--soap-color)',gql:'var(--gql-color)',grpc:'var(--grpc-color)'};
+  const names={rest:'REST',soap:'SOAP',gql:'GraphQL',grpc:'gRPC'};
+  const tags={rest:'tag-rest',soap:'tag-soap',gql:'tag-gql',grpc:'tag-grpc'};
+  scenarios.forEach((s,i)=>{
+    c.innerHTML+=`
+    <div class="hl" style="cursor:pointer;border-color:var(--bg4);transition:all .3s;padding:16px" onclick="showScenario(${i})" id="sc-${i}">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:1.5rem">${s.icon}</span>
+        <span style="font-family:var(--body);font-size:.85rem;font-weight:600;color:var(--text);flex:1">${s.title}</span>
+        <span class="tag ${tags[s.rec]}" id="sc-tag-${i}" style="opacity:.5;transition:all .3s">● ${names[s.rec]}</span>
+      </div>
+      <div id="sc-detail-${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bg4)">
+        <div style="font-family:var(--mono);font-size:.62rem;color:${colors[s.rec]};margin-bottom:6px;font-weight:600">✓ RECOMENDADO: ${names[s.rec]}</div>
+        <div style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim);line-height:1.7;margin-bottom:8px">${s.why}</div>
+        <div style="font-family:var(--mono);font-size:.55rem;color:var(--yellow)">⚡ Alternativa: ${s.alt}</div>
+      </div>
+    </div>`;
+  });
+})();
+
+function showScenario(i){
+  const det=document.getElementById('sc-detail-'+i);
+  const tag=document.getElementById('sc-tag-'+i);
+  const box=document.getElementById('sc-'+i);
+  const isOpen=det.style.display==='block';
+  det.style.display=isOpen?'none':'block';
+  tag.style.opacity=isOpen?'.5':'1';
+  const s=scenarios[i];
+  const borderColors={rest:'rgba(0,229,255,.3)',soap:'rgba(255,107,0,.3)',gql:'rgba(229,53,171,.3)',grpc:'rgba(0,200,83,.3)'};
+  box.style.borderColor=isOpen?'var(--bg4)':borderColors[s.rec];
+  if(!isOpen){
+    const names={rest:'REST',soap:'SOAP',gql:'GraphQL',grpc:'gRPC'};
+    const cls={rest:'t-c',soap:'t-o',gql:'t-pk',grpc:'t-g'};
+    tIn('when-term',`\n[ESCENARIO] ${s.title}`,cls[s.rec]);
+    tIn('when-term',`  → Recomendado: ${names[s.rec]}`,cls[s.rec]);
+    tIn('when-term',`  → ${s.why.substring(0,120)}...`,'t-d');
+  }
+}
+
+// ═══ NAV ACTIVE ═══
+const secs=document.querySelectorAll('.sec');
+const nbtns=document.querySelectorAll('.nbtn');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-200)cur=s.id});
+  nbtns.forEach(b=>b.classList.toggle('act',b.getAttribute('onclick')?.includes(cur)));
+});
+</script>
+</body>
+</html>
