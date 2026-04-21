@@ -119,12 +119,12 @@ graph TD
     ATK --> C
 
     A["ESCENARIO A: EDR MODERNO"]
-    A --> A1["09:00 - Empleado ejecuta el payload"]
+    A --> A1["09:00 - Empleado ejecuta el<br/> payload"]
     A1 --> A2["09:03 - EDR detecta process hollowing<br/>Alerta automatica generada"]
     A2 --> A3["MTTD = 3 minutos"]
 
     B["ESCENARIO B: AV LEGACY + SIEM BASICO"]
-    B --> B1["09:00 Lunes - Payload ejecutado<br/>AV no detecta: crypter personalizado"]
+    B --> B1["09:00 Lunes - Payload ejecutado<br/>AV no detecta: crypter <br/>personalizado"]
     B1 --> B2["09:15 Martes - SIEM detecta beaconing<br/>Necesito 24h de datos estadisticos"]
     B2 --> B3["MTTD = 24 horas 15 minutos"]
 
