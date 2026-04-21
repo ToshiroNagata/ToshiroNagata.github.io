@@ -5,7 +5,6 @@ date: 2026-04-21
 categories: [blueteam, incident-response]
 tags: [dwell-time, metricas, ir, mandiant, mtrends, dfir]
 mermaid: true
-
 ---
 
 ## Lo que pasa antes de que alguien se entere
