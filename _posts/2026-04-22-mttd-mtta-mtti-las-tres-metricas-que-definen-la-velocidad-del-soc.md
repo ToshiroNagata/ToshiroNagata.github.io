@@ -9,7 +9,7 @@ mermaid: true
 
 ## La carrera contra el reloj empieza aquí
 
-En la [entrada anterior](/posts/dwell-time-la-metrica-que-define-si-contienes-o-catastrofe/) se explicó el Dwell Time como la métrica estratégica que mide cuánto tiempo permanece un atacante sin ser detectado. Pero el Dwell Time es un resultado — no se puede mejorar directamente. Lo que sí se puede mejorar son los tres segmentos temporales que lo componen: **detectar** la amenaza, **reconocer** la alerta y **investigar** el incidente.
+En la [entrada anterior](/posts/2026-04-21-dwell-time-La Metrica-que-Separa-la-Contencion-de-la Cataastrofe.md/) se explicó el Dwell Time como la métrica estratégica que mide cuánto tiempo permanece un atacante sin ser detectado. Pero el Dwell Time es un resultado — no se puede mejorar directamente. Lo que sí se puede mejorar son los tres segmentos temporales que lo componen: **detectar** la amenaza, **reconocer** la alerta y **investigar** el incidente.
 
 Estas tres métricas conforman el grupo de **Detección y Triaje**, y juntas determinan cuánto tiempo pasa desde que un atacante ejecuta su primera acción maliciosa hasta que el equipo de seguridad comprende lo que está pasando y puede actuar.
 
