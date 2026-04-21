@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Dwell Time: La Métrica que Separa la Contención de la Catástrofe"
+title: "Dwell Time: La Métrica que Separa la Contención de la Catástrofe."
 date: 2026-04-21
 categories: [blueteam, incident-response]
 tags: [dwell-time, metricas, ir, mandiant, mtrends, dfir]
