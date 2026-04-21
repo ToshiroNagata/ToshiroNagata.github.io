@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "MTTD, MTTA y MTTI: Las Tres Métricas que Definen la Velocidad del SOC"
+title: "MTTD, MTTA y MTTI: Las Tres Métricas que Definen la velocidad del SOC"
 date: 2026-04-22
 categories: [blueteam, incident-response]
 tags: [mttd, mtta, mtti, metricas, soc, dfir, deteccion]
