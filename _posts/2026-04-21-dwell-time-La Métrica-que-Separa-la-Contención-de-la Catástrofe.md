@@ -1,12 +1,11 @@
 ---
 layout: post
-title: "Dwell Time: La Métrica que Define si Contienes o si es Catástrofe"
+title: "Dwell Time: La Métrica que Separa la Contención de la Catástrofe"
 date: 2026-04-21
 categories: [blueteam, incident-response]
 tags: [dwell-time, metricas, ir, mandiant, mtrends, dfir]
 mermaid: true
-image:
-  path: /img/dwell-time/dwell_time_banner.png
+
 ---
 
 ## Lo que pasa antes de que alguien se entere
