@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detección y Triaje // Blue Team IR Metrics</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{
+--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--panel:#0e0e1c;
+--blue:#0af;--blue2:#07f;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;
+--glow:rgba(0,170,255,.25);--text:#b0c4d8;--dim:#445566;--border:#152030;
+--font-display:'Oxanium',sans-serif;--font-body:'JetBrains Mono',monospace;--font-code:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.012) 3px,rgba(0,170,255,.012) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--blue2);border-radius:3px}
+
+/* ── NAV ── */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;padding:0 20px;gap:20px}
+.logo{font-family:var(--font-display);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}
+.logo b{color:var(--cyan)}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--font-code)}
+.nav-links a:hover,.nav-links a.active{color:var(--blue);background:rgba(0,170,255,.07)}
+
+/* ── LAYOUT ── */
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:70px 0 50px}
+.hero h1{font-family:var(--font-display);font-size:clamp(26px,5vw,48px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:5px;line-height:1.15;text-shadow:0 0 40px var(--glow),0 0 80px rgba(0,170,255,.12);margin-bottom:12px}
+.hero .sub{font-family:var(--font-code);font-size:14px;color:var(--dim);letter-spacing:2px}
+.cursor-blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.kpi-row{display:flex;justify-content:center;gap:36px;margin-top:36px;flex-wrap:wrap}
+.kpi{text-align:center}
+.kpi-val{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.25)}
+.kpi-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-top:2px;font-family:var(--font-display)}
+
+/* ── SECTION ── */
+.sec{margin-bottom:64px;scroll-margin-top:58px}
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}
+.sec-title{font-family:var(--font-display);font-size:clamp(17px,3vw,22px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}
+.sec-title .ac{color:var(--cyan)}
+
+/* ── CARDS ── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:16px;position:relative;overflow:hidden;transition:border-color .3s}
+.card:hover{border-color:rgba(0,170,255,.3)}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}
+.card:hover::before{opacity:1}
+.card-tag{font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.card h3{font-size:15px;color:var(--cyan);margin-bottom:10px;font-weight:600}
+.card p,.card li{font-size:13px;margin-bottom:8px}
+
+/* ── FORMULA ── */
+.formula{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:14px 18px;margin:14px 0;font-family:var(--font-code);font-size:13px;color:var(--cyan);position:relative}
+.formula::after{content:'FORMULA';position:absolute;top:5px;right:10px;font-size:8px;color:rgba(0,170,255,.3);letter-spacing:2px;font-family:var(--font-display);font-weight:700}
+
+/* ── EXAMPLE ── */
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.ex-tag{font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+
+/* ── WARN ── */
+.warn{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.warn-tag{font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+
+/* ── INSIGHT ── */
+.insight{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.insight-tag{font-family:var(--font-display);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+.tbl th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--font-display);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:9px 10px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.tbl tr:hover td{background:rgba(0,170,255,.02)}
+.g{color:var(--green);font-weight:600}.o{color:var(--orange);font-weight:600}.r{color:var(--red);font-weight:600}
+
+/* ── FLOW DIAGRAM ── */
+.flow-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;overflow-x:auto}
+.flow-label{font-family:var(--font-display);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;text-align:center}
+.flow-v{display:flex;flex-direction:column;align-items:center;gap:0}
+.flow-h{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;min-width:max-content}
+.fnode{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:12px 16px;text-align:center;min-width:130px;transition:.3s;cursor:default;flex-shrink:0}
+.fnode:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.03);box-shadow:0 0 18px var(--glow)}
+.fnode .nid{font-family:var(--font-display);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:3px}
+.fnode .nlabel{font-size:11px;font-weight:600;color:var(--cyan)}
+.fnode .nsub{font-size:10px;color:var(--dim);margin-top:2px}
+.fnode.red{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fnode.red .nlabel{color:var(--red)}
+.fnode.grn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fnode.grn .nlabel{color:var(--green)}
+.fnode.org{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fnode.org .nlabel{color:var(--orange)}
+.fnode.pur{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fnode.pur .nlabel{color:var(--purple)}
+.farr{color:var(--dim);font-size:18px;padding:4px 0;animation:parr 2s infinite;text-align:center;flex-shrink:0}
+.farr-h{padding:0 8px}
+@keyframes parr{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+
+/* ── TIMELINE ── */
+.tl{position:relative;padding:20px 0 20px 36px;margin:16px 0}
+.tl-line{position:absolute;left:12px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan),var(--green),var(--orange))}
+.tl-item{position:relative;margin-bottom:18px;padding-left:18px;opacity:0;transform:translateX(-16px);animation:sIn .5s forwards}
+.tl-item:nth-child(1){animation-delay:.1s}.tl-item:nth-child(2){animation-delay:.2s}.tl-item:nth-child(3){animation-delay:.3s}.tl-item:nth-child(4){animation-delay:.4s}.tl-item:nth-child(5){animation-delay:.5s}.tl-item:nth-child(6){animation-delay:.6s}.tl-item:nth-child(7){animation-delay:.7s}.tl-item:nth-child(8){animation-delay:.8s}.tl-item:nth-child(9){animation-delay:.9s}.tl-item:nth-child(10){animation-delay:1s}
+@keyframes sIn{to{opacity:1;transform:translateX(0)}}
+.tl-dot{position:absolute;left:-24px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--blue);border:2px solid var(--bg);box-shadow:0 0 8px var(--glow)}
+.tl-dot.red{background:var(--red);box-shadow:0 0 8px rgba(255,51,85,.35)}.tl-dot.grn{background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.35)}.tl-dot.org{background:var(--orange);box-shadow:0 0 8px rgba(255,136,0,.35)}.tl-dot.pur{background:var(--purple);box-shadow:0 0 8px rgba(170,68,255,.35)}
+.tl-time{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--cyan);margin-bottom:1px}
+.tl-title{font-size:12px;font-weight:600;color:var(--blue)}
+.tl-desc{font-size:11px;color:var(--dim)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{background:var(--bg3);color:var(--dim);border:1px solid var(--border);border-radius:5px 5px 0 0;padding:8px 14px;font-family:var(--font-code);font-size:11px;cursor:pointer;transition:.3s}
+.tab-btn:hover{color:var(--blue);border-color:rgba(0,170,255,.3)}
+.tab-btn.active{color:var(--blue);background:rgba(0,170,255,.07);border-color:var(--blue);border-bottom-color:transparent}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* ── BAR CHART ── */
+.bars{display:flex;align-items:flex-end;gap:14px;height:180px;padding:16px 0;border-bottom:1px solid var(--border);margin:16px 0;justify-content:center;flex-wrap:nowrap;overflow-x:auto}
+.bar-c{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+.bar{width:44px;border-radius:3px 3px 0 0;transition:height 1s ease-out;min-height:3px;box-shadow:0 0 8px var(--glow)}
+.bar.b1{background:linear-gradient(to top,var(--blue),var(--cyan))}
+.bar.b2{background:linear-gradient(to top,var(--orange),var(--yellow));box-shadow:0 0 8px rgba(255,136,0,.2)}
+.bar.b3{background:linear-gradient(to top,var(--red),var(--orange));box-shadow:0 0 8px rgba(255,51,85,.2)}
+.bar-v{font-family:var(--font-display);font-size:10px;font-weight:700;color:var(--cyan)}
+.bar-l{font-size:9px;color:var(--dim);text-align:center;max-width:50px}
+
+/* ── BRIDGE RED/BLUE ── */
+.bridge{display:grid;grid-template-columns:1fr auto 1fr;margin:14px 0;align-items:stretch}
+.br-side{padding:16px;border-radius:6px;font-size:12px}
+.br-red{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}
+.br-blue{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}
+.br-green{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15)}
+.br-arr{display:flex;align-items:center;padding:0 10px;font-size:22px;color:var(--dim);animation:parr 2s infinite}
+.br-tag{font-family:var(--font-display);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.br-red .br-tag{color:var(--red)}.br-blue .br-tag{color:var(--blue)}.br-green .br-tag{color:var(--green)}
+
+/* ── ACCORDION ── */
+.acc{border:1px solid var(--border);border-radius:6px;margin-bottom:6px;overflow:hidden}
+.acc-head{padding:12px 16px;background:var(--panel);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}
+.acc-head:hover{background:var(--bg3)}
+.acc-t{font-size:12px;font-weight:600;color:var(--blue)}
+.acc-arr{color:var(--dim);transition:transform .3s;font-size:13px}
+.acc.open .acc-arr{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .4s ease;background:var(--bg)}
+.acc.open .acc-body{max-height:3000px}
+.acc-inner{padding:14px 16px}
+
+/* ── GRID ── */
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:14px 0}
+.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:14px 0}
+
+/* ── METRIC CARD ── */
+.mcard{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px;transition:.3s;cursor:default}
+.mcard:hover{border-color:var(--blue);box-shadow:0 0 16px var(--glow);transform:translateY(-2px)}
+.mcard .mc-metric{font-family:var(--font-display);font-size:17px;font-weight:800;color:var(--blue);margin-bottom:3px}
+.mcard .mc-name{font-size:10px;color:var(--cyan);margin-bottom:6px}
+.mcard .mc-desc{font-size:11px;color:var(--dim)}
+.mcard .mc-seg{font-family:var(--font-code);font-size:9px;color:rgba(0,170,255,.4);margin-top:8px;padding-top:7px;border-top:1px solid var(--border)}
+
+/* ── CALCULATOR ── */
+.calc-row{display:flex;gap:14px;align-items:center;margin:10px 0;flex-wrap:wrap}
+.calc-group label{display:block;font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-family:var(--font-display)}
+.calc-group input{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--cyan);font-family:var(--font-code);font-size:13px;width:90px;outline:none;transition:.3s}
+.calc-group input:focus{border-color:var(--blue)}
+.calc-btn{background:var(--blue);color:var(--bg);border:none;padding:8px 16px;border-radius:4px;font-family:var(--font-display);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;margin-top:14px}
+.calc-result{font-family:var(--font-display);font-size:16px;font-weight:700;padding:8px 16px;border-radius:6px;border:1px solid var(--border);min-width:130px;text-align:center}
+.calc-result.pos{color:var(--green);border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.04)}
+.calc-result.neg{color:var(--red);border-color:rgba(255,51,85,.25);background:rgba(255,51,85,.04)}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── HIGHLIGHT ── */
+.hl{color:var(--cyan);font-weight:600}
+.hlr{color:var(--red);font-weight:600}
+.hlg{color:var(--green);font-weight:600}
+.hlo{color:var(--orange);font-weight:600}
+
+/* ── TAG ── */
+.tag{display:inline-block;font-family:var(--font-display);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}
+.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}
+.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}
+
+/* ── PULSE ── */
+.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);animation:pdot 2s infinite;margin-right:5px;vertical-align:middle}
+@keyframes pdot{0%{box-shadow:0 0 0 0 rgba(0,255,136,.35)}70%{box-shadow:0 0 0 7px rgba(0,255,136,0)}100%{box-shadow:0 0 0 0 rgba(0,255,136,0)}}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:32px 16px;border-top:1px solid var(--border);color:var(--dim);font-size:10px}
+footer .fl{margin-bottom:3px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+main{padding:58px 12px 36px}
+.bridge{grid-template-columns:1fr;gap:8px}
+.br-arr{transform:rotate(90deg);padding:6px 0;justify-content:center}
+.flow-h{overflow-x:auto;padding-bottom:8px}
+.bars{gap:8px}.bar{width:32px}
+.calc-row{flex-direction:column;align-items:flex-start}
+.grid2,.grid3{grid-template-columns:1fr}
+.kpi-row{gap:20px}
+}
+</style>
+</head>
+<body>
+
+<nav id="topbar">
+  <div class="logo">IR<b>::</b>TTx</div>
+  <div class="nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#dwell">Dwell Time</a>
+    <a href="#mttd">MTTD</a>
+    <a href="#mtta">MTTA</a>
+    <a href="#mtti">MTTI</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#calc">Calculadora</a>
+    <a href="#summary">Resumen</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <h1>Detección y Triaje<br>Blue Team IR Metrics</h1>
+  <div class="sub">// Dwell Time + MTTD + MTTA + MTTI — Guía Técnica Visual<span class="cursor-blink"></span></div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" data-c="14" data-s=" d">0</div><div class="kpi-label">Dwell Time 2025</div></div>
+    <div class="kpi"><div class="kpi-val" data-c="960">0</div><div class="kpi-label">Alertas/dia promedio</div></div>
+    <div class="kpi"><div class="kpi-val" data-c="40" data-s="%">0</div><div class="kpi-label">Alertas nunca investigadas</div></div>
+    <div class="kpi"><div class="kpi-val" data-c="29" data-s=" min">0</div><div class="kpi-label">Breakout eCrime 2025</div></div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 0: OVERVIEW ═══════ -->
+<section class="sec reveal" id="overview">
+  <div class="sec-head"><span class="sec-num">00</span><h2 class="sec-title">Mapa <span class="ac">General</span></h2></div>
+  <div class="card">
+    <div class="card-tag">Flujo N.1 — Cadena temporal completa del grupo de detección y triaje</div>
+    <p>Estas cuatro métricas cubren todo lo que ocurre desde que el atacante ejecuta su primera acción hasta que el equipo de seguridad comprende completamente lo que está pasando. Cada una mide un segmento específico de ese timeline.</p>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.1: Timeline de detección y triaje</div>
+      <div class="flow-v">
+        <div class="fnode red"><div class="nid">T0</div><div class="nlabel">Compromiso Inicial</div><div class="nsub">El atacante ejecuta su primera acción</div></div>
+        <div class="farr">|<br>DWELL TIME<br>|</div>
+        <div class="fnode"><div class="nid">MTTD</div><div class="nlabel">Detección</div><div class="nsub">El stack de seguridad genera una alerta</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode" style="border-color:rgba(0,229,255,.3)"><div class="nid">MTTA</div><div class="nlabel" style="color:var(--cyan)">Reconocimiento</div><div class="nsub">Un analista acepta la alerta</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode pur"><div class="nid">MTTI</div><div class="nlabel">Investigación Completa</div><div class="nsub">Alcance, causa raíz e impacto definidos</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode grn"><div class="nid">SIGUIENTE FASE</div><div class="nlabel">Contención (MTTC)</div><div class="nsub">Se cubre en la próxima sesión</div></div>
+      </div>
+    </div>
+    <div class="formula">Tiempo_hasta_respuesta = MTTD + MTTA + MTTI<br><br>Si esta suma > Breakout Time del adversario → el atacante hace movimiento lateral ANTES de que el SOC entienda lo que pasa.</div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 1: DWELL TIME ═══════ -->
+<section class="sec reveal" id="dwell">
+  <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Dwell <span class="ac">Time</span></h2></div>
+
+  <div class="card">
+    <div class="card-tag">Definición técnica</div>
+    <h3>Tiempo de permanencia del adversario</h3>
+    <p>El Dwell Time es el período total que transcurre desde que un atacante obtiene <span class="hl">acceso inicial</span> al entorno hasta que la organización <span class="hl">detecta su presencia</span>. Se reporta como <span class="hl">mediana</span> (no promedio) porque la distribución es extremadamente asimétrica: unas pocas intrusiones de espionaje con dwell times de meses distorsionan cualquier promedio.</p>
+    <p>Es la métrica más importante a nivel estratégico porque correlaciona directamente con el daño: a mayor Dwell Time, más tiempo tiene el atacante para reconocimiento interno, escalación de privilegios, movimiento lateral, exfiltración de datos y preparación de acciones destructivas.</p>
+    <div class="formula">Dwell Time = Fecha_Detección − Fecha_Compromiso_Inicial</div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.2 — Curva de daño progresiva</div>
+    <p>Cada día adicional de Dwell Time permite al atacante avanzar en la cadena de ataque. El daño no es lineal — es acumulativo y exponencial.</p>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.2: Progresión del atacante según Dwell Time</div>
+      <div class="flow-v">
+        <div class="fnode"><div class="nid">PRIMERAS HORAS</div><div class="nlabel">Acceso inicial + Recon local</div><div class="nsub">whoami, ipconfig, net group</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode org"><div class="nid">DIAS 1 A 3</div><div class="nlabel">Robo de credenciales</div><div class="nsub">Kerberoasting, LSASS dump, credential harvesting</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode" style="border-color:rgba(255,85,0,.4)"><div class="nid">DIAS 3 A 7</div><div class="nlabel" style="color:var(--orange)">Movimiento lateral + Data discovery</div><div class="nsub">PsExec, WMI, RDP, acceso a file servers</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode red"><div class="nid">DIA 7 EN ADELANTE</div><div class="nlabel">Exfiltración y/o destrucción</div><div class="nsub">Staging, HTTPS exfil, ransomware deployment</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Evolución histórica — Mandiant M-Trends</div>
+    <div class="bars" id="dwell-bars">
+      <div class="bar-c"><div class="bar-v">205d</div><div class="bar b3" style="height:0" data-h="170"></div><div class="bar-l">2014</div></div>
+      <div class="bar-c"><div class="bar-v">146d</div><div class="bar b3" style="height:0" data-h="122"></div><div class="bar-l">2016</div></div>
+      <div class="bar-c"><div class="bar-v">78d</div><div class="bar b2" style="height:0" data-h="68"></div><div class="bar-l">2018</div></div>
+      <div class="bar-c"><div class="bar-v">24d</div><div class="bar b2" style="height:0" data-h="30"></div><div class="bar-l">2020</div></div>
+      <div class="bar-c"><div class="bar-v">16d</div><div class="bar b1" style="height:0" data-h="22"></div><div class="bar-l">2022</div></div>
+      <div class="bar-c"><div class="bar-v">10d</div><div class="bar b1" style="height:0" data-h="16"></div><div class="bar-l">2023</div></div>
+      <div class="bar-c"><div class="bar-v">11d</div><div class="bar b1" style="height:0" data-h="17"></div><div class="bar-l">2024</div></div>
+      <div class="bar-c"><div class="bar-v">14d</div><div class="bar b1" style="height:0" data-h="20"></div><div class="bar-l">2025</div></div>
+    </div>
+    <table class="tbl">
+      <tr><th>Fuente de detección (2024)</th><th>Mediana</th><th>Implicación</th></tr>
+      <tr><td>Detección interna</td><td class="g">10 dias</td><td>El SOC tiene visibilidad. La organización descubrió la intrusión sola.</td></tr>
+      <tr><td>Notificación externa</td><td class="o">26 dias</td><td>Un tercero (LE, vendor, CERT) avisó. No había visibilidad propia.</td></tr>
+      <tr><td>Notificación del adversario</td><td class="g">5 dias</td><td>El atacante avisó (ransom note). Rápido, pero ya cumplió su objetivo.</td></tr>
+      <tr><td>Ransomware específico</td><td class="g">6 dias</td><td>Modelo de extorsión requiere velocidad. No quiere permanecer, quiere cobrar.</td></tr>
+      <tr><td>Espionaje / NK IT workers</td><td class="r">122 dias</td><td>Operaciones diseñadas para persistencia a largo plazo. Algunos superaron el año.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.3 — Triple perspectiva del Dwell Time</div>
+    <div class="bridge">
+      <div class="br-side br-red"><div class="br-tag">Perspectiva ofensiva</div><p>El Dwell Time es el recurso más valioso del atacante. Todo el playbook post-explotación (BloodHound, Kerberoasting, DCSync, lateral movement) requiere tiempo. 11 dias es <span class="hlr">enorme</span> para un operador competente.</p></div>
+      <div class="br-arr">→</div>
+      <div class="br-side br-blue"><div class="br-tag">Perspectiva defensiva</div><p>Cada dia de Dwell Time es un dia más de artefactos forenses, un día más de posible exfiltración, y un día más de sistemas comprometidos. La reducción del Dwell Time es la diferencia entre contener y <span class="hl">catástrofe</span>.</p></div>
+    </div>
+    <div class="insight"><div class="insight-tag">Perspectiva de gestión</div><p>Para la dirección, el Dwell Time se traduce directamente en costo. Según IBM 2025, las organizaciones que identifican brechas en menos de 200 dias ahorran millones comparadas con las que tardan más. Es la métrica que conecta la operación del SOC con el impacto financiero al negocio.</p></div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 2: MTTD ═══════ -->
+<section class="sec reveal" id="mttd">
+  <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">MTTD — Mean Time To <span class="ac">Detect</span></h2></div>
+
+  <div class="card">
+    <div class="card-tag">Definición técnica</div>
+    <p>MTTD mide el tiempo promedio entre el momento en que ocurre la actividad maliciosa y el momento en que el stack de seguridad <span class="hl">genera una alerta</span>. Es una métrica de capacidad de detección pura — refleja la calidad de los sensores, las reglas, la telemetría y la cobertura de monitoreo.</p>
+    <p>MTTD es el componente principal del Dwell Time. Matemáticamente, <span class="hl">Dwell Time ≥ MTTD</span> siempre. Si se reduce el MTTD a minutos, el Dwell Time se comprime automáticamente.</p>
+    <div class="formula">MTTD = Suma(Timestamp_Alerta − Timestamp_Compromiso) / N_incidentes</div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.4 — Tres escenarios comparativos de detección</div>
+    <p>El mismo ataque (phishing → Cobalt Strike beacon con callbacks C2 cada 60 segundos) produce resultados radicalmente distintos según el stack de detección:</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('mttd-t','t-edr')">Escenario A: EDR moderno</button>
+      <button class="tab-btn" onclick="showTab('mttd-t','t-av')">Escenario B: AV legacy + SIEM</button>
+      <button class="tab-btn" onclick="showTab('mttd-t','t-none')">Escenario C: Sin detección</button>
+    </div>
+    <div id="mttd-t">
+      <div class="tab-pane active" id="t-edr">
+        <div class="ex"><div class="ex-tag"><span class="pulse"></span>Escenario A — EDR moderno</div>
+        <p><span class="hlg">09:00</span> — El empleado de finanzas abre el enlace de phishing. Se instala un loader de Cobalt Strike.</p>
+        <p><span class="hlg">09:03</span> — El EDR detecta <code>process hollowing</code> (inyección de proceso) que usa Cobalt Strike. Alerta generada automáticamente con contexto: proceso padre, linea de comando, hash.</p>
+        <p style="margin-top:8px"><span class="tag tag-g">MTTD = 3 minutos</span> La detección es casi instantánea porque el EDR analiza comportamiento en tiempo real, no solo firmas estáticas.</p></div>
+      </div>
+      <div class="tab-pane" id="t-av">
+        <div class="insight"><div class="insight-tag">Escenario B — AV legacy + SIEM con reglas básicas</div>
+        <p><span class="hlo">09:00 Lunes</span> — El payload de Cobalt Strike se ejecuta. El antivirus no lo detecta porque está ofuscado con un crypter personalizado. Los hashes no coinciden con ninguna firma conocida.</p>
+        <p><span class="hlo">09:15 Martes</span> — El SIEM tiene una regla de detección estadística para beaconing (conexiones a intervalos regulares). Necesita 24 horas de datos para que la correlación funcione. Se genera la alerta.</p>
+        <p style="margin-top:8px"><span class="tag tag-o">MTTD = 24 horas 15 minutos</span> El atacante tuvo un dia completo de acceso libre antes de que el SIEM detectara el patrón.</p></div>
+      </div>
+      <div class="tab-pane" id="t-none">
+        <div class="warn"><div class="warn-tag">Escenario C — Sin EDR ni reglas de beaconing</div>
+        <p><span class="hlr">09:00 Lunes</span> — El Cobalt Strike se ejecuta y comienza a operar. No hay EDR. No hay reglas de beaconing en el SIEM. No hay NDR.</p>
+        <p><span class="hlr">Dia 10</span> — Nadie detecta nada hasta que el atacante despliega ransomware. El operador del SOC se entera cuando empiezan los tickets de helpdesk: "no puedo abrir mis archivos".</p>
+        <p style="margin-top:8px"><span class="tag tag-r">MTTD = 10 dias</span> La detección fue el propio ataque del adversario. La organización no detectó — fue notificada por el atacante.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.5 — Factores que inflan el MTTD</div>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.5: Por que el MTTD es alto</div>
+      <div class="grid2">
+        <div class="fnode red" style="text-align:left;min-width:auto">
+          <div class="nid">FACTOR 1</div><div class="nlabel" style="font-size:12px">Gaps de visibilidad</div>
+          <div class="nsub" style="text-align:left;margin-top:6px">Endpoints sin EDR. Segmentos de red sin captura. Servidores sin Sysmon. Cloud sin logging habilitado. Cada uno es un punto ciego donde el atacante opera invisible.</div>
+        </div>
+        <div class="fnode red" style="text-align:left;min-width:auto">
+          <div class="nid">FACTOR 2</div><div class="nlabel" style="font-size:12px">Reglas insuficientes</div>
+          <div class="nsub" style="text-align:left;margin-top:6px">Solo detección basada en IOCs (hashes, IPs, dominios) que cambian diariamente. Sin reglas de comportamiento para TTPs. Sin mapeo a MITRE ATT&CK.</div>
+        </div>
+        <div class="fnode red" style="text-align:left;min-width:auto">
+          <div class="nid">FACTOR 3</div><div class="nlabel" style="font-size:12px">Ruido excesivo</div>
+          <div class="nsub" style="text-align:left;margin-top:6px">73% de equipos citan falsos positivos como desafio principal (SANS 2025). 40% de alertas nunca se investigan. La alerta real se pierde entre 960 alertas diarias.</div>
+        </div>
+        <div class="fnode red" style="text-align:left;min-width:auto">
+          <div class="nid">FACTOR 4</div><div class="nlabel" style="font-size:12px">Cobertura temporal</div>
+          <div class="nsub" style="text-align:left;margin-top:6px">SOC opera solo 8x5. Las 16 horas nocturnas y los fines de semana no tienen nadie mirando alertas. Un ataque a las 02:00 AM del sábado no se ve hasta el lunes.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Benchmarks y estrategias</div>
+    <table class="tbl">
+      <tr><th>Fuente</th><th>Benchmark</th><th>Contexto</th></tr>
+      <tr><td>SANS 2023 IR Survey</td><td class="g">Top 25%: menos de 60 min</td><td>Incidentes activos a nivel SOC</td></tr>
+      <tr><td>SANS 2023 IR Survey</td><td>Mas del 50%: menos de 5 horas</td><td>Organizaciones medianas incluidas</td></tr>
+      <tr><td>Prophet Security 2026</td><td class="g">Top performers: 30 min a 4h</td><td>Rango objetivo para SOCs maduros</td></tr>
+      <tr><td>IBM Cost of Breach 2025</td><td class="r">Promedio: 158 dias</td><td>Brechas completas, no alertas individuales</td></tr>
+      <tr><td>Industrias alto riesgo</td><td class="g">Objetivo: menos de 1 hora</td><td>Finanzas, salud, infraestructura critica</td></tr>
+    </table>
+
+    <div class="bridge" style="margin-top:16px">
+      <div class="br-side br-red"><div class="br-tag">Red Team</div><p>El MTTD es exactamente lo que el atacante intenta maximizar. Cada técnica de evasión (ofuscación, LOTL, tunneling DNS, jitter aleatorio en beaconing) tiene un solo propósito: evitar que el MTTD sea bajo.</p></div>
+      <div class="br-arr">→</div>
+      <div class="br-side br-blue"><div class="br-tag">Blue Team</div><p>El MTTD es la primera barrera. Si falla, todo lo demás es irrelevante — no se puede reconocer una alerta que nunca se generó, ni investigar un incidente que nunca se detectó.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 3: MTTA ═══════ -->
+<section class="sec reveal" id="mtta">
+  <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">MTTA — Mean Time To <span class="ac">Acknowledge</span></h2></div>
+
+  <div class="card">
+    <div class="card-tag">Definición técnica</div>
+    <p>MTTA mide el tiempo promedio entre el momento en que <span class="hl">se genera una alerta</span> y el momento en que <span class="hl">un analista humano la reconoce</span> y comienza a trabajar en ella. Es el "tiempo muerto" entre la detección automatizada y la intervención humana. Una alerta sin reconocer es un incidente sin gestionar.</p>
+    <div class="formula">MTTA = Suma(Timestamp_Acknowledge − Timestamp_Alerta) / N_incidentes</div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Benchmarks por severidad</div>
+    <table class="tbl">
+      <tr><th>Severidad</th><th>Objetivo MTTA</th><th>Fuente</th></tr>
+      <tr><td>Critica (SEV-1)</td><td class="g">Menos de 5 min</td><td>MetricFire 2026, Prophet Security</td></tr>
+      <tr><td>Alta (SEV-2)</td><td class="g">Menos de 10 min</td><td>MetricFire 2026</td></tr>
+      <tr><td>Media (SEV-3)</td><td>Menos de 20 min</td><td>MetricFire 2026</td></tr>
+      <tr><td>Baja (SEV-4)</td><td>Menos de 1 hora</td><td>General</td></tr>
+    </table>
+    <div class="warn"><div class="warn-tag">Dato critico</div><p>Si el Breakout Time promedio de eCrime es de <span class="hlr">29 minutos</span>, incluso un MTTA de 30 minutos significa que el atacante ya hizo movimiento lateral antes de que un analista siquiera abriera la alerta. Solo el MTTA ya puede ser mayor que todo el Breakout Time.</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.6 — La crisis del alert fatigue</div>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.6: Alert fatigue — numeros reales</div>
+      <div class="flow-v">
+        <div class="fnode red"><div class="nlabel">960 alertas diarias promedio</div><div class="nsub">AI SOC Market Landscape 2025</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode red"><div class="nlabel">Empresas +20,000 empleados: 3,000+ alertas/dia</div><div class="nsub">El volumen crece con el tamaño de la organización</div></div>
+        <div class="farr">↓</div>
+        <div class="flow-h">
+          <div class="fnode org" style="min-width:auto;flex:1"><div class="nlabel" style="font-size:11px">40% nunca se investigan</div></div>
+          <div class="farr farr-h">+</div>
+          <div class="fnode org" style="min-width:auto;flex:1"><div class="nlabel" style="font-size:11px">61% admitieron ignorar alertas que resultaron criticas</div></div>
+        </div>
+        <div class="farr">↓</div>
+        <div class="fnode red"><div class="nlabel">80% de analistas se sienten constantemente atrasados</div><div class="nsub">Osterman Research — 66% no pueden mantener el ritmo (SANS 2025)</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode" style="border-color:rgba(255,51,85,.5)"><div class="nlabel" style="color:var(--red)">MTTA se infla de minutos a horas</div><div class="nsub">Incidentes reales pasan desapercibidos en el ruido</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.7 — Estrategias de reducción de MTTA</div>
+    <div class="acc open"><div class="acc-head" onclick="toggleAcc(this)"><span class="acc-t">1. Automatización de triage (SOAR)</span><span class="acc-arr">▾</span></div><div class="acc-body"><div class="acc-inner"><p>El SOAR enriquece alertas automáticamente antes de que el analista las vea: consulta threat intel, verifica reputación de IPs y dominios, correlaciona con actividad previa del usuario. Cuando el analista abre la alerta, ya tiene <span class="hl">todo el contexto</span> para decidir en segundos en lugar de minutos.</p></div></div></div>
+    <div class="acc"><div class="acc-head" onclick="toggleAcc(this)"><span class="acc-t">2. Niveles de severidad bien definidos con SLAs</span><span class="acc-arr">▾</span></div><div class="acc-body"><div class="acc-inner"><p>Sin niveles claros, todas las alertas se tratan igual. Un "possible lateral movement via WMI" compite por atención con "user failed login attempt" sin diferenciación. Definir P1 (inmediato), P2 (menos de 10 min), P3 (menos de 20 min), P4 (próximo turno) y medir el cumplimiento de cada SLA.</p></div></div></div>
+    <div class="acc"><div class="acc-head" onclick="toggleAcc(this)"><span class="acc-t">3. La regla de los 30 dias</span><span class="acc-arr">▾</span></div><div class="acc-body"><div class="acc-inner"><p>Si un tipo de alerta lleva 30 dias sin que nadie actúe sobre ella, <span class="hlr">eliminarla</span>. No ajustar. No reducir severidad. Eliminar. Equipos que lo implementaron reportan reducciones del <span class="hlg">40% en MTTA</span> porque el volumen de ruido baja drásticamente. (State of Incident Management 2026, Runframe).</p></div></div></div>
+    <div class="acc"><div class="acc-head" onclick="toggleAcc(this)"><span class="acc-t">4. Rotación de on-call y gestión del burnout</span><span class="acc-arr">▾</span></div><div class="acc-body"><div class="acc-inner"><p>79% de organizaciones 24x7 experimentan alert fatigue máxima durante los cambios de turno (SANS 2025). Los equipos que no rotan queman a sus analistas. El tenure promedio de un analista SOC es menor a 2 años (ESG Research). Alert fatigue es un problema de personas, no solo de tecnología.</p></div></div></div>
+
+    <div class="bridge" style="margin-top:16px">
+      <div class="br-side br-red"><div class="br-tag">Red Team</div><p>Los atacantes explotan activamente el alert fatigue. Técnicas como spam bombing (generar cientos de alertas de bajo nivel para enterrar la actividad real) son parte del toolkit ofensivo moderno.</p></div>
+      <div class="br-arr">→</div>
+      <div class="br-side br-blue"><div class="br-tag">Blue Team</div><p>La solución no es agregar más alertas — es hacer que cada alerta importa. Menos alertas de mayor calidad producen un MTTA más bajo que miles de alertas genéricas.</p></div>
+    </div>
+    <div class="insight"><div class="insight-tag">Perspectiva de gestión</div><p>El MTTA es la métrica que mejor refleja la capacidad operativa real del SOC. Un MTTA alto de forma consistente indica necesidad de más personal, mejores herramientas de triage, o ambas. Es un indicador directo para decisiones de inversión y staffing.</p></div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 4: MTTI ═══════ -->
+<section class="sec reveal" id="mtti">
+  <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">MTTI — Mean Time To <span class="ac">Investigate</span></h2></div>
+
+  <div class="card">
+    <div class="card-tag">Definición técnica</div>
+    <p>MTTI mide el tiempo promedio desde que un analista <span class="hl">reconoce una alerta</span> hasta que la investigación se <span class="hl">completa</span>: se comprende que ocurrió, que sistemas están afectados, cuál es el alcance del compromiso y cuál es la respuesta apropiada. Es el tiempo de <span class="hl">análisis puro</span> — donde la experiencia del analista, la calidad de las herramientas y la disponibilidad de telemetría hacen la diferencia.</p>
+    <div class="formula">MTTI = Suma(Timestamp_Fin_Investigación − Timestamp_Acknowledge) / N_incidentes</div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.8 — Las cuatro fases de la investigación</div>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.8: Que incluye el MTTI</div>
+      <div class="flow-v">
+        <div class="fnode"><div class="nid">FASE 1</div><div class="nlabel">Validación</div><div class="nsub">Confirmar que la alerta es un verdadero positivo.<br>Puede ser trivial (ese hash es Cobalt Strike)<br>o complejo (tunnel DNS vs uso normal?).</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode" style="border-color:rgba(0,229,255,.3)"><div class="nid">FASE 2</div><div class="nlabel" style="color:var(--cyan)">Determinación de alcance</div><div class="nsub">Cuántos sistemas afectados? Movimiento lateral?<br>Otros beacons o implantes? EDR threat hunting,<br>SIEM correlación cross-host, NDR.</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode org"><div class="nid">FASE 3</div><div class="nlabel">Análisis de causa raíz</div><div class="nsub">Cómo entró el atacante? Que vector uso?<br>Que vulnerabilidad explotó?<br>Que credenciales comprometió?</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode red"><div class="nid">FASE 4</div><div class="nlabel">Assessment de impacto</div><div class="nsub">Se exfiltró información? Que datos en riesgo?<br>Implicaciones regulatorias?<br>Datos personales bajo GDPR o ley local?</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.9 — Walkthrough de investigación paso a paso</div>
+    <p>Alerta del NDR: "Anomalous SMB traffic from WS-FIN-023 to FS-01 at 03:00 — 47GB transferred". El analista comienza la investigación a las 08:15.</p>
+    <div class="tl">
+      <div class="tl-line"></div>
+      <div class="tl-item"><div class="tl-dot" style="background:var(--cyan)"></div><div class="tl-time">08:15 – 08:25 (10 min)</div><div class="tl-title">Paso 1: Validación</div><div class="tl-desc">Consulta SIEM: usuario juan.perez no tiene historial de acceso a FS-01 fuera de horario. <span class="hlg">Verdadero Positivo confirmado</span>.</div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">08:25 – 08:45 (20 min)</div><div class="tl-title">Paso 2: Análisis de endpoint (EDR)</div><div class="tl-desc">WS-FIN-023 tiene <code>rundll32.exe</code> ejecutando DLL desde <code>AppData\Local\Temp\</code>. Hash en VirusTotal: 0 detecciones. Muestra nueva.</div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">08:45 – 09:15 (30 min)</div><div class="tl-title">Paso 3: Pivoting y determinación de alcance</div><div class="tl-desc">Búsqueda en SIEM: mismo hash o misma IP C2 en otros hosts. Resultado: <span class="hlr">2 máquinas adicionales</span> (WS-HR-011, WS-IT-005). Alcance = 3 sistemas.</div></div>
+      <div class="tl-item"><div class="tl-dot org"></div><div class="tl-time">09:15 – 09:30 (15 min)</div><div class="tl-title">Paso 4: Análisis de Active Directory</div><div class="tl-desc">Logs de AD: cuenta de servicio <code>svc_backup</code> usada contra FS-01. Confirmado: <span class="hlr">Kerberoasting</span> (TGS ticket crackeado offline).</div></div>
+      <div class="tl-item"><div class="tl-dot grn"></div><div class="tl-time">09:30 – 09:40 (10 min)</div><div class="tl-title">Paso 5: Documentación del assessment</div><div class="tl-desc">3 hosts comprometidos. Exfiltración potencial de 47GB. Vector: phishing → Cobalt Strike → Kerberoasting → exfiltración SMB. <span class="tag tag-b">MTTI = 1h 25min</span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.10 — Factores que inflan el MTTI</div>
+    <table class="tbl">
+      <tr><th>Factor</th><th>Por que infla el MTTI</th><th>Solución</th></tr>
+      <tr><td><span class="hl">Falta de contexto automatizado</span></td><td>El analista abre 5 consolas diferentes (SIEM, EDR, firewall, DNS, AD) y correlaciona manualmente.</td><td>SOAR que pre-enriquece alertas con IOCs, reputación, contexto del usuario.</td></tr>
+      <tr><td><span class="hl">Logging insuficiente</span></td><td>Sin Sysmon configurado no se ven ejecuciones de DLLs sospechosas. El analista busca información que no existe.</td><td>Sysmon con reglas de SwiftOnSecurity u Olaf Hartong en todos los endpoints.</td></tr>
+      <tr><td><span class="hl">Herramientas fragmentadas</span></td><td>7 herramientas con 7 logins diferentes. El context switching consume tiempo cognitivo.</td><td>Plataformas XDR o SIEM con integraciones nativas a EDR, NDR y threat intel.</td></tr>
+      <tr><td><span class="hl">Falta de experiencia</span></td><td>Un analista junior puede tardar 4 horas en lo que un senior hace en 30 minutos.</td><td>Playbooks detallados paso a paso, mentoring, ejercicios regulares con CyberDefenders.</td></tr>
+      <tr><td><span class="hl">Alertas sin contexto</span></td><td>La alerta dice "suspicious activity" sin detalles. El analista parte de cero.</td><td>Reglas de detección que incluyan: usuario, host, proceso padre, comando ejecutado.</td></tr>
+    </table>
+    <div class="bridge" style="margin-top:16px">
+      <div class="br-side br-red"><div class="br-tag">Red Team</div><p>El MTTI es la ventana donde el atacante todavía puede pivotar. Si sabe que fue detectado (su beacon dejó de recibir callbacks), puede intentar saltar a otro implante, escalar privilegios o destruir evidencia antes de que la investigación termine.</p></div>
+      <div class="br-arr">→</div>
+      <div class="br-side br-blue"><div class="br-tag">Blue Team</div><p>Una investigación incompleta lleva a una contención incompleta. Si no se identifican todos los hosts comprometidos, los que se pierden siguen en manos del atacante. El MTTI determina la calidad de todo lo que sigue.</p></div>
+    </div>
+    <div class="insight"><div class="insight-tag">Perspectiva de gestión</div><p>El MTTI es donde se mide el retorno de inversión en training y herramientas del SOC. Invertir en un SOAR que pre-enriquezca alertas puede reducir el MTTI en un 50% o más. Invertir en capacitación de analistas reduce la variabilidad entre junior y senior. Ambas inversiones son medibles y justificables con esta métrica.</p></div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 5: PIPELINE ═══════ -->
+<section class="sec reveal" id="pipeline">
+  <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Pipeline <span class="ac">Combinado</span></h2></div>
+
+  <div class="card">
+    <div class="card-tag">Flujo N.11 — Las cuatro métricas en un solo incidente</div>
+    <p>Para ver el impacto combinado de Dwell Time + MTTD + MTTA + MTTI, se presenta un solo incidente medido en cada fase, comparado contra el Breakout Time del adversario.</p>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.11: Pipeline completo vs Breakout Time</div>
+      <div class="flow-v">
+        <div class="fnode red"><div class="nid">09:00</div><div class="nlabel">Compromiso inicial</div><div class="nsub">Cobalt Strike beacon activo</div></div>
+        <div class="farr">↓ MTTD = 3 min</div>
+        <div class="fnode"><div class="nid">09:03</div><div class="nlabel">Alerta generada</div><div class="nsub">EDR detecta process hollowing</div></div>
+        <div class="farr">↓ MTTA = 12 min</div>
+        <div class="fnode" style="border-color:rgba(0,229,255,.3)"><div class="nid">09:15</div><div class="nlabel" style="color:var(--cyan)">Analista reconoce</div><div class="nsub">Abre la alerta y comienza triage</div></div>
+        <div class="farr">↓ MTTI = 45 min</div>
+        <div class="fnode pur"><div class="nid">10:00</div><div class="nlabel">Investigación completa</div><div class="nsub">1 host comprometido, C2 identificado, sin lateral movement</div></div>
+        <div class="farr">↓</div>
+        <div class="fnode grn"><div class="nlabel">Listo para contener</div><div class="nsub">Total desde compromiso: 1 hora</div></div>
+      </div>
+    </div>
+    <div class="warn"><div class="warn-tag">La matemática critica</div>
+    <p>El pipeline tardó <span class="hl">60 minutos</span> en total (MTTD 3 + MTTA 12 + MTTI 45). Pero el Breakout Time promedio eCrime en 2025 fue de <span class="hlr">29 minutos</span>.</p>
+    <p>Esto significa que a las 09:29 el atacante ya se movió lateralmente, y cuando la investigación termina a las 10:00, el alcance real puede ser <span class="hlr">mayor que el detectado inicialmente</span>. Incluso con un MTTD excelente de 3 minutos, si MTTA + MTTI suman más de 26 minutos, el atacante completa su breakout antes de que el SOC tenga la imagen completa.</p>
+    <p>Esta es la razón por la cual la <span class="hl">automatización del triage</span> (SOAR) y la <span class="hl">contención automatizada</span> (auto-isolation en EDR) son cada vez más necesarias.</p></div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 6: CALCULATOR ═══════ -->
+<section class="sec reveal" id="calc">
+  <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Calculadora de <span class="ac">Detection Gap</span></h2></div>
+  <div class="card">
+    <div class="card-tag">Herramienta interactiva</div>
+    <p>Se introduce el MTTD, MTTA y MTTI del SOC junto con el Breakout Time del adversario. Un resultado <span class="hlr">negativo</span> significa que el atacante completa su breakout antes de que el equipo tenga el assessment completo.</p>
+    <div class="calc-row">
+      <div class="calc-group"><label>Breakout Time (min)</label><input type="number" id="c-bt" value="29" min="0"></div>
+      <div class="calc-group"><label>MTTD (min)</label><input type="number" id="c-mttd" value="3" min="0"></div>
+      <div class="calc-group"><label>MTTA (min)</label><input type="number" id="c-mtta" value="12" min="0"></div>
+      <div class="calc-group"><label>MTTI (min)</label><input type="number" id="c-mtti" value="45" min="0"></div>
+      <div><button class="calc-btn" onclick="doCalc()">CALCULAR</button></div>
+    </div>
+    <div class="calc-row" style="margin-top:14px">
+      <div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-family:var(--font-display);margin-bottom:4px">Detection Gap</div><div class="calc-result neg" id="c-res">-31 min</div></div>
+      <div id="c-verdict" style="font-size:12px;color:var(--red);max-width:400px">NEGATIVO — El atacante completa el breakout 31 minutos antes de que el SOC tenga el assessment completo. Se requiere automatización de contención.</div>
+    </div>
+    <div class="formula" style="margin-top:14px">Detection Gap = Breakout Time − (MTTD + MTTA + MTTI)<br>POSITIVO → El SOC tiene ventana para investigar y contener<br>NEGATIVO → El atacante hace breakout antes del assessment</div>
+  </div>
+</section>
+
+<!-- ═══════ SEC 7: SUMMARY ═══════ -->
+<section class="sec reveal" id="summary">
+  <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Tabla <span class="ac">Resumen</span></h2></div>
+
+  <div class="grid2">
+    <div class="mcard"><div class="mc-metric">DWELL TIME</div><div class="mc-name">Tiempo de permanencia</div><div class="mc-desc">Periodo total desde el compromiso hasta la detección. Correlaciona directamente con el daño del incidente. Se reporta como mediana.</div><div class="mc-seg">T0 → T1 // Mediana 2024: 11 dias, 2025: 14 dias</div></div>
+    <div class="mcard"><div class="mc-metric">MTTD</div><div class="mc-name">Mean Time To Detect</div><div class="mc-desc">Tiempo hasta que el stack de seguridad genera una alerta. Refleja la capacidad de detección: sensores, reglas, telemetría y cobertura.</div><div class="mc-seg">T0 → T1 // Objetivo: menos de 1h critico, menos de 4h general</div></div>
+    <div class="mcard"><div class="mc-metric" style="color:var(--cyan)">MTTA</div><div class="mc-name">Mean Time To Acknowledge</div><div class="mc-desc">Tiempo muerto entre la alerta y la intervención humana. Indicador directo de alert fatigue y capacidad operativa del SOC.</div><div class="mc-seg">T1 → T2 // Objetivo: menos de 5 min P1, menos de 20 min P3</div></div>
+    <div class="mcard"><div class="mc-metric" style="color:var(--purple)">MTTI</div><div class="mc-name">Mean Time To Investigate</div><div class="mc-desc">Tiempo de análisis puro: validación, alcance, causa raíz, impacto. Depende de herramientas, telemetría y experiencia del analista.</div><div class="mc-seg">T2 → T3 // Objetivo: 10 min a 1h top, 1 a 4h aceptable</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-tag">Flujo N.12 — Relación entre las cuatro métricas</div>
+    <div class="flow-wrap">
+      <div class="flow-label">Flujo N.12: Cadena de dependencias</div>
+      <div class="flow-v" style="gap:4px">
+        <div style="font-family:var(--font-code);font-size:11px;color:var(--dim);line-height:2;text-align:left;max-width:600px;margin:0 auto">
+<span style="color:var(--red)">DWELL TIME = MTTD + (tiempo no detectado restante)</span>
+<br><span style="color:var(--blue)">MTTD</span> alimenta → <span style="color:var(--cyan)">MTTA</span> alimenta → <span style="color:var(--purple)">MTTI</span> alimenta → MTTC (contención)
+<br>
+<br><span style="color:var(--green)">Reducir MTTD</span> → comprime Dwell Time automáticamente
+<br><span style="color:var(--green)">Reducir MTTA</span> → libera tiempo para investigar antes del breakout
+<br><span style="color:var(--green)">Reducir MTTI</span> → contención más rápida y más precisa
+<br>
+<br><span style="color:var(--orange)">Objetivo final: MTTD + MTTA + MTTI < Breakout Time del adversario</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fl" style="color:var(--blue);font-family:var(--font-display);font-size:9px;letter-spacing:2px">IR::TTx DETECTION AND TRIAGE // BLUE TEAM REFERENCE</div>
+  <div class="fl">Fuentes: Mandiant M-Trends 2025/2026 // CrowdStrike GTR 2025/2026 // SANS 2023/2025 // IBM Cost of Breach 2025</div>
+  <div class="fl">AI SOC Market Landscape 2025 // Osterman Research // Prophet Security 2026 // MetricFire 2026</div>
+  <div class="fl" style="margin-top:6px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+
+<script>
+function showTab(cid,tid){const c=document.getElementById(cid);c.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.getElementById(tid).classList.add('active');const card=c.closest('.card');card.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active')}
+function toggleAcc(h){h.closest('.acc').classList.toggle('open')}
+
+// counters
+document.querySelectorAll('[data-c]').forEach(el=>{const t=+el.dataset.c,s=el.dataset.s||'';let c=0;const step=Math.max(1,Math.ceil(t/35));const i=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(i)}el.textContent=c+s},28)})
+
+// bars
+document.querySelectorAll('.bar[data-h]').forEach(b=>{const o=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){setTimeout(()=>{b.style.height=b.dataset.h+'px'},150);o.unobserve(b)}})},{threshold:.2});o.observe(b)})
+
+// reveal
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('visible');ro.unobserve(en.target)}})},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el))
+
+// nav
+const secs=document.querySelectorAll('.sec');const links=document.querySelectorAll('.nav-links a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=document.querySelector(`.nav-links a[href="#${en.target.id}"]`);if(a)a.classList.add('active')}})},{threshold:.25,rootMargin:'-56px 0px -55% 0px'});
+secs.forEach(s=>no.observe(s))
+
+// calc
+function doCalc(){const bt=+(document.getElementById('c-bt').value)||0,d=+(document.getElementById('c-mttd').value)||0,a=+(document.getElementById('c-mtta').value)||0,i=+(document.getElementById('c-mtti').value)||0;const g=bt-(d+a+i);const r=document.getElementById('c-res'),v=document.getElementById('c-verdict');if(g>=0){r.textContent='+'+g+' min';r.className='calc-result pos';v.style.color='var(--green)';v.innerHTML='POSITIVO — El SOC tiene una ventana de '+g+' minutos después del assessment para iniciar contención antes de que el atacante haga breakout.'}else{r.textContent=g+' min';r.className='calc-result neg';v.style.color='var(--red)';v.innerHTML='NEGATIVO — El atacante completa el breakout '+Math.abs(g)+' minutos antes de que el SOC tenga el assessment completo. Se requiere automatización de triage y contención.'}}
+
+// keyboard nav
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+
+doCalc()
+</script>
+</body>
+</html>

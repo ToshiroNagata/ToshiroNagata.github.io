@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contención y las 4 R // Blue Team IR Metrics</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--blue2:#07f;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445566;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--blue2);border-radius:3px}
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}
+.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+.hero{text-align:center;padding:70px 0 50px}
+.hero h1{font-family:var(--fd);font-size:clamp(24px,5vw,46px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:12px}
+.hero .sub{font-family:var(--fc);font-size:14px;color:var(--dim);letter-spacing:2px}
+.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+.kpi-row{display:flex;justify-content:center;gap:34px;margin-top:34px;flex-wrap:wrap}
+.kpi{text-align:center}.kpi-v{font-family:var(--fd);font-size:24px;font-weight:700;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.2)}.kpi-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-top:2px;font-family:var(--fd)}
+.sec{margin-bottom:60px;scroll-margin-top:56px}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:11px;border-bottom:1px solid var(--brd)}
+.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}
+.st{font-family:var(--fd);font-size:clamp(16px,3vw,21px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}
+.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.c h3{font-size:15px;color:var(--cyan);margin-bottom:10px;font-weight:600}.c p{font-size:13px;margin-bottom:8px}
+.fm{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:14px 18px;margin:14px 0;font-family:var(--fc);font-size:13px;color:var(--cyan);position:relative}
+.fm::after{content:'FORMULA';position:absolute;top:5px;right:10px;font-size:8px;color:rgba(0,170,255,.3);letter-spacing:2px;font-family:var(--fd);font-weight:700}
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.tb{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:9px 10px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}
+.tb td{padding:8px 10px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+.g{color:var(--green);font-weight:600}.o{color:var(--orange);font-weight:600}.r{color:var(--red);font-weight:600}
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:24px;margin:14px 0;overflow-x:auto}
+.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:12px 16px;text-align:center;min-width:140px;max-width:420px;transition:.3s;cursor:default;flex-shrink:0}
+.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 16px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:3px}
+.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:3px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fa{color:var(--dim);font-size:16px;padding:4px 0;animation:pa 2s infinite;text-align:center;flex-shrink:0}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.tl{position:relative;padding:20px 0 20px 36px;margin:14px 0}
+.tl-ln{position:absolute;left:12px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan),var(--green),var(--orange))}
+.ti{position:relative;margin-bottom:16px;padding-left:18px;opacity:0;transform:translateX(-14px);animation:si .5s forwards}
+.ti:nth-child(1){animation-delay:.1s}.ti:nth-child(2){animation-delay:.2s}.ti:nth-child(3){animation-delay:.3s}.ti:nth-child(4){animation-delay:.4s}.ti:nth-child(5){animation-delay:.5s}.ti:nth-child(6){animation-delay:.6s}.ti:nth-child(7){animation-delay:.7s}.ti:nth-child(8){animation-delay:.8s}.ti:nth-child(9){animation-delay:.9s}.ti:nth-child(10){animation-delay:1s}
+@keyframes si{to{opacity:1;transform:translateX(0)}}
+.td{position:absolute;left:-24px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--blue);border:2px solid var(--bg);box-shadow:0 0 8px var(--glow)}
+.td.red{background:var(--red);box-shadow:0 0 8px rgba(255,51,85,.3)}.td.grn{background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.3)}.td.org{background:var(--orange);box-shadow:0 0 8px rgba(255,136,0,.3)}.td.pur{background:var(--purple);box-shadow:0 0 8px rgba(170,68,255,.3)}
+.tt{font-family:var(--fd);font-size:11px;font-weight:600;color:var(--cyan)}.tit{font-size:12px;font-weight:600;color:var(--blue)}.tds{font-size:11px;color:var(--dim)}
+.tabs{display:flex;gap:3px;margin-bottom:14px;flex-wrap:wrap}
+.tb2{background:var(--bg3);color:var(--dim);border:1px solid var(--brd);border-radius:5px 5px 0 0;padding:8px 14px;font-family:var(--fc);font-size:11px;cursor:pointer;transition:.3s}
+.tb2:hover{color:var(--blue);border-color:rgba(0,170,255,.3)}.tb2.on{color:var(--blue);background:rgba(0,170,255,.07);border-color:var(--blue);border-bottom-color:transparent}
+.tp{display:none}.tp.on{display:block}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:14px 0}
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:14px 0;align-items:stretch}
+.bs{padding:16px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}
+.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}
+.bgr{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15)}
+.ba{display:flex;align-items:center;padding:0 10px;font-size:22px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}.bgr .btg{color:var(--green)}
+.mc{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:16px;transition:.3s;cursor:default}
+.mc:hover{border-color:var(--blue);box-shadow:0 0 16px var(--glow);transform:translateY(-2px)}
+.mc .mm{font-family:var(--fd);font-size:17px;font-weight:800;color:var(--blue);margin-bottom:3px}
+.mc .mn{font-size:10px;color:var(--cyan);margin-bottom:6px}.mc .md{font-size:11px;color:var(--dim)}
+.mc .ms{font-family:var(--fc);font-size:9px;color:rgba(0,170,255,.4);margin-top:8px;padding-top:7px;border-top:1px solid var(--brd)}
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}
+.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}
+.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:6px;overflow:hidden}
+.ah{padding:12px 16px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}
+.ah:hover{background:var(--bg3)}.at{font-size:12px;font-weight:600;color:var(--blue)}.aa{color:var(--dim);transition:transform .3s;font-size:13px}
+.acc.op .aa{transform:rotate(180deg)}.ab{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab{max-height:3000px}.ai{padding:14px 16px}
+footer{text-align:center;padding:30px 16px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}footer .fli{margin-bottom:3px}
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:8px}.ba{transform:rotate(90deg);padding:6px 0;justify-content:center}.g2,.g3{grid-template-columns:1fr}.kpi-row{gap:18px}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="logo">IR<b>::</b>R4</div>
+  <div class="nl">
+    <a href="#ctx">Contexto</a>
+    <a href="#mttc">MTTC</a>
+    <a href="#4r">Las 4 R</a>
+    <a href="#respond">Respond</a>
+    <a href="#recover">Recover</a>
+    <a href="#resolve">Resolve</a>
+    <a href="#cycle">Ciclo CER</a>
+    <a href="#errors">Errores</a>
+    <a href="#summary">Resumen</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>Contención y<br>El Problema de las R</h1>
+  <div class="sub">// MTTC + MTTR (Respond / Recover / Resolve) — Guía Técnica Visual<span class="blink"></span></div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-v" data-c="67" data-s=" d">0</div><div class="kpi-l">Dias para contener insider (Ponemon 2026)</div></div>
+    <div class="kpi"><div class="kpi-v" data-c="19" data-s=".5M">0</div><div class="kpi-l">Costo anual insider threats USD</div></div>
+    <div class="kpi"><div class="kpi-v" data-c="24" data-s="h">0</div><div class="kpi-l">MTTC objetivo critico</div></div>
+    <div class="kpi"><div class="kpi-v" data-c="4">0</div><div class="kpi-l">Variantes de MTTR</div></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 0: CONTEXTO ═══ -->
+<section class="sec rv" id="ctx">
+  <div class="sh"><span class="sn">00</span><h2 class="st">Donde nos <span class="ac">encontramos</span></h2></div>
+  <div class="c">
+    <div class="ct">Flujo N.1 — Posición en el timeline completo</div>
+    <p>En el bloque anterior se cubrió todo lo que pasa desde el compromiso hasta el assessment completo (MTTD + MTTA + MTTI). Este bloque cubre lo que sigue: <span class="hl">la acción</span>. Aquí el equipo pasa de "entender lo que pasó" a "hacer algo al respecto".</p>
+    <div class="fw">
+      <div class="fl">Flujo N.1: Posición de este bloque en el timeline del incidente</div>
+      <div class="fv">
+        <div class="fn" style="opacity:.5"><div class="ni">BLOQUE ANTERIOR</div><div class="nl2" style="color:var(--dim)">Detección y Triaje</div><div class="ns">MTTD → MTTA → MTTI</div></div>
+        <div class="fa">↓ Assessment completo</div>
+        <div class="fn og"><div class="ni">ESTE BLOQUE</div><div class="nl2">Contención (MTTC)</div><div class="ns">Detener el sangrado — aislar la amenaza</div></div>
+        <div class="fa">↓</div>
+        <div class="fn rd"><div class="ni">ERRADICACION</div><div class="nl2">Eliminar todos los artefactos</div><div class="ns">Malware, webshells, persistencia, cuentas backdoor</div></div>
+        <div class="fa">↓</div>
+        <div class="fn gn"><div class="ni">RECUPERACION</div><div class="nl2">Restaurar sistemas</div><div class="ns">Backups, rebuilds, hardening, validación</div></div>
+        <div class="fa">↓</div>
+        <div class="fn pu"><div class="ni">RESOLUCION</div><div class="nl2">Cierre completo</div><div class="ns">Lecciones aprendidas, playbooks actualizados, cierre formal</div></div>
+      </div>
+    </div>
+    <div class="ins"><div class="ins-t">Relación clave con el bloque anterior</div><p>La calidad del MTTI determina la calidad de la contención. Si la investigación fue incompleta (no se identificaron todos los hosts comprometidos), la contención será incompleta y el atacante puede mantener acceso a través de los sistemas que se pasaron por alto.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 1: MTTC ═══ -->
+<section class="sec rv" id="mttc">
+  <div class="sh"><span class="sn">01</span><h2 class="st">MTTC — Mean Time To <span class="ac">Contain</span></h2></div>
+
+  <div class="c">
+    <div class="ct">Definición técnica</div>
+    <p>MTTC mide el tiempo promedio desde la <span class="hl">detección</span> de un incidente hasta que los sistemas afectados están <span class="hl">aislados</span> y la amenaza <span class="hlr">no puede seguir propagándose</span>. Es el punto donde se "detiene el sangrado": el atacante ya no puede moverse lateralmente, exfiltrar más datos, ni escalar su acceso — aunque la amenaza no haya sido erradicada ni los sistemas recuperados.</p>
+    <div class="fm">MTTC = Suma(Timestamp_Contención − Timestamp_Detección) / N_incidentes</div>
+    <div class="w"><div class="w-t">Diferencia fundamental</div><p><span class="hlr">Contención no es resolución.</span> La contención es la acción urgente que limita el daño inmediato. La erradicación y recuperación vienen después y pueden tomar días o semanas. Analogía médica: la contención es aplicar el torniquete. La cirugía viene después.</p></div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.2 — Las 6 acciones de contención</div>
+    <p>Cada acción tiene un propósito específico en la cadena de contención. Deben ejecutarse en orden y verificarse individualmente.</p>
+    <div class="fw">
+      <div class="fl">Flujo N.2: Checklist técnico de contención</div>
+      <div class="fv">
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">ACCION 1</div><div class="nl2" style="font-size:12px">Aislamiento de red (EDR network isolation)</div><div class="ns" style="text-align:left">El host comprometido se desconecta de la red pero mantiene comunicación con el servidor EDR para gestión remota. Impide que el atacante use ese host para pivotar. Se ejecuta desde la consola del EDR con un clic.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">ACCION 2</div><div class="nl2" style="font-size:12px">Bloqueo de IOCs de red</div><div class="ns" style="text-align:left">IPs y dominios de C2 bloqueados en firewall perimetral + proxy + DNS sinkhole. Sin C2, el atacante pierde la capacidad de enviar comandos al implante. El sinkhole además permite detectar otros hosts comunicándose con el mismo C2.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">ACCION 3</div><div class="nl2" style="font-size:12px">Deshabilitación de cuentas comprometidas</div><div class="ns" style="text-align:left">Deshabilitar y resetear contraseña en AD. Si el atacante obtuvo credenciales por Kerberoasting o LSASS dump, esas credenciales deben invalidarse inmediatamente. El reset invalida los hashes obtenidos por el atacante.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">ACCION 4</div><div class="nl2" style="font-size:12px">Revocación de tokens y sesiones</div><div class="ns" style="text-align:left">En entornos cloud y SaaS, revocar tokens de sesión activos. Esto cierra las sesiones y fuerza re-autenticación, que fallará si las credenciales ya fueron reseteadas en la acción anterior.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">ACCION 5</div><div class="nl2" style="font-size:12px">Bloqueo de hashes maliciosos (prevent execution)</div><div class="ns" style="text-align:left">Agregar el hash del malware a la lista de bloqueo global del EDR. Esto previene que el mismo payload se ejecute en cualquier otro host de la organización, incluso si el atacante intenta desplegarlo en máquinas no comprometidas.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">ACCION 6</div><div class="nl2" style="font-size:12px">Verificación de scope (sweep completo)</div><div class="ns" style="text-align:left">Barrido con el EDR buscando el mismo hash, las mismas IPs de C2, los mismos indicadores en TODA la red. Si se encuentran hosts adicionales comprometidos, se repite el ciclo completo para cada uno. Contención sin sweep es contención incompleta.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.3 — Ejemplo paso a paso con timestamps</div>
+    <p>Continuación del escenario del bloque anterior: 3 hosts comprometidos con Cobalt Strike, Kerberoasting de svc_backup, exfiltración potencial de 47GB.</p>
+    <div class="tl">
+      <div class="tl-ln"></div>
+      <div class="ti"><div class="td org"></div><div class="tt">09:40</div><div class="tit">Assessment completo (MTTI finalizado)</div><div class="tds">3 hosts: WS-FIN-023, WS-HR-011, WS-IT-005. C2: malicioso.evil.com → 185.x.x.x. Credencial: svc_backup (Kerberoasting).</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">09:42</div><div class="tit">Acción 1: Isolate Host en EDR (3 máquinas)</div><div class="tds">Los hosts quedan en red aislada — solo comunicación con servidor EDR.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">09:45</div><div class="tit">Acción 2: Bloqueo de C2</div><div class="tds">malicioso.evil.com → sinkhole DNS (127.0.0.1). IP 185.x.x.x → deny outbound en firewall.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">09:48</div><div class="tit">Acción 3: Cuentas invalidadas</div><div class="tds">svc_backup deshabilitada. Reset password juan.perez. Tokens cloud revocados.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">09:50</div><div class="tit">Acción 4-5: Hash bloqueado + Sweep</div><div class="tds">Hash del beacon en lista de bloqueo global. Sweep: no se encuentran hosts adicionales.</div></div>
+      <div class="ti"><div class="td grn"></div><div class="tt">09:58</div><div class="tit">Contención confirmada</div><div class="tds">El atacante no tiene C2, sus credenciales están invalidadas, hosts aislados. <span class="tag tag-b">MTTC = 1h 43min</span> (desde la primera alerta a las 08:15).</div></div>
+    </div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Benchmarks y triple perspectiva</div>
+    <table class="tb">
+      <tr><th>Nivel</th><th>MTTC</th><th>Contexto</th></tr>
+      <tr><td>Excelente</td><td class="g">Menos de 12 horas</td><td>Plan de IR robusto y herramientas maduras</td></tr>
+      <tr><td>Aceptable</td><td class="o">12 a 24 horas</td><td>Espacio para mejora en detección y respuesta</td></tr>
+      <tr><td>Preocupante</td><td class="r">Mas de 24 horas</td><td>Revisión inmediata de estrategias de respuesta</td></tr>
+      <tr><td>Con SOAR/AI</td><td class="g">3 a 15 minutos</td><td>Automatización completa del triage y contención</td></tr>
+    </table>
+    <div class="br">
+      <div class="bs brd2"><div class="btg">Ofensiva</div><p>La contención se evade con acceso redundante: múltiples implantes, cuentas de respaldo, webshells, scheduled tasks que reinstalan el beacon. Por eso el sweep (acción 6) es critico.</p></div>
+      <div class="ba">→</div>
+      <div class="bs bbl"><div class="btg">Defensiva</div><p>La contención debe ser agresiva pero quirúrgica. Debe estar <span class="hl">pre-aprobada</span> en los playbooks para que el analista pueda ejecutar sin esperar autorización. Cada minuto de espera es MTTC adicional.</p></div>
+    </div>
+    <div class="ins"><div class="ins-t">Gestión</div><p>Según Ponemon 2026, los incidentes de insider threats tardan 67 dias en contenerse y cuestan 19.5M USD anuales. El MTTC tiene un ROI directo y demostrable — reducirlo se traduce en reducción proporcional del costo del incidente.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 2: LAS 4 R ═══ -->
+<section class="sec rv" id="4r">
+  <div class="sh"><span class="sn">02</span><h2 class="st">MTTR — El Problema de las <span class="ac">4 R</span></h2></div>
+
+  <div class="c">
+    <div class="ct">Flujo N.4 — Por que MTTR es la métrica más confusa</div>
+    <p>MTTR tiene <span class="hlr">cuatro significados diferentes</span> dependiendo de quién lo use. Cada uno mide un segmento distinto del timeline. Usar "MTTR" sin especificar cuál R es como decir "la temperatura es 37" sin especificar si es Celsius o Fahrenheit.</p>
+
+    <div class="fw">
+      <div class="fl">Flujo N.4: Las 4 variantes de MTTR (de más estrecha a más amplia)</div>
+      <div class="fv">
+        <div class="fn" style="max-width:500px"><div class="ni">R1 — MAS ESTRECHA</div><div class="nl2">MTT-Respond</div><div class="ns">Detección → Primera acción de respuesta<br>Ejemplo: 15 minutos</div></div>
+        <div class="fa">↓ incluye lo anterior +</div>
+        <div class="fn og" style="max-width:500px"><div class="ni">R2</div><div class="nl2">MTT-Repair</div><div class="ns">Identificación del fallo → Fix validado<br>Ejemplo: 18 horas 30 minutos</div></div>
+        <div class="fa">↓ incluye lo anterior +</div>
+        <div class="fn" style="max-width:500px;border-color:rgba(0,229,255,.3)"><div class="ni">R3</div><div class="nl2" style="color:var(--cyan)">MTT-Recover</div><div class="ns">Contención → Sistemas completamente operativos<br>Ejemplo: 2 dias 8 horas</div></div>
+        <div class="fa">↓ incluye lo anterior +</div>
+        <div class="fn pu" style="max-width:500px"><div class="ni">R4 — MAS AMPLIA</div><div class="nl2">MTT-Resolve</div><div class="ns">Detección → Cierre total (lecciones aprendidas incluidas)<br>Ejemplo: 3 dias 4 horas</div></div>
+      </div>
+    </div>
+
+    <div class="w"><div class="w-t">Recomendación técnica</div><p>Nunca usar "MTTR" sin calificación. Siempre especificar MTT-Respond, MTT-Recover, MTT-Repair o MTT-Resolve. Un vendor que dice "nuestro MTTR es 10 minutos" se refiere a MTT-Respond. Un regulador que pregunta por el MTTR espera MTT-Resolve. La diferencia puede ser de <span class="hlr">órdenes de magnitud</span>.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 3: RESPOND ═══ -->
+<section class="sec rv" id="respond">
+  <div class="sh"><span class="sn">03</span><h2 class="st">MTT-<span class="ac">Respond</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>Mide desde la <span class="hl">detección</span> hasta la <span class="hl">primera acción de respuesta</span>. Es la variante más estrecha. Captura cuánto tarda el equipo en pasar de "sabemos que algo pasó" a "estamos haciendo algo al respecto". Cuando un vendor dice "nuestro MTTR es de 15 minutos", generalmente se refiere a esta variante.</p>
+    <div class="fm">MTT-Respond = Timestamp_Primera_Acción − Timestamp_Detección</div>
+    <p style="margin-top:10px">La "primera acción" puede ser: isolation de un host en el EDR, bloqueo de un IOC en el firewall, deshabilitación de una cuenta, o escalamiento al equipo de IR. No cuenta reconocer la alerta (MTTA) ni terminar la investigación (MTTI).</p>
+    <table class="tb">
+      <tr><th>Severidad</th><th>Objetivo</th><th>Fuente</th></tr>
+      <tr><td>Critica (SEV-1)</td><td class="g">Menos de 1 hora</td><td>Prophet Security 2026</td></tr>
+      <tr><td>Alta (SEV-2)</td><td class="g">Menos de 2 horas</td><td>Prophet Security 2026</td></tr>
+      <tr><td>Media (SEV-3)</td><td>Menos de 4 horas</td><td>General</td></tr>
+      <tr><td>Baja (SEV-4)</td><td>Menos de 8 horas</td><td>General</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ SEC 4: RECOVER ═══ -->
+<section class="sec rv" id="recover">
+  <div class="sh"><span class="sn">04</span><h2 class="st">MTT-<span class="ac">Recover</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>Mide desde la <span class="hl">contención</span> hasta que los <span class="hl">sistemas vuelven a estar completamente operativos</span>. Es la variante que más le importa al negocio porque responde la pregunta: "¿cuánto tiempo vamos a estar caídos?"</p>
+    <div class="fm">MTT-Recover = Timestamp_Sistemas_Operativos − Timestamp_Contención</div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.5 — Los 5 pasos de la recuperación</div>
+    <div class="fw">
+      <div class="fl">Flujo N.5: Pipeline de recuperación</div>
+      <div class="fv">
+        <div class="fn rd" style="max-width:500px;text-align:left"><div class="ni">PASO 1</div><div class="nl2" style="font-size:12px">Erradicación</div><div class="ns" style="text-align:left">Eliminar TODOS los artefactos: malware, webshells, scheduled tasks, cuentas backdoor, GPOs modificadas, reglas de firewall alteradas. Si no se puede confirmar que un sistema está limpio, se reconstruye desde cero.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">PASO 2</div><div class="nl2" style="font-size:12px">Restauración de sistemas</div><div class="ns" style="text-align:left">Reconstruir desde imágenes limpias o restaurar desde backups verificados. Los backups deben validarse: si se hicieron durante el Dwell Time, pueden contener malware. Solo usar backups anteriores a T0.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn og" style="max-width:500px;text-align:left"><div class="ni">PASO 3</div><div class="nl2" style="font-size:12px">Hardening post-incidente</div><div class="ns" style="text-align:left">Antes de volver a producción: parchar la vulnerabilidad explotada, cerrar puertos innecesarios, implementar MFA, segmentar la red. Los sistemas restaurados deben ser MAS seguros que antes.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">PASO 4</div><div class="nl2" style="font-size:12px">Validación</div><div class="ns" style="text-align:left">Verificar que los servicios funcionan correctamente. Sweep final con EDR para confirmar que no hay IOCs residuales. Monitoreo intensivo durante las primeras 48-72 horas post-recuperación para detectar reinfección.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">PASO 5</div><div class="nl2" style="font-size:12px">Rotación de credenciales</div><div class="ns" style="text-align:left">Rotar TODAS las credenciales potencialmente comprometidas. Si AD fue comprometido (DCSync): doble reset de krbtgt con 12h de separación, reset de todas las cuentas de servicio, forzar cambio de contraseña para todos los usuarios.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.6 — Tiempos típicos de recuperación por escenario</div>
+    <table class="tb">
+      <tr><th>Escenario</th><th>MTT-Recover típico</th><th>Por que</th></tr>
+      <tr><td>Ransomware en 5 endpoints</td><td class="g">1 a 3 dias</td><td>Reimaginar máquinas, restaurar datos de usuario desde backup.</td></tr>
+      <tr><td>Ransomware en 50 servidores</td><td class="o">1 a 3 semanas</td><td>Restaurar desde backup, verificar integridad, reconstruir servicios.</td></tr>
+      <tr><td>Compromiso de Active Directory</td><td class="r">2 a 6 semanas</td><td>Reconstrucción de AD, doble reset de krbtgt, rotación masiva de credenciales.</td></tr>
+      <tr><td>Compromiso de supply chain</td><td class="r">1 a 3 meses</td><td>Auditoría completa de código, revalidación de toda la cadena.</td></tr>
+    </table>
+    <div class="ins"><div class="ins-t">Dato clave — IRE</div><p>Mandiant recomienda en M-Trends 2025 el uso de <span class="hlo">Isolated Recovery Environments (IRE)</span>: entornos de recuperación separados del entorno de producción a nivel de identidad, con su propio AD, sus propias credenciales, y acceso solo por consola. Esto previene que un atacante con presencia residual comprometa el proceso de recuperación.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 5: RESOLVE ═══ -->
+<section class="sec rv" id="resolve">
+  <div class="sh"><span class="sn">05</span><h2 class="st">MTT-<span class="ac">Resolve</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>Es la variante más <span class="hl">amplia</span> de MTTR. Mide desde la detección hasta el <span class="hl">cierre completo</span> del incidente, incluyendo recuperación técnica Y actividades post-incidente:</p>
+    <div class="fm">MTT-Resolve = Timestamp_Cierre_Incidente − Timestamp_Detección</div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.7 — Que incluye el cierre completo</div>
+    <div class="fw">
+      <div class="fl">Flujo N.7: Actividades de cierre (NIST SP 800-61 Rev. 3)</div>
+      <div class="g2">
+        <div class="fn" style="text-align:left;min-width:auto"><div class="ni">CIERRE 1</div><div class="nl2" style="font-size:11px">Lecciones aprendidas</div><div class="ns" style="text-align:left">Reunión con todos los participantes del IR. Que pasó, cuando, como se detectó, como se respondió. Que funcionó y que no.</div></div>
+        <div class="fn" style="text-align:left;min-width:auto"><div class="ni">CIERRE 2</div><div class="nl2" style="font-size:11px">Documentación completa</div><div class="ns" style="text-align:left">Timeline del incidente, artefactos encontrados, acciones tomadas, decisiones y justificaciones. Base de conocimiento para futuros incidentes.</div></div>
+        <div class="fn" style="text-align:left;min-width:auto"><div class="ni">CIERRE 3</div><div class="nl2" style="font-size:11px">Actualización de playbooks</div><div class="ns" style="text-align:left">Nuevas reglas de detección para el vector de ataque. Actualización de procedimientos de contención. Mejora de runbooks.</div></div>
+        <div class="fn" style="text-align:left;min-width:auto"><div class="ni">CIERRE 4</div><div class="nl2" style="font-size:11px">Reportes y retención de evidencia</div><div class="ns" style="text-align:left">Reporte a stakeholders (CISO, board). Notificación a reguladores si aplica (SEC: 4 dias hábiles). Retención de evidencia según requisitos legales.</div></div>
+      </div>
+    </div>
+    <p>NIST SP 800-61 Rev. 3 (abril 2025) convierte la mejora continua en un proceso que ocurre <span class="hl">durante todo el ciclo</span> de vida, no solo al final. No se debe esperar al cierre para mejorar si hay algo que se puede hacer mejor ahora.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.8 — Ejemplo completo: todas las métricas en un incidente de ransomware</div>
+    <div class="tl">
+      <div class="tl-ln"></div>
+      <div class="ti"><div class="td red"></div><div class="tt">Martes 14:00</div><div class="tit">Primera alerta del EDR</div><div class="tds">Detección de cifrado masivo. Fin del MTTD.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">Martes 14:08</div><div class="tds"><span class="tag tag-b">MTTA = 8 min</span> Analista acepta la alerta.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">Martes 14:15</div><div class="tds"><span class="tag tag-g">MTT-Respond = 15 min</span> Primera acción: isolation de hosts.</div></div>
+      <div class="ti"><div class="td"></div><div class="tt">Martes 15:30</div><div class="tds"><span class="tag tag-b">MTTI = 1h 22min</span> Investigación: 50 servers, vector = RDP expuesto.</div></div>
+      <div class="ti"><div class="td org"></div><div class="tt">Martes 15:45</div><div class="tds"><span class="tag tag-o">MTTC = 1h 45min</span> Contención confirmada. Todos los hosts aislados, C2 bloqueado.</div></div>
+      <div class="ti"><div class="td grn"></div><div class="tt">Jueves 22:00</div><div class="tds"><span class="tag tag-g">MTT-Recover = 2d 8h</span> Último servidor restaurado desde backup.</div></div>
+      <div class="ti"><div class="td pur"></div><div class="tt">Viernes 18:00</div><div class="tds"><span class="tag tag-b">MTT-Resolve = 3d 4h</span> RDP cerrado, MFA implementado, nuevas reglas SIEM, playbooks actualizados, lecciones aprendidas.</div></div>
+    </div>
+    <div class="w"><div class="w-t">La diferencia entre las R</div>
+    <p>MTT-Respond: <span class="hlg">15 minutos</span><br>MTTC: <span class="hlo">1 hora 45 minutos</span><br>MTT-Recover: <span class="hlo">2 dias 8 horas</span><br>MTT-Resolve: <span class="hlr">3 dias 4 horas</span></p>
+    <p style="margin-top:8px">Reportar solo "MTTR" sin especificar cuál R oculta esta diferencia y hace imposible entender dónde están los cuellos de botella reales.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 6: CICLO CER ═══ -->
+<section class="sec rv" id="cycle">
+  <div class="sh"><span class="sn">06</span><h2 class="st">Ciclo <span class="ac">C-E-R</span></h2></div>
+
+  <div class="c">
+    <div class="ct">Flujo N.9 — Contención, erradicación y recuperación según NIST</div>
+    <p>NIST agrupa estas tres fases como una sola etapa del ciclo de vida porque están íntimamente conectadas y frecuentemente se superponen.</p>
+
+    <div class="acc op"><div class="ah" onclick="tAcc(this)"><span class="at">Fase 1: Contención (dos niveles)</span><span class="aa">▾</span></div><div class="ab"><div class="ai">
+      <p><span class="hl">Contención a corto plazo:</span> acciones inmediatas para detener el daño activo. Aislar hosts, bloquear IPs, deshabilitar cuentas. Debe ejecutarse en <span class="hlg">minutos</span>. No requiere entender completamente el incidente — basta con saber que algo malo está pasando.</p>
+      <p style="margin-top:8px"><span class="hl">Contención a largo plazo:</span> medidas más permanentes mientras se prepara la erradicación. Redirigir tráfico, parches temporales, reglas de firewall granulares, mover sistemas a VLAN de cuarentena. Requiere más entendimiento del incidente. Puede tomar <span class="hlo">horas</span>.</p>
+      <div class="ins" style="margin-top:12px"><div class="ins-t">Observación controlada</div><p>NIST menciona que en algunos casos, el equipo puede decidir NO contener inmediatamente y en su lugar monitorear al atacante para entender mejor sus TTPs. Esta decisión ("controlled observation") es arriesgada y requiere autorización explícita de gerencia y legal.</p></div>
+    </div></div></div>
+
+    <div class="acc"><div class="ah" onclick="tAcc(this)"><span class="at">Fase 2: Erradicación</span><span class="aa">▾</span></div><div class="ab"><div class="ai">
+      <p>Eliminar <span class="hlr">completamente</span> la amenaza del entorno. No basta con aislar — hay que remover todos los artefactos:</p>
+      <div class="g2" style="margin-top:10px">
+        <div class="fn rd" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Eliminar malware e implantes</div><div class="ns" style="text-align:left">Beacons, webshells, droppers, loaders de todos los sistemas afectados.</div></div>
+        <div class="fn rd" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Remover persistencia</div><div class="ns" style="text-align:left">Scheduled tasks, services, registry keys, cuentas backdoor, GPOs modificadas.</div></div>
+        <div class="fn rd" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Parchar el vector de entrada</div><div class="ns" style="text-align:left">Cerrar la vulnerabilidad que permitió el acceso inicial. Sin esto, el atacante puede re-entrar.</div></div>
+        <div class="fn rd" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Verificación documentada</div><div class="ns" style="text-align:left">Para cada artefacto, confirmación de que fue eliminado. Si no se puede confirmar, reconstruir el sistema desde cero.</div></div>
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="ah" onclick="tAcc(this)"><span class="at">Fase 3: Recuperación</span><span class="aa">▾</span></div><div class="ab"><div class="ai">
+      <p>Restaurar sistemas al estado operativo. La clave: "normal" después de un incidente no debería ser igual que antes — debería ser <span class="hlg">mejor</span>, con las medidas de hardening que faltaban ya implementadas.</p>
+      <p style="margin-top:8px">El <span class="hl">orden de recuperación</span> importa. Los sistemas más criticos para el negocio se restauran primero, pero los más comprometidos requieren más verificación. Cuando un sistema es tanto critico como severamente comprometido (ej: controlador de dominio), la tensión requiere decisiones a nivel de gestión.</p>
+    </div></div></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 7: ERRORES ═══ -->
+<section class="sec rv" id="errors">
+  <div class="sh"><span class="sn">07</span><h2 class="st">Errores <span class="ac">Comunes</span></h2></div>
+  <div class="c">
+    <div class="ct">Flujo N.10 — Los 5 errores que convierten una respuesta en un desastre</div>
+    <div class="fw">
+      <div class="fl">Flujo N.10: Anti-patrones criticos de incident response</div>
+      <div class="fv" style="gap:10px">
+        <div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">ERROR 1</div><div class="nl2" style="font-size:12px">Usar "MTTR" sin especificar la R</div><div class="ns" style="text-align:left">El vendor dice "MTTR = 10 min" (MTT-Respond). El regulador espera MTT-Resolve (dias). La organización reporta el número del vendor al regulador y subestima su tiempo real por órdenes de magnitud.</div></div>
+        <div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">ERROR 2</div><div class="nl2" style="font-size:12px">Contener sin verificar scope</div><div class="ns" style="text-align:left">Se aíslan los 3 hosts identificados pero no se hace sweep. El atacante tiene un cuarto implante en un servidor no detectado. La contención es parcial y el atacante mantiene acceso.</div></div>
+        <div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">ERROR 3</div><div class="nl2" style="font-size:12px">Recuperar antes de erradicar</div><div class="ns" style="text-align:left">Se restaura un servidor desde un backup creado durante el Dwell Time. El backup contiene el webshell del atacante. El servidor restaurado está comprometido desde el momento en que vuelve a producción.</div></div>
+        <div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">ERROR 4</div><div class="nl2" style="font-size:12px">Cerrar sin lecciones aprendidas</div><div class="ns" style="text-align:left">El incidente se cierra pero nadie documenta nada. El siguiente incidente con el mismo vector se maneja igual de lento. NIST Rev. 3 convierte esto en un proceso continuo, no opcional.</div></div>
+        <div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">ERROR 5</div><div class="nl2" style="font-size:12px">Contención lenta por esperar aprobación</div><div class="ns" style="text-align:left">Ransomware activo. El analista necesita autorización del CISO para aislar producción. CISO en reunión, no responde 45 min. En ese tiempo, 20 servidores adicionales cifrados. Los playbooks DEBEN pre-autorizar contención para SEV-1.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 8: RESUMEN ═══ -->
+<section class="sec rv" id="summary">
+  <div class="sh"><span class="sn">08</span><h2 class="st">Tabla <span class="ac">Resumen</span></h2></div>
+  <div class="g2">
+    <div class="mc"><div class="mm" style="color:var(--orange)">MTTC</div><div class="mn">Mean Time To Contain</div><div class="md">Detección hasta amenaza aislada. Detiene el sangrado. El atacante ya no puede operar pero la amenaza no está eliminada.</div><div class="ms">T1 → T4 // Menos de 12h excelente, menos de 24h aceptable</div></div>
+    <div class="mc"><div class="mm">MTT-Respond</div><div class="mn">Mean Time To Respond</div><div class="md">Detección hasta primera acción de respuesta. La variante más estrecha. Lo que los vendors suelen reportar como "MTTR".</div><div class="ms">T1 → primera acción // Menos de 1h P1, menos de 4h general</div></div>
+    <div class="mc"><div class="mm" style="color:var(--cyan)">MTT-Recover</div><div class="mn">Mean Time To Recover</div><div class="md">Contención hasta sistemas completamente operativos. La que más le importa al negocio: cuánto tiempo se está caído.</div><div class="ms">T4 → T6 // Dias a semanas según severidad</div></div>
+    <div class="mc"><div class="mm" style="color:var(--purple)">MTT-Resolve</div><div class="mn">Mean Time To Resolve</div><div class="md">Detección hasta cierre total incluyendo lecciones aprendidas, playbooks actualizados, y reportes a reguladores.</div><div class="ms">T1 → T7 // Dias a meses según severidad</div></div>
+  </div>
+
+  <div class="c" style="margin-top:12px">
+    <div class="ct">Flujo N.11 — Pipeline completo: ambos bloques unidos</div>
+    <div class="fw">
+      <div class="fl">Flujo N.11: De T0 a T7 — todas las métricas</div>
+      <div style="font-family:var(--fc);font-size:11px;color:var(--dim);line-height:2.2;overflow-x:auto;white-space:pre">
+<span style="color:var(--red)">T0 Compromiso</span>
+  <span style="color:var(--blue)">├── MTTD ──┤</span> Detección
+  <span style="color:var(--cyan)">           ├── MTTA ──┤</span> Reconocimiento
+  <span style="color:var(--purple)">                      ├── MTTI ──┤</span> Investigación
+<span style="color:var(--orange)">  ├──────── MTTC ─────────────────┤</span> Contención
+                                  <span style="color:var(--red)">├── Erradicación ──┤</span>
+                                  <span style="color:var(--green)">├── MTT-Recover ───────┤</span> Sistemas OK
+<span style="color:var(--yellow)">  ├──────────── MTT-Resolve ────────────────────┤</span> Cierre total
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">IR::R4 CONTAINMENT AND RESPONSE // BLUE TEAM REFERENCE</div>
+  <div class="fli">Fuentes: NIST SP 800-61 Rev.2/Rev.3 // Mandiant M-Trends 2025/2026 // CrowdStrike GTR 2026</div>
+  <div class="fli">Ponemon 2026 // Prophet Security 2026 // Rapid7 // Rootly // Dropzone AI</div>
+  <div class="fli" style="margin-top:6px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+
+<script>
+function showTab(c,t){const p=document.getElementById(c);p.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));document.getElementById(t).classList.add('on');p.closest('.c').querySelectorAll('.tb2').forEach(b=>b.classList.remove('on'));event.target.classList.add('on')}
+function tAcc(h){h.closest('.acc').classList.toggle('op')}
+document.querySelectorAll('[data-c]').forEach(el=>{const t=+el.dataset.c,s=el.dataset.s||'';let c=0;const step=Math.max(1,Math.ceil(t/30));const i=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(i)}el.textContent=c+s},30)})
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>
