@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defensa Proactiva y Reactiva // Blue Team Foundations</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--blue2:#07f;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445566;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--blue2);border-radius:3px}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}
+.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+
+.hero{text-align:center;padding:70px 0 50px}
+.hero h1{font-family:var(--fd);font-size:clamp(24px,5vw,46px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:12px}
+.hero .sub{font-family:var(--fc);font-size:14px;color:var(--dim);letter-spacing:2px}
+.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+
+.sec{margin-bottom:60px;scroll-margin-top:56px}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:11px;border-bottom:1px solid var(--brd)}
+.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}
+.st{font-family:var(--fd);font-size:clamp(16px,3vw,21px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}
+.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.c h3{font-size:15px;color:var(--cyan);margin-bottom:10px;font-weight:600}.c p{font-size:13px;margin-bottom:8px}
+
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.note{background:rgba(170,68,255,.04);border:1px solid rgba(170,68,255,.15);border-left:3px solid var(--purple);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}
+.note-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:24px;margin:14px 0;overflow-x:auto}
+.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:12px 16px;text-align:center;min-width:140px;max-width:520px;transition:.3s;cursor:default;flex-shrink:0}
+.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 16px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:3px}
+.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:3px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fn.cy{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.05)}.fn.cy .nl2{color:var(--cyan)}
+.fa{color:var(--dim);font-size:16px;padding:4px 0;animation:pa 2s infinite;text-align:center;flex-shrink:0}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.fh{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;min-width:max-content}
+.fah{color:var(--dim);font-size:18px;padding:0 8px;flex-shrink:0;animation:pa 2s infinite}
+
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:14px 0}
+
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:14px 0;align-items:stretch}
+.bs{padding:16px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}
+.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}
+.bgr{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15)}
+.bpu{background:rgba(170,68,255,.04);border:1px solid rgba(170,68,255,.15)}
+.ba{display:flex;align-items:center;padding:0 10px;font-size:22px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}.bgr .btg{color:var(--green)}.bpu .btg{color:var(--purple)}
+
+.tb{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:9px 10px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}
+.tb td{padding:8px 10px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:6px;overflow:hidden}
+.ah{padding:12px 16px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}
+.ah:hover{background:var(--bg3)}.at{font-size:12px;font-weight:600;color:var(--blue)}.aa{color:var(--dim);transition:transform .3s;font-size:13px}
+.acc.op .aa{transform:rotate(180deg)}.ab{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab{max-height:4000px}.ai{padding:14px 16px}
+
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}.hlp{color:var(--purple);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}
+.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}
+.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}
+.tag-p{background:rgba(170,68,255,.08);color:var(--purple);border:1px solid rgba(170,68,255,.2)}
+
+.rv{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+
+/* watermark */
+.watermark{position:fixed;bottom:16px;right:20px;font-family:var(--fd);font-size:10px;font-weight:700;color:rgba(0,170,255,.12);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;writing-mode:vertical-rl;text-orientation:mixed}
+
+footer{text-align:center;padding:40px 16px 30px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}
+footer .fli{margin-bottom:3px}
+.author{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:8px}.ba{transform:rotate(90deg);padding:6px 0;justify-content:center}.g2,.g3{grid-template-columns:1fr}.fh{flex-wrap:wrap;min-width:auto;justify-content:center}.watermark{display:none}}
+</style>
+</head>
+<body>
+
+<div class="watermark">Toshiro Nagata</div>
+
+<nav id="nav">
+  <div class="logo">BT<b>::</b>DEF</div>
+  <div class="nl">
+    <a href="#overview">Panorama</a>
+    <a href="#proactive">Proactiva</a>
+    <a href="#soc">SOC</a>
+    <a href="#risk">Risk Assessment</a>
+    <a href="#tools">Tools</a>
+    <a href="#reactive">Reactiva</a>
+    <a href="#ir">IR</a>
+    <a href="#forensics">Forensics</a>
+    <a href="#malware">Malware</a>
+    <a href="#transversal">Transversales</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>Defensa Proactiva<br>y Reactiva</h1>
+  <div class="sub">// Blue Team Foundations — Los Dos Pilares de la Defensa<span class="blink"></span></div>
+</section>
+
+<!-- ═══ SEC 0: OVERVIEW ═══ -->
+<section class="sec rv" id="overview">
+  <div class="sh"><span class="sn">00</span><h2 class="st">Panorama <span class="ac">General</span></h2></div>
+  <div class="c">
+    <div class="ct">Flujo N.1 — Los dos pilares de la defensa</div>
+    <p>La defensa en ciberseguridad se organiza en dos grandes pilares que operan en momentos diferentes del timeline de una amenaza. Ninguno es suficiente por si solo — la defensa proactiva siempre tendrá gaps, y la defensa reactiva siempre llegará después del daño inicial. La madurez de una organización se mide por cómo integra ambas.</p>
+    <div class="fw">
+      <div class="fl">Flujo N.1: Defensa proactiva vs reactiva en el timeline de una amenaza</div>
+      <div class="fv">
+        <div class="fh">
+          <div class="fn gn" style="min-width:200px"><div class="ni">ANTES DEL INCIDENTE</div><div class="nl2">Defensa Proactiva</div><div class="ns">Reducir superficie de ataque<br>Anticipar amenazas<br>Prevenir intrusiones</div></div>
+          <div class="fah">|</div>
+          <div class="fn rd" style="min-width:80px"><div class="nl2" style="font-size:10px">Incidente</div></div>
+          <div class="fah">|</div>
+          <div class="fn og" style="min-width:200px"><div class="ni">DESPUES DEL INCIDENTE</div><div class="nl2">Defensa Reactiva</div><div class="ns">Contener el dano<br>Erradicar la amenaza<br>Recuperar operaciones</div></div>
+        </div>
+        <div style="height:16px"></div>
+        <div class="fn pu" style="max-width:500px"><div class="ni">TRANSVERSALES</div><div class="nl2">Threat Intelligence + Threat Hunting</div><div class="ns">Alimentan AMBOS pilares. Son proactivas cuando anticipan<br>TTPs y reactivas cuando responden a incidentes activos.</div></div>
+      </div>
+    </div>
+
+    <div class="br">
+      <div class="bs bgr"><div class="btg" style="color:var(--green)">Analogia ofensiva</div><p>La defensa proactiva es como el hardening que se hace antes de un ejercicio de Red Team: parchar, segmentar, configurar controles. Es la preparación del campo defensivo.</p></div>
+      <div class="ba">→</div>
+      <div class="bs brd2"><div class="btg">Analogia reactiva</div><p>La defensa reactiva es lo que ocurre cuando el Red Team logra entrar a pesar del hardening: el Blue Team debe detectar, contener y expulsar al atacante. Es la batalla real.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 1: PROACTIVA ═══ -->
+<section class="sec rv" id="proactive">
+  <div class="sh"><span class="sn">01</span><h2 class="st">Defensa <span class="ac">Proactiva</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>La defensa proactiva se ejecuta <span class="hlg">ANTES</span> de que ocurra un incidente. Su objetivo es reducir la superficie de ataque, anticipar amenazas y prevenir intrusiones. Es la inversión que se hace para que los incidentes sean menos frecuentes y, cuando ocurren, menos severos.</p>
+    <p>Tiene tres componentes principales que se retroalimentan entre si:</p>
+    <div class="fw">
+      <div class="fl">Flujo N.2: Componentes de la defensa proactiva</div>
+      <div class="fv">
+        <div class="fn gn" style="max-width:400px"><div class="nl2" style="font-size:14px">DEFENSA PROACTIVA</div><div class="ns">Se ejecuta ANTES del incidente</div></div>
+        <div class="fa">↓</div>
+        <div class="fh" style="flex-wrap:wrap;gap:10px;justify-content:center">
+          <div class="fn" style="min-width:180px;max-width:220px"><div class="ni">COMPONENTE 1</div><div class="nl2">SOC</div><div class="ns">Centro neuralgico<br>de la defensa</div></div>
+          <div class="fn" style="min-width:180px;max-width:220px"><div class="ni">COMPONENTE 2</div><div class="nl2">Risk Assessment</div><div class="ns">Evaluacion sistematica<br>de riesgos</div></div>
+          <div class="fn" style="min-width:180px;max-width:220px"><div class="ni">COMPONENTE 3</div><div class="nl2">Security Tools</div><div class="ns">Controles tecnicos<br>preventivos</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 2: SOC ═══ -->
+<section class="sec rv" id="soc">
+  <div class="sh"><span class="sn">02</span><h2 class="st">Security Operations <span class="ac">Center</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición técnica</div>
+    <h3>El centro neuralgico de la defensa</h3>
+    <p>El SOC es la unidad operativa que <span class="hl">monitorea en tiempo real todos los eventos de seguridad</span> de la organización. Es donde la defensa proactiva toma su forma más operacional — no es solo una sala con pantallas, es un equipo de personas, procesos y tecnología trabajando en conjunto para mantener awareness situacional constante.</p>
+    <p>Un SOC maduro no solo reacciona a alertas — realiza <span class="hl">threat hunting activo</span>, correlaciona eventos de múltiples fuentes (SIEM, EDR, NDR, cloud logs, identity providers) y mantiene una postura de vigilancia continua.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.3 — Niveles de madurez del SOC</div>
+    <div class="fw">
+      <div class="fl">Flujo N.3: Evolucion de un SOC segun madurez</div>
+      <div class="fv">
+        <div class="fn rd" style="max-width:500px;text-align:left"><div class="ni">NIVEL 1 — REACTIVO</div><div class="nl2" style="font-size:12px">SOC basado en alertas</div><div class="ns" style="text-align:left">Solo responde cuando una herramienta genera una alerta. No hay hunting. No hay correlacion avanzada. Los analistas procesan alertas en cola como tickets de soporte. Alto volumen de falsos positivos. MTTD medido en dias.</div></div>
+        <div class="fa">↓ Evolucion</div>
+        <div class="fn og" style="max-width:500px;text-align:left"><div class="ni">NIVEL 2 — PROACTIVO</div><div class="nl2" style="font-size:12px">SOC con threat hunting y correlacion</div><div class="ns" style="text-align:left">Además de responder alertas, los analistas ejecutan hunts basados en hipotesis. Hay correlacion cross-source (SIEM + EDR + NDR). Reglas de deteccion mapeadas a MITRE ATT&CK. Tuning activo de falsos positivos. MTTD medido en horas.</div></div>
+        <div class="fa">↓ Evolucion</div>
+        <div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">NIVEL 3 — INTELIGENTE</div><div class="nl2" style="font-size:12px">SOC con threat intel integrada y automatizacion</div><div class="ns" style="text-align:left">Threat intelligence alimenta reglas de deteccion y hunts proactivamente. SOAR automatiza triage y enriquecimiento. Deteccion basada en comportamiento (UEBA). Auto-containment para incidentes de alta confianza. MTTD medido en minutos.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.4 — Que monitorea un SOC maduro</div>
+    <div class="g2">
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 1</div><div class="nl2" style="font-size:11px">Endpoints (EDR)</div><div class="ns" style="text-align:left">Ejecucion de procesos, modificaciones de registro, inyeccion de memoria, carga de DLLs sospechosas, conexiones de red por proceso.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 2</div><div class="nl2" style="font-size:11px">Red (NDR / IDS / Firewall)</div><div class="ns" style="text-align:left">Trafico este-oeste (lateral movement), beaconing C2, exfiltracion, escaneo de puertos, conexiones a IPs/dominios maliciosos.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 3</div><div class="nl2" style="font-size:11px">Identidad (Active Directory / IdP)</div><div class="ns" style="text-align:left">Autenticaciones anomalas, Kerberoasting, DCSync, creacion de cuentas, cambios en grupos privilegiados, pass-the-hash.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 4</div><div class="nl2" style="font-size:11px">Cloud y SaaS</div><div class="ns" style="text-align:left">Accesos desde geolocalizaciones inusuales, cambios en configuracion de seguridad, creacion de roles privilegiados, API calls sospechosos.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 5</div><div class="nl2" style="font-size:11px">Email Gateway</div><div class="ns" style="text-align:left">Phishing, BEC, adjuntos maliciosos, URLs sospechosas, spoofing de dominios, volumen anomalo de envios.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">FUENTE 6</div><div class="nl2" style="font-size:11px">SIEM (correlacion central)</div><div class="ns" style="text-align:left">Correlaciona TODAS las fuentes anteriores. Detecta patrones que ningun sensor individual puede ver. Es el cerebro analitico del SOC.</div></div>
+    </div>
+    <div class="ins"><div class="ins-t">Perspectiva ofensiva</div><p>Desde el Red Team, el SOC es el adversario principal. Cada técnica de evasion (ofuscacion, LOTL, tunneling, jitter) tiene como objetivo evitar que el SOC detecte la operacion. Entender como opera un SOC es fundamental para entender tanto el ataque como la defensa.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 3: RISK ═══ -->
+<section class="sec rv" id="risk">
+  <div class="sh"><span class="sn">03</span><h2 class="st">Risk <span class="ac">Assessment</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>La evaluación sistemática de riesgos permite <span class="hl">priorizar recursos defensivos</span>. No todo puede protegerse con la misma intensidad — el risk assessment identifica los <span class="hl">"crown jewels"</span> (activos criticos) y permite asignar controles proporcionados al nivel de riesgo.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.5 — El proceso de risk assessment</div>
+    <div class="fw">
+      <div class="fl">Flujo N.5: Ciclo de evaluacion de riesgos</div>
+      <div class="fv">
+        <div class="fn" style="max-width:460px;text-align:left"><div class="ni">PASO 1</div><div class="nl2" style="font-size:12px">Identificar activos criticos (Crown Jewels)</div><div class="ns" style="text-align:left">Que tiene la organizacion que vale la pena proteger? Datos de clientes, propiedad intelectual, sistemas de produccion, infraestructura de identidad (AD), datos financieros. Priorizar por impacto al negocio si se comprometen.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:460px;text-align:left"><div class="ni">PASO 2</div><div class="nl2" style="font-size:12px">Identificar amenazas relevantes</div><div class="ns" style="text-align:left">Que threat actors atacan esta industria? Que TTPs usan? Threat intelligence alimenta este paso. No es lo mismo defenderse de ransomware generico que de APTs de estado-nacion. El perfil de amenaza define la estrategia defensiva.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:460px;text-align:left"><div class="ni">PASO 3</div><div class="nl2" style="font-size:12px">Evaluar vulnerabilidades y gaps</div><div class="ns" style="text-align:left">Donde estan los puntos debiles? Sistemas sin parchar, segmentos sin segmentar, endpoints sin EDR, cuentas con privilegios excesivos, MFA no implementado. Cada gap es una oportunidad para el atacante.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:460px;text-align:left"><div class="ni">PASO 4</div><div class="nl2" style="font-size:12px">Calcular riesgo y priorizar controles</div><div class="ns" style="text-align:left">Riesgo = Probabilidad x Impacto. Los controles se asignan proporcionalmente: los crown jewels reciben la mayor proteccion. Los activos de bajo riesgo reciben controles basicos. El presupuesto es finito — hay que elegir donde invertir.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn gn" style="max-width:460px;text-align:left"><div class="ni">PASO 5</div><div class="nl2" style="font-size:12px">Monitorear y reevaluar</div><div class="ns" style="text-align:left">El panorama de amenazas cambia constantemente. Nuevas vulnerabilidades, nuevos activos, nuevos threat actors. El risk assessment no es un evento — es un proceso continuo que se repite periodicamente.</div></div>
+      </div>
+    </div>
+    <div class="br">
+      <div class="bs brd2"><div class="btg">Perspectiva ofensiva</div><p>Desde el Red Team, el risk assessment es el equivalente defensivo de la fase de reconocimiento: entender que hay, donde esta, y que vale la pena proteger. El Red Team busca exactamente lo que el risk assessment identifica como critico — porque eso es lo que tiene valor para el atacante real también.</p></div>
+      <div class="ba">→</div>
+      <div class="bs bbl"><div class="btg">Perspectiva defensiva</div><p>Sin risk assessment, la defensa es uniforme (y por tanto insuficiente en todos los frentes). Con risk assessment, la defensa es proporcional: proteccion maxima donde mas importa, controles basicos donde el riesgo es menor.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 4: TOOLS ═══ -->
+<section class="sec rv" id="tools">
+  <div class="sh"><span class="sn">04</span><h2 class="st">Security Tools & <span class="ac">Technology</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>La implementación de controles técnicos preventivos constituye la capa tecnológica de la defensa proactiva. Cada herramienta cubre un <span class="hl">vector de ataque específico</span>, y la clave está en la <span class="hl">integración y correlación</span> entre ellas — una herramienta aislada es una defensa parcial; un ecosistema integrado es una defensa en profundidad.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.6 — Mapa de herramientas por capa de defensa</div>
+    <div class="fw">
+      <div class="fl">Flujo N.6: Defensa en profundidad — herramientas por capa</div>
+      <div class="fv" style="gap:10px">
+        <div class="fn" style="max-width:520px;text-align:left;border-color:rgba(0,255,136,.3)"><div class="ni" style="color:rgba(0,255,136,.4)">CAPA 1 — PERIMETRO</div><div class="nl2" style="color:var(--green);font-size:12px">Firewall / WAF / Email Gateway / DNS Filtering</div><div class="ns" style="text-align:left">Primera linea de defensa. Filtra trafico entrante y saliente. Bloquea ataques conocidos antes de que lleguen a los sistemas internos. El WAF protege aplicaciones web contra SQLi, XSS, SSRF. El email gateway filtra phishing y adjuntos maliciosos.</div></div>
+        <div class="fn" style="max-width:520px;text-align:left;border-color:rgba(0,170,255,.3)"><div class="ni">CAPA 2 — RED INTERNA</div><div class="nl2" style="font-size:12px">IDS/IPS / NDR / Segmentacion de red</div><div class="ns" style="text-align:left">Monitorea trafico interno (este-oeste). Detecta lateral movement, beaconing, exfiltracion. El NDR analiza patrones de trafico con machine learning. La segmentacion limita el blast radius si un segmento es comprometido.</div></div>
+        <div class="fn" style="max-width:520px;text-align:left;border-color:rgba(0,229,255,.3)"><div class="ni" style="color:rgba(0,229,255,.4)">CAPA 3 — ENDPOINT</div><div class="nl2" style="color:var(--cyan);font-size:12px">EDR / Antimalware / Host Firewall / DLP</div><div class="ns" style="text-align:left">Proteccion directa del endpoint. El EDR detecta comportamiento malicioso en tiempo real (process injection, credential dumping, lateral movement). El DLP previene fuga de datos sensibles. El antimalware es la capa basica de deteccion por firmas.</div></div>
+        <div class="fn" style="max-width:520px;text-align:left;border-color:rgba(170,68,255,.3)"><div class="ni" style="color:rgba(170,68,255,.4)">CAPA 4 — IDENTIDAD</div><div class="nl2" style="color:var(--purple);font-size:12px">MFA / PAM / CASB / Zero Trust</div><div class="ns" style="text-align:left">Proteccion del plano de identidad — la capa más critica en 2025. MFA bloquea uso de credenciales robadas. PAM controla acceso privilegiado. CASB extiende control a aplicaciones SaaS. Zero Trust verifica cada acceso independientemente de la ubicacion.</div></div>
+        <div class="fn" style="max-width:520px;text-align:left;border-color:rgba(255,136,0,.3)"><div class="ni" style="color:rgba(255,136,0,.4)">CAPA 5 — DATOS</div><div class="nl2" style="color:var(--orange);font-size:12px">Cifrado / Backup / DLP / Clasificacion</div><div class="ns" style="text-align:left">Ultima linea de defensa. Si todo lo anterior falla, los datos deben estar cifrados (inservibles para el atacante), respaldados (recuperables despues del ataque), y clasificados (se sabe exactamente que se comprometio para reportar).</div></div>
+      </div>
+    </div>
+    <div class="w"><div class="w-t">Principio critico</div><p>Ninguna herramienta individual es suficiente. Un EDR sin SIEM no puede correlacionar. Un firewall sin EDR no ve lo que pasa dentro del endpoint. Un SIEM sin logs no tiene datos que analizar. La <span class="hl">integración</span> entre capas es lo que convierte herramientas individuales en una defensa real.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 5: REACTIVA ═══ -->
+<section class="sec rv" id="reactive">
+  <div class="sh"><span class="sn">05</span><h2 class="st">Defensa <span class="ac">Reactiva</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>La defensa reactiva se ejecuta <span class="hlr">DESPUES</span> de que un incidente ha sido detectado o confirmado. Su objetivo es <span class="hl">contener el dano, erradicar la amenaza, recuperar operaciones y aprender del incidente</span>. Incluye cuatro disciplinas principales:</p>
+    <div class="fw">
+      <div class="fl">Flujo N.7: Componentes de la defensa reactiva</div>
+      <div class="fv">
+        <div class="fn og" style="max-width:400px"><div class="nl2" style="font-size:14px">DEFENSA REACTIVA</div><div class="ns">Se ejecuta DESPUES del incidente</div></div>
+        <div class="fa">↓</div>
+        <div class="g2" style="max-width:600px">
+          <div class="fn" style="min-width:auto"><div class="ni">DISCIPLINA 1</div><div class="nl2">Incident Response</div><div class="ns">Proceso estructurado<br>de respuesta</div></div>
+          <div class="fn" style="min-width:auto"><div class="ni">DISCIPLINA 2</div><div class="nl2">Digital Forensics</div><div class="ns">Recoleccion y analisis<br>de evidencia</div></div>
+          <div class="fn" style="min-width:auto"><div class="ni">DISCIPLINA 3</div><div class="nl2">Malware Analysis</div><div class="ns">Analisis de codigo<br>malicioso</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 6: IR ═══ -->
+<section class="sec rv" id="ir">
+  <div class="sh"><span class="sn">06</span><h2 class="st">Incident <span class="ac">Response</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>IR es el proceso estructurado de respuesta ante un incidente confirmado. Sigue fases bien definidas y es la capacidad más critica del Blue Team — sin IR, detectar un ataque es irrelevante porque no se sabría que hacer con esa información.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.8 — Ciclo de vida de IR (NIST SP 800-61)</div>
+    <div class="fw">
+      <div class="fl">Flujo N.8: Las 6 fases del incident response</div>
+      <div class="fv">
+        <div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">FASE 1</div><div class="nl2" style="font-size:12px">Preparación</div><div class="ns" style="text-align:left">Desarrollar capacidad de IR ANTES de que ocurra un incidente. Incluye: formar el equipo, definir playbooks, adquirir herramientas, entrenar con ejercicios, establecer canales de comunicacion, definir autoridades de decision (quien puede aislar produccion sin pedir permiso).</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">FASE 2</div><div class="nl2" style="font-size:12px">Identificación (Detección y Análisis)</div><div class="ns" style="text-align:left">Detectar que un incidente está ocurriendo y determinar su naturaleza, alcance e impacto. Aqui es donde operan las metricas MTTD, MTTA y MTTI. La calidad de esta fase determina la efectividad de todo lo que sigue.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn og" style="max-width:500px;text-align:left"><div class="ni">FASE 3</div><div class="nl2" style="font-size:12px">Contención</div><div class="ns" style="text-align:left">Detener el sangrado. Aislar sistemas comprometidos, bloquear C2, deshabilitar cuentas. Contención a corto plazo (inmediata) y a largo plazo (mientras se prepara la erradicacion). Aqui opera la metrica MTTC.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn rd" style="max-width:500px;text-align:left"><div class="ni">FASE 4</div><div class="nl2" style="font-size:12px">Erradicación</div><div class="ns" style="text-align:left">Eliminar completamente la amenaza: malware, webshells, persistencia, cuentas backdoor, GPOs modificadas. Parchar la vulnerabilidad explotada. Si no se puede confirmar limpieza total, reconstruir el sistema desde cero.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left;border-color:rgba(0,229,255,.3)"><div class="ni">FASE 5</div><div class="nl2" style="color:var(--cyan);font-size:12px">Recuperación</div><div class="ns" style="text-align:left">Restaurar sistemas a operacion normal (mejorada). Restaurar desde backups verificados, reimaginar equipos, validar servicios, monitoreo intensivo post-restauracion 48-72h. Aqui opera la metrica MTT-Recover.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn pu" style="max-width:500px;text-align:left"><div class="ni">FASE 6</div><div class="nl2" style="font-size:12px">Lecciones Aprendidas</div><div class="ns" style="text-align:left">Documentar que paso, como se detecto, como se respondio. Que funciono y que no. Actualizar playbooks, reglas de deteccion y procedimientos. NIST Rev. 3 (2025) convierte esto en un proceso CONTINUO, no solo post-incidente. Aqui cierra MTT-Resolve.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 7: FORENSICS ═══ -->
+<section class="sec rv" id="forensics">
+  <div class="sh"><span class="sn">07</span><h2 class="st">Digital <span class="ac">Forensics</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>La recolección y análisis de evidencia digital con <span class="hl">integridad forense</span>. Se usa tanto para entender que ocurrió (apoyo al IR) como para generar <span class="hl">evidencia admisible legalmente</span> (apoyo a procesos judiciales o regulatorios).</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.9 — Tipos de forensics y que investigan</div>
+    <div class="g2">
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 1</div><div class="nl2" style="font-size:11px">Disk Forensics</div><div class="ns" style="text-align:left">Análisis de discos duros e imagenes forenses. Busca artefactos en el filesystem: archivos eliminados, prefetch, shellbags, registry hives, MFT, event logs, USN journal. Herramientas: Autopsy, FTK, EnCase, KAPE.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 2</div><div class="nl2" style="font-size:11px">Memory Forensics</div><div class="ns" style="text-align:left">Análisis de la memoria RAM. Detecta malware fileless, injección de procesos, credenciales en memoria, conexiones de red ocultas. El atacante puede no dejar nada en disco pero siempre deja huella en memoria. Herramientas: Volatility, Rekall.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 3</div><div class="nl2" style="font-size:11px">Network Forensics</div><div class="ns" style="text-align:left">Análisis de capturas de tráfico de red (pcap). Reconstruye comunicaciones C2, exfiltración de datos, lateral movement, DNS tunneling. Herramientas: Wireshark, tcpdump, Zeek, NetworkMiner.</div></div>
+      <div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 4</div><div class="nl2" style="font-size:11px">Log Forensics</div><div class="ns" style="text-align:left">Análisis de logs de sistemas, aplicaciones, AD, cloud. Reconstruye la timeline del atacante: cuando entro, que hizo, por donde se movio. La correlacion de logs de múltiples fuentes es lo que permite armar la narrativa completa del incidente.</div></div>
+    </div>
+
+    <div class="br">
+      <div class="bs brd2"><div class="btg">Perspectiva ofensiva</div><p>Desde el Red Team, cada artefacto que se deja durante una operación (logs, ficheros, registros, conexiones) es lo que el equipo forense va a reconstruir. Entender forensics desde el lado ofensivo permite tanto mejorar el OPSEC del Red Team como entender que busca el defensor.</p></div>
+      <div class="ba">→</div>
+      <div class="bs bbl"><div class="btg">Perspectiva defensiva</div><p>La capacidad forense es lo que permite responder las preguntas criticas del IR: como entro el atacante, que hizo una vez dentro, que datos se vieron comprometidos, y si todavía tiene acceso. Sin forensics, el IR opera a ciegas.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEC 8: MALWARE ═══ -->
+<section class="sec rv" id="malware">
+  <div class="sh"><span class="sn">08</span><h2 class="st">Malware <span class="ac">Analysis</span></h2></div>
+  <div class="c">
+    <div class="ct">Definición</div>
+    <p>El análisis estático y dinámico de código malicioso para entender su funcionalidad, extraer <span class="hl">IOCs</span> (Indicators of Compromise) e identificar las <span class="hl">TTPs</span> asociadas. Permite crear detecciones específicas y entender el nivel de sofisticación del adversario.</p>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.10 — Los dos enfoques de analisis</div>
+    <div class="br">
+      <div class="bs bbl" style="flex:1"><div class="btg">Análisis estático</div>
+        <p><span class="hl">Sin ejecutar</span> el malware. Se examina el binario en reposo:</p>
+        <p style="margin-top:6px;font-size:12px">Strings: buscar URLs, IPs, comandos, rutas de archivo dentro del binario.<br>
+        PE Headers: analizar imports, exports, secciones del ejecutable.<br>
+        Hashes: generar MD5/SHA256 para comparar con bases de datos de threat intel.<br>
+        YARA rules: identificar familias de malware conocidas por patrones de bytes.<br>
+        Disassembly: analizar el codigo ensamblador con IDA Pro, Ghidra, Radare2.</p>
+        <p style="margin-top:8px;font-size:11px;color:var(--dim)">Ventaja: seguro, no requiere ejecucion. Desventaja: no revela comportamiento dinamico ni payloads cifrados.</p>
+      </div>
+      <div class="ba">vs</div>
+      <div class="bs bgr" style="flex:1"><div class="btg" style="color:var(--green)">Análisis dinámico</div>
+        <p><span class="hlg">Ejecutando</span> el malware en un entorno controlado (sandbox):</p>
+        <p style="margin-top:6px;font-size:12px">Sandbox: ejecutar en VM aislada y observar comportamiento en tiempo real.<br>
+        Network: capturar trafico de red (C2 callbacks, DNS queries, exfiltración).<br>
+        Filesystem: monitorear archivos creados, modificados, eliminados.<br>
+        Registry: detectar persistencia (Run keys, services, scheduled tasks).<br>
+        Process: rastrear procesos creados, inyecciones, escalacion de privilegios.</p>
+        <p style="margin-top:8px;font-size:11px;color:var(--dim)">Ventaja: revela comportamiento real. Desventaja: el malware puede detectar el sandbox y cambiar su comportamiento.</p>
+      </div>
+    </div>
+    <div class="ex"><div class="ex-t">Ejemplo practico</div><p>Se recibe una muestra de un .exe sospechoso encontrado durante el IR. Análisis estático: strings revela la URL "https://update-service[.]evil/beacon". PE headers muestran imports de VirtualAllocEx y WriteProcessMemory (indicadores de process injection). Análisis dinámico: al ejecutar en sandbox, el malware se inyecta en svchost.exe y comienza beaconing HTTPS cada 60 segundos al dominio identificado. Se generan IOCs: hash, dominio, IP, y user-agent. Estos IOCs se distribuyen al SOC para crear reglas de deteccion inmediatas.</p></div>
+  </div>
+</section>
+
+<!-- ═══ SEC 9: TRANSVERSALES ═══ -->
+<section class="sec rv" id="transversal">
+  <div class="sh"><span class="sn">09</span><h2 class="st">Disciplinas <span class="ac">Transversales</span></h2></div>
+  <div class="c">
+    <div class="ct">Corrección importante sobre la clasificación</div>
+    <div class="w"><div class="w-t">Imprecisión comun en la literatura</div><p>Algunos materiales clasifican Threat Hunting y Threat Intelligence como puramente "reactivos". Esto es <span class="hlr">técnicamente incorrecto</span>. Ambas disciplinas son <span class="hlp">transversales</span>: tienen componentes tanto proactivos como reactivos. La clasificación correcta reconoce que alimentan ambos pilares de la defensa.</p></div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.11 — Threat Intelligence: alimenta ambos pilares</div>
+    <h3>Threat Intelligence</h3>
+    <p>La recopilación, análisis y aplicación de información sobre amenazas para mejorar la postura defensiva. Opera en múltiples niveles:</p>
+    <div class="fw">
+      <div class="fl">Flujo N.11: Los tres niveles de threat intelligence</div>
+      <div class="fv">
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">NIVEL 1 — OPERACIONAL</div><div class="nl2" style="font-size:12px">IOCs especificos</div><div class="ns" style="text-align:left">Hashes de malware, IPs de C2, dominios maliciosos, URLs de phishing. Se consumen en tiempo real por SIEM y EDR para deteccion automatica. Es la forma más inmediata y táctica de threat intel.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn og" style="max-width:500px;text-align:left"><div class="ni">NIVEL 2 — TACTICA</div><div class="nl2" style="font-size:12px">TTPs de adversarios</div><div class="ns" style="text-align:left">Como opera un threat actor especifico: que tecnicas usa, en que orden, contra que tipo de organizaciones. Se mapea a MITRE ATT&CK y alimenta reglas de deteccion y hunts proactivos. Mas duradera que los IOCs.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn pu" style="max-width:500px;text-align:left"><div class="ni">NIVEL 3 — ESTRATEGICA</div><div class="nl2" style="font-size:12px">Tendencias de amenazas por sector</div><div class="ns" style="text-align:left">Que sectores son los mas atacados? Cuales son las tendencias emergentes? Que motivaciones tienen los adversarios? Alimenta decisiones de inversion en seguridad a nivel ejecutivo. Es la intel que consume el CISO y el board.</div></div>
+      </div>
+    </div>
+
+    <div class="fw" style="margin-top:14px">
+      <div class="fl">Naturaleza transversal de la Threat Intelligence</div>
+      <div class="fv">
+        <div class="fn pu" style="max-width:350px"><div class="nl2">THREAT INTELLIGENCE</div></div>
+        <div class="fa">↓ alimenta</div>
+        <div class="fh" style="flex-wrap:wrap;gap:10px;justify-content:center">
+          <div class="fn gn" style="min-width:200px;max-width:240px"><div class="ni">USO PROACTIVO</div><div class="nl2" style="font-size:11px">Anticipar TTPs</div><div class="ns">Crear reglas de deteccion<br>ANTES del ataque basandose<br>en la inteligencia de amenazas</div></div>
+          <div class="fn og" style="min-width:200px;max-width:240px"><div class="ni">USO REACTIVO</div><div class="nl2" style="font-size:11px">Responder a incidentes</div><div class="ns">Durante un IR activo, la intel<br>ayuda a identificar el adversario,<br>predecir proximos pasos, y<br>buscar IOCs relacionados</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="c">
+    <div class="ct">Flujo N.12 — Threat Hunting: búsqueda proactiva de amenazas</div>
+    <h3>Threat Hunting</h3>
+    <p>La búsqueda proactiva e iterativa de amenazas que han <span class="hl">evadido los controles de detección automáticos</span>. Un threat hunter parte de una hipótesis y la investiga usando datos de telemetría. No espera alertas — busca activamente lo que las reglas automatizadas no detectan.</p>
+
+    <div class="fw">
+      <div class="fl">Flujo N.12: Ciclo de threat hunting basado en hipotesis</div>
+      <div class="fv">
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">PASO 1</div><div class="nl2" style="font-size:12px">Formular hipótesis</div><div class="ns" style="text-align:left">Basada en threat intel, TTPs conocidas, o intuicion del analista. Ejemplo: "Creo que hay movimiento lateral en el segmento de servidores porque un threat actor que ataca nuestra industria usa WMI para lateral movement y no tenemos regla de deteccion para eso."</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">PASO 2</div><div class="nl2" style="font-size:12px">Recolectar y analizar datos</div><div class="ns" style="text-align:left">Consultar SIEM, EDR, NDR buscando evidencia que soporte o refute la hipotesis. En el ejemplo: buscar procesos WMI (wmiprvse.exe) ejecutandose en servidores con command lines sospechosos, correlacionar con autenticaciones remotas.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn" style="max-width:500px;text-align:left"><div class="ni">PASO 3</div><div class="nl2" style="font-size:12px">Evaluar resultados</div><div class="ns" style="text-align:left">Si se encuentra actividad sospechosa → escalar como incidente y activar IR. Si no se encuentra → la hipotesis se refuta (por ahora), pero se generan reglas de deteccion para monitorear la TTP en el futuro.</div></div>
+        <div class="fa">↓</div>
+        <div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">PASO 4</div><div class="nl2" style="font-size:12px">Documentar y mejorar</div><div class="ns" style="text-align:left">Independientemente del resultado, documentar el hunt. Si se encontro algo, se genera un caso de IR. Si no, las queries y la logica se convierten en detecciones automaticas para el SIEM. El threat hunting genera detecciones.</div></div>
+      </div>
+    </div>
+
+    <div class="fw" style="margin-top:14px">
+      <div class="fl">Naturaleza transversal del Threat Hunting</div>
+      <div class="fv">
+        <div class="fn pu" style="max-width:350px"><div class="nl2">THREAT HUNTING</div></div>
+        <div class="fa">↓ opera en ambos modos</div>
+        <div class="fh" style="flex-wrap:wrap;gap:10px;justify-content:center">
+          <div class="fn gn" style="min-width:200px;max-width:240px"><div class="ni">COMPONENTE PROACTIVO</div><div class="nl2" style="font-size:11px">Buscar lo invisible</div><div class="ns">Busca amenazas que los<br>controles automaticos NO<br>han detectado. Opera sin<br>alertas previas. Proactivo<br>por definicion.</div></div>
+          <div class="fn og" style="min-width:200px;max-width:240px"><div class="ni">COMPONENTE REACTIVO</div><div class="nl2" style="font-size:11px">Ampliar el alcance del IR</div><div class="ns">Durante un IR activo, el<br>hunting busca otros hosts<br>comprometidos, otros<br>implantes, otras cuentas<br>afectadas. Extiende el scope.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ins"><div class="ins-t">Dato importante</div><p>Según Gartner, los equipos de SOC que pasan menos del 30% de su tiempo en threat hunting real están esencialmente apagando incendios todo el dia. El hunting es lo que permite pasar de una postura reactiva a una proactiva, y es lo que encuentra las amenazas que las reglas automatizadas no cubren — el delta entre "lo que podemos detectar" y "lo que realmente hay".</p></div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="author">Toshiro Nagata</div>
+  <div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">BLUE TEAM FOUNDATIONS // DEFENSA PROACTIVA Y REACTIVA</div>
+  <div class="fli">Maestria en Ciberseguridad — Material de clase</div>
+  <div class="fli" style="margin-top:6px;font-size:9px;color:rgba(0,170,255,.25)">Frameworks: NIST CSF 2.0 // NIST SP 800-61 Rev.3 // MITRE ATT&CK</div>
+</footer>
+</main>
+
+<script>
+function tAcc(h){h.closest('.acc').classList.toggle('op')}
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>
