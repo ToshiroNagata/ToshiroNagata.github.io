@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOCs & IOAs // Blue Team Indicators Reference</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#07f;border-radius:3px}
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+.hero{text-align:center;padding:60px 0 40px}.hero h1{font-family:var(--fd);font-size:clamp(22px,5vw,44px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:10px}.hero .sub{font-family:var(--fc);font-size:13px;color:var(--dim);letter-spacing:2px}
+.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+.sec{margin-bottom:55px;scroll-margin-top:56px}.sh{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--brd)}.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}.st{font-family:var(--fd);font-size:clamp(15px,3vw,20px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;transition:border-color .3s}.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:7px}.c h3{font-size:14px;color:var(--cyan);margin-bottom:8px;font-weight:600}.c p{font-size:13px;margin-bottom:7px}
+.fm{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:12px 16px;margin:12px 0;font-family:var(--fc);font-size:12px;color:var(--cyan)}
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:22px;margin:12px 0;overflow-x:auto}.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:11px 15px;text-align:center;min-width:130px;max-width:500px;transition:.3s;cursor:default;flex-shrink:0}.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 14px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:2px}.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:2px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fa{color:var(--dim);font-size:15px;padding:3px 0;animation:pa 2s infinite;text-align:center}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:9px;margin:12px 0}
+.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px;margin:12px 0}
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:12px 0;align-items:stretch}.bs{padding:14px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}.bgr{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15)}.bpu{background:rgba(170,68,255,.04);border:1px solid rgba(170,68,255,.15)}
+.ba2{display:flex;align-items:center;padding:0 8px;font-size:20px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px}.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}.bgr .btg{color:var(--green)}.bpu .btg{color:var(--purple)}
+.tb{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 9px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}.tb td{padding:7px 9px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:5px;overflow:hidden}.ah{padding:11px 14px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}.ah:hover{background:var(--bg3)}.at2{font-size:12px;font-weight:600;color:var(--blue)}.aa2{color:var(--dim);transition:transform .3s;font-size:12px}.acc.op .aa2{transform:rotate(180deg)}.ab2{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab2{max-height:5000px}.ai2{padding:12px 14px}
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}.tag-p{background:rgba(170,68,255,.08);color:var(--purple);border:1px solid rgba(170,68,255,.2)}
+.rv{opacity:0;transform:translateY(22px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+.tl{position:relative;padding:18px 0 18px 34px;margin:12px 0}.tl-ln{position:absolute;left:11px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan),var(--green),var(--orange),var(--red))}
+.ti{position:relative;margin-bottom:14px;padding-left:16px;opacity:0;transform:translateX(-12px);animation:si .5s forwards}
+.ti:nth-child(1){animation-delay:.1s}.ti:nth-child(2){animation-delay:.2s}.ti:nth-child(3){animation-delay:.25s}.ti:nth-child(4){animation-delay:.3s}.ti:nth-child(5){animation-delay:.35s}.ti:nth-child(6){animation-delay:.4s}.ti:nth-child(7){animation-delay:.45s}.ti:nth-child(8){animation-delay:.5s}
+@keyframes si{to{opacity:1;transform:translateX(0)}}
+.td2{position:absolute;left:-22px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--blue);border:2px solid var(--bg);box-shadow:0 0 7px var(--glow)}
+.td2.red{background:var(--red)}.td2.grn{background:var(--green)}.td2.org{background:var(--orange)}.td2.pur{background:var(--purple)}
+.tt2{font-family:var(--fd);font-size:10px;font-weight:600;color:var(--cyan)}.tit2{font-size:11px;font-weight:600;color:var(--blue)}.tds2{font-size:10px;color:var(--dim)}
+.tabs{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap}.tb3{background:var(--bg3);color:var(--dim);border:1px solid var(--brd);border-radius:5px 5px 0 0;padding:7px 13px;font-family:var(--fc);font-size:11px;cursor:pointer;transition:.3s}.tb3:hover{color:var(--blue)}.tb3.on{color:var(--blue);background:rgba(0,170,255,.07);border-color:var(--blue);border-bottom-color:transparent}.tp{display:none}.tp.on{display:block}
+.wm{position:fixed;bottom:14px;right:18px;font-family:var(--fd);font-size:10px;font-weight:700;color:rgba(0,170,255,.1);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;writing-mode:vertical-rl}
+footer{text-align:center;padding:35px 16px 25px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}footer .fli{margin-bottom:3px}
+.author{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+/* CIA hex */
+.hex-wrap{display:flex;justify-content:center;margin:16px 0}
+.hex-grid{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.hex-item{width:120px;text-align:center;padding:16px 8px;border-radius:8px;transition:.3s;cursor:default}
+.hex-item:hover{transform:scale(1.05)}
+.hex-letter{font-family:var(--fd);font-size:28px;font-weight:800;margin-bottom:4px}
+.hex-name{font-size:10px;font-weight:600;letter-spacing:1px}
+.hex-desc{font-size:9px;color:var(--dim);margin-top:4px}
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:6px}.ba2{transform:rotate(90deg);padding:4px 0;justify-content:center}.g2,.g3{grid-template-columns:1fr}.wm{display:none}}
+</style>
+</head>
+<body>
+<div class="wm">Toshiro Nagata</div>
+<nav id="nav"><div class="logo">IOC<b>::</b>IOA</div><div class="nl">
+<a href="#core">Diferencia</a><a href="#ioc">IOCs</a><a href="#ioc-types">Tipos IOC</a><a href="#ioa">IOAs</a><a href="#ioa-types">Tipos IOA</a><a href="#example">Ejemplo</a><a href="#pyramid">Piramide</a><a href="#cia">CIA</a><a href="#compare">Comparativa</a>
+</div></nav>
+<main>
+
+<section class="hero">
+<h1>IOCs & IOAs</h1>
+<div class="sub">// Indicators of Compromise & Indicators of Attack — Guia Visual Completa<span class="blink"></span></div>
+</section>
+
+<!-- ═══ SEC 1: DIFERENCIA CORE ═══ -->
+<section class="sec rv" id="core">
+<div class="sh"><span class="sn">01</span><h2 class="st">La Diferencia <span class="ac">Fundamental</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.1 — Que pasó vs que está pasando</div>
+<p>La diferencia entre IOCs e IOAs se reduce a una pregunta temporal:</p>
+<div class="br" style="margin:16px 0">
+<div class="bs brd2" style="text-align:center">
+<div class="btg">IOC — Indicator of Compromise</div>
+<p style="font-size:16px;font-weight:700;color:var(--red);margin:8px 0">Que pasó?</p>
+<p>Evidencia forense de que un compromiso <span class="hlr">ya ocurrió</span>.</p>
+<p style="margin-top:6px;font-size:11px;color:var(--dim)">Se descubre DESPUES del hecho. Es la huella digital que el atacante dejó atrás.</p>
+</div>
+<div class="ba2">vs</div>
+<div class="bs bgr" style="text-align:center">
+<div class="btg" style="color:var(--green)">IOA — Indicator of Attack</div>
+<p style="font-size:16px;font-weight:700;color:var(--green);margin:8px 0">Que está pasando ahora?</p>
+<p>Patrón de comportamiento que indica que un ataque <span class="hlg">está en curso</span>.</p>
+<p style="margin-top:6px;font-size:11px;color:var(--dim)">Se detecta EN TIEMPO REAL. Es la acción del atacante mientras la ejecuta.</p>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.2 — Donde operan en el timeline de un ataque</div>
+<div class="fw">
+<div class="fl">Flujo N.2: IOAs detectan durante el ataque, IOCs se encuentran después</div>
+<div class="fv">
+<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%">
+<div class="fn rd" style="flex:1;min-width:100px"><div class="ni">FASE 1</div><div class="nl2" style="font-size:10px">Acceso Inicial</div></div>
+<div class="fn rd" style="flex:1;min-width:100px"><div class="ni">FASE 2</div><div class="nl2" style="font-size:10px">Ejecución</div></div>
+<div class="fn og" style="flex:1;min-width:100px"><div class="ni">FASE 3</div><div class="nl2" style="font-size:10px">Persistencia</div></div>
+<div class="fn og" style="flex:1;min-width:100px"><div class="ni">FASE 4</div><div class="nl2" style="font-size:10px">Mov. Lateral</div></div>
+<div class="fn" style="flex:1;min-width:100px;border-color:rgba(255,51,85,.5)"><div class="ni">FASE 5</div><div class="nl2" style="font-size:10px;color:var(--red)">Exfiltración</div></div>
+</div>
+<div style="height:12px"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%">
+<div style="border:1px solid rgba(0,255,136,.2);border-radius:6px;padding:10px 16px;text-align:center;flex:1;min-width:200px;background:rgba(0,255,136,.03)">
+<div style="font-family:var(--fd);font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:4px">IOAs DETECTAN AQUI</div>
+<div style="font-size:10px;color:var(--dim)">Comportamiento en tiempo real durante TODAS las fases</div>
+</div>
+<div style="border:1px solid rgba(255,51,85,.2);border-radius:6px;padding:10px 16px;text-align:center;flex:1;min-width:200px;background:rgba(255,51,85,.03)">
+<div style="font-family:var(--fd);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:4px">IOCs SE ENCUENTRAN AQUI</div>
+<div style="font-size:10px;color:var(--dim)">Artefactos forenses descubiertos POST-compromiso</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fm">Detectar un IOA a tiempo puede prevenir el daño. Encontrar un IOC confirma que el daño ya ocurrió — pero permite entender qué pasó y evitar que se repita. Ambos son necesarios.</div>
+</div>
+</section>
+
+<!-- ═══ SEC 2: IOCs ═══ -->
+<section class="sec rv" id="ioc">
+<div class="sh"><span class="sn">02</span><h2 class="st">IOC — Indicators of <span class="ac">Compromise</span></h2></div>
+<div class="c">
+<div class="ct">Definición técnica</div>
+<p>Un IOC es un <span class="hl">artefacto forense observable</span> que constituye evidencia de que un sistema ha sido comprometido. Es la "huella digital" que el atacante deja tras una intrusión. Los IOCs son <span class="hlr">reactivos por naturaleza</span>: se descubren después del compromiso y se usan para entender el alcance, buscar el mismo compromiso en otros sistemas, y crear reglas de bloqueo.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.3 — Ciclo de vida de un IOC</div>
+<div class="fw">
+<div class="fl">Flujo N.3: Vida útil de los IOCs (de efímeros a duraderos)</div>
+<div class="fv">
+<div class="fn" style="max-width:460px;text-align:left;opacity:.5"><div class="ni">VIDA: MINUTOS A HORAS</div><div class="nl2" style="font-size:11px">Hash de archivo</div><div class="ns" style="text-align:left">Cambiar un solo byte genera un hash nuevo. Trivial para el atacante. La operación más simple posible.</div></div>
+<div class="fa">↓ más duradero</div>
+<div class="fn" style="max-width:460px;text-align:left;opacity:.65"><div class="ni">VIDA: HORAS A DIAS</div><div class="nl2" style="font-size:11px">Dirección IP</div><div class="ns" style="text-align:left">Rotar IPs toma minutos con VPS desechables o bulletproof hosting. Bloquear IPs legítimas compartidas causa daño colateral.</div></div>
+<div class="fa">↓ más duradero</div>
+<div class="fn" style="max-width:460px;text-align:left;opacity:.8"><div class="ni">VIDA: DIAS A SEMANAS</div><div class="nl2" style="font-size:11px">Nombre de dominio</div><div class="ns" style="text-align:left">Requiere registro y propagación DNS. Más costoso que IPs pero técnicas como DGA y Fast Flux lo compensan.</div></div>
+<div class="fa">↓ más duradero</div>
+<div class="fn og" style="max-width:460px;text-align:left"><div class="ni">VIDA: SEMANAS A MESES</div><div class="nl2" style="font-size:11px">Patrón de tráfico / Artefacto de host</div><div class="ns" style="text-align:left">User-Agent strings, JA3 fingerprints, intervalos de beaconing, registry keys de persistencia. Cambiar requiere reconfigurar herramientas.</div></div>
+</div>
+</div>
+<div class="w"><div class="w-t">Error común</div><p>Muchas organizaciones miden la "efectividad" de su threat intel por la cantidad de hashes bloqueados. Esta métrica es engañosa: bloquear 10,000 hashes puede significar 10,000 variantes del mismo malware que un packer generó en segundos. La cantidad no refleja capacidad defensiva real.</p></div>
+</div>
+</section>
+
+<!-- ═══ SEC 3: TIPOS IOC ═══ -->
+<section class="sec rv" id="ioc-types">
+<div class="sh"><span class="sn">03</span><h2 class="st">Tipos de <span class="ac">IOCs</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.4 — IOCs por categoría con ejemplos</div>
+
+<div class="acc op"><div class="ah" onclick="tA(this)"><span class="at2">IOCs de Red</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">IP MALICIOSA</div><div class="nl2" style="font-size:11px">Servidor C2, exfiltración</div><div class="ns" style="text-align:left">Ej: <code>185.234.72.15</code> — servidor C2 de Cobalt Strike. Utilidad: baja (fácil de rotar).</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DOMINIO MALICIOSO</div><div class="nl2" style="font-size:11px">C2, phishing, distribución</div><div class="ns" style="text-align:left">Ej: <code>micros0ft-update.com</code> — typosquatting. Utilidad: moderada.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">URL MALICIOSA</div><div class="nl2" style="font-size:11px">Endpoint de staging o C2</div><div class="ns" style="text-align:left">Ej: <code>/api/v2/update?id=beacon</code> — URI de Cobalt Strike. Utilidad: moderada.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">PATRON DE TRAFICO</div><div class="nl2" style="font-size:11px">Beaconing, JA3/JA3S</div><div class="ns" style="text-align:left">Ej: HTTPS cada 60s con jitter 10% + User-Agent de IE9 (no existe). Utilidad: alta.</div></div>
+</div>
+</div></div></div>
+
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">IOCs de Host (Endpoint)</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">HASH DE ARCHIVO</div><div class="nl2" style="font-size:11px">MD5, SHA-1, SHA-256</div><div class="ns" style="text-align:left">Ej: <code>e99a18c428cb...</code> — beacon.exe. Utilidad: muy baja (trivial de cambiar).</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">RUTA DE ARCHIVO</div><div class="nl2" style="font-size:11px">Donde se instala el malware</div><div class="ns" style="text-align:left">Ej: <code>C:\ProgramData\svchost.exe</code> — svchost.exe nunca se ejecuta desde ProgramData.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">REGISTRY KEY</div><div class="nl2" style="font-size:11px">Persistencia</div><div class="ns" style="text-align:left">Ej: <code>HKLM\...\Run\WindowsUpdate</code> apuntando a ruta sospechosa.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">PROCESO PADRE-HIJO</div><div class="nl2" style="font-size:11px">Cadena de ejecución</div><div class="ns" style="text-align:left">Ej: <code>winword.exe → cmd.exe → powershell.exe</code> — Word ejecutando un shell.</div></div>
+</div>
+</div></div></div>
+
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">IOCs de Email</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p><span class="hl">Remitente</span>: <code>it-support@micros0ft-help.com</code> (0 en lugar de o). <span class="hl">Hash de adjunto</span>: hash del .docx o .exe malicioso. <span class="hl">Headers</span>: inconsistencias en SPF/DKIM/DMARC, Reply-To diferente al From.</p>
+</div></div></div>
+</div>
+
+<div class="c">
+<div class="ct">4 usos operativos de IOCs</div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">USO 1</div><div class="nl2" style="font-size:11px">Detección retrospectiva</div><div class="ns" style="text-align:left">Buscar IOCs nuevos retroactivamente en logs y telemetría. Si aparece = compromiso previo.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">USO 2</div><div class="nl2" style="font-size:11px">Bloqueo preventivo</div><div class="ns" style="text-align:left">TIPs distribuyen IOCs a EDR/firewall/proxy en milisegundos vía APIs. Automatizado.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">USO 3</div><div class="nl2" style="font-size:11px">Scoping durante IR</div><div class="ns" style="text-align:left">IOCs de un host comprometido se buscan en toda la organización para determinar alcance.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">USO 4</div><div class="nl2" style="font-size:11px">Atribución</div><div class="ns" style="text-align:left">Si los IOCs coinciden con un reporte de APT29, se tiene contexto sobre capacidades y motivaciones del adversario.</div></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 4: IOAs ═══ -->
+<section class="sec rv" id="ioa">
+<div class="sh"><span class="sn">04</span><h2 class="st">IOA — Indicators of <span class="ac">Attack</span></h2></div>
+<div class="c">
+<div class="ct">Definición técnica</div>
+<p>Un IOA es un <span class="hl">patrón de comportamiento</span> que indica que un ataque está en curso o es inminente. A diferencia de los IOCs (artefactos estáticos), los IOAs son <span class="hlg">secuencias de acciones</span> que revelan la intención del atacante — no qué herramienta usa, sino qué está intentando hacer.</p>
+<p>Los IOAs son <span class="hlg">proactivos por naturaleza</span>. Se detectan en tiempo real, lo que permite interceptar el ataque antes de que el atacante complete su objetivo. No requieren conocimiento previo de la herramienta o malware específico.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.5 — La analogía del ladrón del banco (CrowdStrike)</div>
+<div class="br">
+<div class="bs brd2" style="text-align:left">
+<div class="btg">Solo con IOCs</div>
+<p>Se busca al ladrón por la descripción del robo anterior: "conduce una camioneta morada, usa gorra de los Ravens, y usa un taladro para abrir la bóveda."</p>
+<p style="margin-top:8px">Si viene con auto rojo, sombrero de vaquero y una palanca → <span class="hlr">los IOCs no lo detectan</span>. Los indicadores estáticos cambiaron.</p>
+</div>
+<div class="ba2">vs</div>
+<div class="bs bgr" style="text-align:left">
+<div class="btg" style="color:var(--green)">Con IOAs</div>
+<p>Se detecta el COMPORTAMIENTO: "alguien estacionó un vehículo cerca, entró con la cara cubierta, se dirigió a la bóveda, e intenta forzar la cerradura."</p>
+<p style="margin-top:8px">No importa qué auto conduce ni qué herramienta usa → <span class="hlg">el patrón de comportamiento delata la intención</span>.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 5: TIPOS IOA ═══ -->
+<section class="sec rv" id="ioa-types">
+<div class="sh"><span class="sn">05</span><h2 class="st">Tipos de <span class="ac">IOAs</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.6 — IOAs por tipo de comportamiento (mapeados a MITRE ATT&CK)</div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EJECUCION ANOMALA</div><div class="nl2" style="font-size:11px">Office ejecutando shells</div><div class="ns" style="text-align:left">Word/Excel ejecutando cmd.exe o powershell.exe. Casi nunca es legítimo — indica macro maliciosa.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">MOVIMIENTO LATERAL</div><div class="nl2" style="font-size:11px">Auth remota + ejecución</div><div class="ns" style="text-align:left">Autenticaciones a hosts no habituales fuera de horario, seguidas de ejecución de comandos.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">ESCALACION DE PRIVILEGIOS</div><div class="nl2" style="font-size:11px">Obtener acceso elevado</div><div class="ns" style="text-align:left">Usuario estándar ejecuta <code>whoami /priv</code> → <code>net localgroup administrators</code>. Reconocimiento previo a escalación.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">RECONOCIMIENTO INTERNO</div><div class="nl2" style="font-size:11px">Discovery en secuencia</div><div class="ns" style="text-align:left"><code>whoami → ipconfig → net group "Domain Admins"</code> en 30 segundos. Cada comando es legítimo; la secuencia es el IOA.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">PERSISTENCIA SOSPECHOSA</div><div class="nl2" style="font-size:11px">Creación en contexto anómalo</div><div class="ns" style="text-align:left">Crear scheduled task o service a las 03:00 AM por un usuario que no debería modificar esas configuraciones.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EXFILTRACION</div><div class="nl2" style="font-size:11px">Transferencia anormal</div><div class="ns" style="text-align:left">47GB de datos comprimidos transferidos a cloud storage externo durante la madrugada.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">COMUNICACION C2</div><div class="nl2" style="font-size:11px">Beaconing periódico</div><div class="ns" style="text-align:left">Conexiones a intervalos regulares (con jitter) a dominios nuevos usando protocolos cifrados en puertos no estándar.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EVASION DE DEFENSAS</div><div class="nl2" style="font-size:11px">Deshabilitar controles</div><div class="ns" style="text-align:left">Deshabilitación de AV/EDR, limpieza de event logs, modificación de políticas de auditoría.</div></div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">10 IOAs concretos que un SOC debe monitorear</div>
+<div class="tl">
+<div class="tl-ln"></div>
+<div class="ti"><div class="td2 red"></div><div class="tit2">1. Servidores públicos → hosts internos</div><div class="tds2">Posible exfiltración o comunicación remota desde servidores comprometidos.</div></div>
+<div class="ti"><div class="td2 red"></div><div class="tit2">2. Conexiones por puertos no estándar</div><div class="tds2">El atacante usa puertos inusuales para evadir inspección de tráfico.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tit2">3. Comunicación con países fuera del rango de negocio</div><div class="tds2">Sin operaciones en ciertos países, conexiones allá son altamente sospechosas.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tit2">4. Comunicación inter-host en períodos cortos</div><div class="tds2">Puede indicar movimiento lateral automatizado o insider threat.</div></div>
+<div class="ti"><div class="td2"></div><div class="tit2">5. Múltiples honeytokens activados desde un solo host</div><div class="tds2">Activación múltiple confirma movimiento lateral activo.</div></div>
+<div class="ti"><div class="td2"></div><div class="tit2">6. Reinfección minutos después de la eliminación</div><div class="tds2">Indica APT con persistencia que el equipo no encontró.</div></div>
+<div class="ti"><div class="td2 pur"></div><div class="tit2">7. Login del mismo usuario desde regiones geográficas diferentes</div><div class="tds2">Credencial comprometida usada simultáneamente desde ubicaciones imposibles.</div></div>
+<div class="ti"><div class="td2 pur"></div><div class="tit2">8. Deshabilitación de seguridad + ejecución de binarios</div><div class="tds2">El atacante deshabilita el EDR/AV antes de ejecutar su payload.</div></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 6: EJEMPLO INTEGRADO ═══ -->
+<section class="sec rv" id="example">
+<div class="sh"><span class="sn">06</span><h2 class="st">Ejemplo <span class="ac">Integrado</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.7 — IOAs e IOCs trabajando juntos en un incidente real</div>
+<div class="fw">
+<div class="fl">Flujo N.7: Pipeline operativo IOA + IOC</div>
+<div class="fv">
+<div class="fn gn" style="max-width:480px;text-align:left"><div class="ni">PASO 1 — IOA DETECTA EN TIEMPO REAL</div><div class="nl2" style="font-size:12px">Comportamiento sospechoso identificado</div><div class="ns" style="text-align:left">"Word ejecutó PowerShell que descargó un archivo de internet y creó una scheduled task de persistencia." El EDR detecta la cadena de ejecución como IOA.</div></div>
+<div class="fa">↓</div>
+<div class="fn rd" style="max-width:480px;text-align:left"><div class="ni">PASO 2 — INVESTIGACION GENERA IOCs</div><div class="nl2" style="font-size:12px">Artefactos extraídos durante el análisis</div><div class="ns" style="text-align:left">Hash del archivo descargado: <code>a1b2c3d4...</code><br>IP del servidor: <code>185.234.72.15</code><br>Dominio C2: <code>cdn-update.evil.com</code><br>Registry key: <code>HKLM\...\Run\Update</code></div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 3 — IOCs SE DISTRIBUYEN</div><div class="nl2" style="font-size:12px">Tres acciones simultáneas</div><div class="ns" style="text-align:left">a) Buscar retroactivamente en toda la org → hay más hosts afectados?<br>b) Bloquear en todas las herramientas → no más descargas de esa IP<br>c) Compartir con ISACs y comunidad → proteger a otros</div></div>
+<div class="fa">↓</div>
+<div class="fn pu" style="max-width:480px;text-align:left"><div class="ni">PASO 4 — IOAs SE REFINAN</div><div class="nl2" style="font-size:12px">Mejorar la detección conductual</div><div class="ns" style="text-align:left">Crear/mejorar reglas de detección conductual para la cadena Office → Shell → Download → Persistence. Actualizar baselines de UEBA. Generar nuevas hipótesis de hunting.</div></div>
+<div class="fa">↓ el ciclo se repite</div>
+</div>
+</div>
+<div class="fm">En este modelo, los IOAs son la primera línea (detectan en curso) y los IOCs son la herramienta de response y enrichment (permiten entender alcance y prevenir reinfección).</div>
+</div>
+</section>
+
+<!-- ═══ SEC 7: PIRAMIDE DEL DOLOR ═══ -->
+<section class="sec rv" id="pyramid">
+<div class="sh"><span class="sn">07</span><h2 class="st">Conexión con la <span class="ac">Pirámide del Dolor</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.8 — Donde viven IOCs e IOAs en la pirámide</div>
+<p>Los IOCs ocupan toda la pirámide <span class="hlr">excepto la cúspide</span>. Los IOAs son la materialización operativa de la cúspide — donde la detección causa el máximo dolor al adversario.</p>
+<div class="fw">
+<div class="fl">Flujo N.8: IOCs e IOAs mapeados a la Piramide del Dolor</div>
+<div class="fv">
+<div class="fn pu" style="max-width:240px"><div class="ni">CUSPIDE</div><div class="nl2">TTPs</div><div class="ns"><span class="tag tag-g">IOAs</span> Dolor MAXIMO</div></div>
+<div class="fa">|</div>
+<div class="fn rd" style="max-width:300px"><div class="ni">NIVEL 5</div><div class="nl2">Herramientas</div><div class="ns"><span class="tag tag-r">IOCs</span> Dolor alto</div></div>
+<div class="fa">|</div>
+<div class="fn og" style="max-width:360px"><div class="ni">NIVEL 4</div><div class="nl2">Artefactos red/host</div><div class="ns"><span class="tag tag-r">IOCs</span> Dolor moderado</div></div>
+<div class="fa">|</div>
+<div class="fn" style="max-width:420px;opacity:.7"><div class="ni">NIVELES 1-3</div><div class="nl2">Hashes, IPs, Dominios</div><div class="ns"><span class="tag tag-r">IOCs</span> Dolor trivial-bajo</div></div>
+</div>
+</div>
+<div class="ins"><div class="ins-t">Implicación operativa</div><p>Un equipo que solo trabaja con IOCs opera en la base de la pirámide — donde el dolor al atacante es mínimo. Un equipo que también detecta IOAs opera en la cúspide — donde cambiar es enormemente costoso para el adversario. La detección basada en comportamiento (IOAs) es lo que hace que la defensa sea realmente efectiva contra atacantes sofisticados.</p></div>
+</div>
+</section>
+
+<!-- ═══ SEC 8: CIA TRIAD ═══ -->
+<section class="sec rv" id="cia">
+<div class="sh"><span class="sn">08</span><h2 class="st">Conexión con la <span class="ac">Triada CIA</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.9 — IOCs e IOAs protegen los tres pilares</div>
+<div class="hex-wrap">
+<div class="hex-grid">
+<div class="hex-item" style="background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.2)">
+<div class="hex-letter" style="color:var(--blue)">C</div>
+<div class="hex-name" style="color:var(--blue)">Confidentiality</div>
+<div class="hex-desc">IOAs detectan exfiltración en curso. IOCs identifican qué datos se comprometieron post-incidente.</div>
+</div>
+<div class="hex-item" style="background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2)">
+<div class="hex-letter" style="color:var(--green)">I</div>
+<div class="hex-name" style="color:var(--green)">Integrity</div>
+<div class="hex-desc">IOAs detectan modificaciones no autorizadas en tiempo real. IOCs revelan qué archivos/configs fueron alterados.</div>
+</div>
+<div class="hex-item" style="background:rgba(255,136,0,.06);border:1px solid rgba(255,136,0,.2)">
+<div class="hex-letter" style="color:var(--orange)">A</div>
+<div class="hex-name" style="color:var(--orange)">Availability</div>
+<div class="hex-desc">IOAs detectan ransomware/DDoS en curso antes de impacto total. IOCs identifican la infraestructura del ataque para bloquearla.</div>
+</div>
+</div>
+</div>
+<p>Cada pilar de la triada se beneficia de ambos tipos de indicadores pero de formas diferentes: los IOAs permiten <span class="hlg">prevenir</span> violaciones a la CIA interceptándolas en tiempo real, mientras que los IOCs permiten <span class="hl">investigar y remediar</span> violaciones que ya ocurrieron.</p>
+
+<div class="ex"><div class="ex-t">Ejemplo — Ransomware (Availability)</div>
+<p><span class="hlg">IOA en acción</span>: el EDR detecta el comportamiento "proceso cifrando archivos masivamente + eliminando Volume Shadow Copies" → contención inmediata antes de que se cifre toda la red.</p>
+<p style="margin-top:6px"><span class="hlr">IOC post-incidente</span>: se extrae el hash del ransomware, la nota de rescate, los dominios de pago, y se busca en toda la organización para confirmar qué sistemas fueron afectados.</p>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 9: COMPARATIVA ═══ -->
+<section class="sec rv" id="compare">
+<div class="sh"><span class="sn">09</span><h2 class="st">Tabla <span class="ac">Comparativa</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.10 — IOC vs IOA lado a lado</div>
+<table class="tb">
+<tr><th>Aspecto</th><th style="color:var(--red)">IOC</th><th style="color:var(--green)">IOA</th></tr>
+<tr><td>Que responde</td><td>Que pasó?</td><td>Que está pasando ahora?</td></tr>
+<tr><td>Naturaleza</td><td>Reactivo (post-compromiso)</td><td class="g">Proactivo (durante el ataque)</td></tr>
+<tr><td>Foco</td><td>Artefactos estáticos</td><td class="g">Comportamiento y secuencias</td></tr>
+<tr><td>Detección zero-day</td><td class="r">No (no hay firma previa)</td><td class="g">Si (detecta comportamiento)</td></tr>
+<tr><td>Vida útil</td><td class="r">Horas a semanas</td><td class="g">Meses a años</td></tr>
+<tr><td>Falsos positivos</td><td class="g">Bajos (coincide o no)</td><td>Más altos (necesita contexto)</td></tr>
+<tr><td>Automatización</td><td class="g">Altamente automatizable</td><td>Parcialmente (requiere humanos)</td></tr>
+<tr><td>Herramientas</td><td>TIPs, feeds, firewalls, AV</td><td>EDR conductual, UEBA, SIEM, hunting</td></tr>
+<tr><td>Contra APTs</td><td class="r">Limitado (no reutilizan IOCs)</td><td class="g">Alto (necesitan ejecutar TTPs)</td></tr>
+<tr><td>En la pirámide</td><td>Base y niveles medios</td><td class="g">Cúspide (TTPs)</td></tr>
+<tr><td>Mapeado a ATT&CK</td><td>Alimenta "indicators"</td><td class="g">Se mapea a tácticas y técnicas</td></tr>
+</table>
+</div>
+
+<div class="c">
+<div class="ct">Perspectivas cruzadas</div>
+<div class="br">
+<div class="bs brd2"><div class="btg">Perspectiva ofensiva</div>
+<p><span class="hlr">IOCs</span>: el atacante los minimiza (payloads únicos, infra desechable, Malleable C2 Profiles, anti-forensics). Son el costo de operar — intenta que sean efímeros e irrelevantes.</p>
+<p style="margin-top:6px"><span class="hlr">IOAs</span>: mucho más difíciles de evadir porque representan acciones que el atacante NECESITA hacer. Si necesita escalar privilegios, necesita ejecutar acciones que constituyen un IOA. El atacante intenta ser lento, silencioso, y mezclarse con actividad legítima (LOTL).</p>
+</div>
+<div class="ba2">vs</div>
+<div class="bs bbl"><div class="btg">Perspectiva defensiva</div>
+<p><span class="hl">IOCs</span>: automatizar la base (TIPs, SOAR). Los humanos no deben gestionar hashes e IPs manualmente — lo hacen APIs en milisegundos. El valor real está en el scoping durante IR y la atribución.</p>
+<p style="margin-top:6px"><span class="hl">IOAs</span>: invertir en detección conductual (EDR, UEBA, reglas Sigma basadas en TTPs). Requiere analistas experimentados y hunting proactivo. Es donde la inteligencia humana marca la diferencia.</p>
+</div>
+</div>
+<div class="fm" style="margin-top:12px">Un equipo que solo busca IOCs llega tarde a todo.<br>Un equipo que solo busca IOAs carece de capacidad forense.<br>La defensa madura usa ambos simultáneamente:<br>IOAs como primera línea de detección + IOCs como herramienta de response.</div>
+</div>
+</section>
+
+<footer>
+<div class="author">Toshiro Nagata</div>
+<div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">IOCs & IOAs // BLUE TEAM INDICATORS REFERENCE</div>
+<div class="fli">Fuentes: CrowdStrike IOA vs IOC // Palo Alto Networks // SentinelOne // Wiz // UpGuard // MITRE ATT&CK</div>
+<div class="fli" style="margin-top:5px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+<script>
+function tA(h){h.closest('.acc').classList.toggle('op')}
+function sT(c,t){const p=document.getElementById(c);p.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));document.getElementById(t).classList.add('on');p.closest('.c').querySelectorAll('.tb3').forEach(b=>b.classList.remove('on'));event.target.classList.add('on')}
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>
