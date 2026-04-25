@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log → Evento → Alerta → Incidente // SOC Pipeline</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#07f;border-radius:3px}
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+.hero{text-align:center;padding:60px 0 40px}.hero h1{font-family:var(--fd);font-size:clamp(22px,5vw,44px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:10px}.hero .sub{font-family:var(--fc);font-size:13px;color:var(--dim);letter-spacing:2px}
+.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+.kpi-row{display:flex;justify-content:center;gap:30px;margin-top:30px;flex-wrap:wrap}.kpi{text-align:center}.kpi-v{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.2)}.kpi-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-top:2px;font-family:var(--fd)}
+.sec{margin-bottom:55px;scroll-margin-top:56px}.sh{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--brd)}.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}.st{font-family:var(--fd);font-size:clamp(15px,3vw,20px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;transition:border-color .3s}.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:7px}.c h3{font-size:14px;color:var(--cyan);margin-bottom:8px;font-weight:600}.c p{font-size:13px;margin-bottom:7px}
+.fm{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:12px 16px;margin:12px 0;font-family:var(--fc);font-size:12px;color:var(--cyan)}
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:22px;margin:12px 0;overflow-x:auto}.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:11px 15px;text-align:center;min-width:130px;max-width:520px;transition:.3s;cursor:default;flex-shrink:0}.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 14px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:2px}.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:2px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fa{color:var(--dim);font-size:15px;padding:3px 0;animation:pa 2s infinite;text-align:center}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:9px;margin:12px 0}
+.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px;margin:12px 0}
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:12px 0;align-items:stretch}.bs{padding:14px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}
+.ba2{display:flex;align-items:center;padding:0 8px;font-size:20px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px}.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}
+.tb{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 9px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}.tb td{padding:7px 9px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+.g0{color:var(--green);font-weight:600}.r0{color:var(--red);font-weight:600}
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:5px;overflow:hidden}.ah{padding:11px 14px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}.ah:hover{background:var(--bg3)}.at2{font-size:12px;font-weight:600;color:var(--blue)}.aa2{color:var(--dim);transition:transform .3s;font-size:12px}.acc.op .aa2{transform:rotate(180deg)}.ab2{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab2{max-height:5000px}.ai2{padding:12px 14px}
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}
+.rv{opacity:0;transform:translateY(22px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+.tl{position:relative;padding:18px 0 18px 34px;margin:12px 0}.tl-ln{position:absolute;left:11px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan),var(--green),var(--orange),var(--red))}
+.ti{position:relative;margin-bottom:14px;padding-left:16px;opacity:0;transform:translateX(-12px);animation:si .5s forwards}
+.ti:nth-child(1){animation-delay:.1s}.ti:nth-child(2){animation-delay:.2s}.ti:nth-child(3){animation-delay:.3s}.ti:nth-child(4){animation-delay:.4s}.ti:nth-child(5){animation-delay:.5s}.ti:nth-child(6){animation-delay:.6s}.ti:nth-child(7){animation-delay:.7s}
+@keyframes si{to{opacity:1;transform:translateX(0)}}
+.td2{position:absolute;left:-22px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--blue);border:2px solid var(--bg);box-shadow:0 0 7px var(--glow)}
+.td2.red{background:var(--red)}.td2.grn{background:var(--green)}.td2.org{background:var(--orange)}.td2.pur{background:var(--purple)}.td2.cyn{background:var(--cyan)}
+.tt2{font-family:var(--fd);font-size:10px;font-weight:600;color:var(--cyan)}.tit2{font-size:11px;font-weight:600;color:var(--blue)}.tds2{font-size:10px;color:var(--dim)}
+/* code block */
+.codeblock{background:var(--bg);border:1px solid var(--brd);border-radius:6px;padding:14px 16px;margin:10px 0;font-family:var(--fc);font-size:11px;color:var(--cyan);overflow-x:auto;white-space:pre;line-height:1.6}
+.codeblock .cm{color:var(--dim)}.codeblock .ky{color:var(--blue)}.codeblock .vl{color:var(--green)}.codeblock .wr{color:var(--orange)}
+/* funnel */
+.funnel{display:flex;flex-direction:column;align-items:center;gap:4px;margin:16px 0}
+.funnel-bar{border-radius:6px;padding:12px 20px;text-align:center;transition:.3s;cursor:default;display:flex;align-items:center;justify-content:center;gap:12px}
+.funnel-bar:hover{transform:scale(1.02)}
+.funnel-bar .fb-vol{font-family:var(--fd);font-size:18px;font-weight:800}.funnel-bar .fb-label{font-size:11px;font-weight:600}.funnel-bar .fb-desc{font-size:9px;opacity:.7}
+.wm{position:fixed;bottom:14px;right:18px;font-family:var(--fd);font-size:10px;font-weight:700;color:rgba(0,170,255,.1);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;writing-mode:vertical-rl}
+footer{text-align:center;padding:35px 16px 25px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}footer .fli{margin-bottom:3px}
+.author{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:6px}.ba2{transform:rotate(90deg);padding:4px 0;justify-content:center}.g2,.g3{grid-template-columns:1fr}.wm{display:none}.kpi-row{gap:16px}}
+</style>
+</head>
+<body>
+<div class="wm">Toshiro Nagata</div>
+<nav id="nav"><div class="logo">SOC<b>::</b>PIPE</div><div class="nl">
+<a href="#chain">Cadena</a><a href="#log">Log</a><a href="#event">Evento</a><a href="#alert">Alerta</a><a href="#incident">Incidente</a><a href="#live">Ejemplo</a><a href="#rules">Reglas</a><a href="#fail">Fallas</a>
+</div></nav>
+<main>
+
+<section class="hero">
+<h1>Log → Evento →<br>Alerta → Incidente</h1>
+<div class="sub">// La cadena fundamental de procesamiento del SOC<span class="blink"></span></div>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-v" data-c="1000000">0</div><div class="kpi-l">Logs / dia</div></div>
+<div class="kpi"><div class="kpi-v" data-c="10000">0</div><div class="kpi-l">Eventos</div></div>
+<div class="kpi"><div class="kpi-v" data-c="500">0</div><div class="kpi-l">Alertas</div></div>
+<div class="kpi"><div class="kpi-v" data-c="3">0</div><div class="kpi-l">Incidentes</div></div>
+</div>
+</section>
+
+<!-- ═══ SEC 1: CADENA ═══ -->
+<section class="sec rv" id="chain">
+<div class="sh"><span class="sn">01</span><h2 class="st">La <span class="ac">Cadena</span> Completa</h2></div>
+<div class="c">
+<div class="ct">Flujo N.1 — De datos crudos a acción</div>
+<p>La relación entre estos cuatro conceptos es una <span class="hl">cadena de refinamiento progresivo</span>: cada nivel filtra, enriquece y prioriza la información del anterior. El trabajo del SOC es refinar millones de datos crudos en unas pocas acciones concretas.</p>
+<div class="funnel">
+<div class="funnel-bar" style="width:95%;max-width:600px;background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.15)"><div class="fb-vol" style="color:var(--blue)">1,000,000</div><div><div class="fb-label" style="color:var(--blue)">LOGS</div><div class="fb-desc">Datos crudos. Todo queda registrado. Sin interpretación.</div></div></div>
+<div class="funnel-bar" style="width:75%;max-width:480px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15)"><div class="fb-vol" style="color:var(--cyan)">10,000</div><div><div class="fb-label" style="color:var(--cyan)">EVENTOS</div><div class="fb-desc">Logs con relevancia de seguridad. Filtrados y contextualizados.</div></div></div>
+<div class="funnel-bar" style="width:50%;max-width:340px;background:rgba(255,136,0,.06);border:1px solid rgba(255,136,0,.15)"><div class="fb-vol" style="color:var(--orange)">500</div><div><div class="fb-label" style="color:var(--orange)">ALERTAS</div><div class="fb-desc">Eventos que coinciden con una regla de detección.</div></div></div>
+<div class="funnel-bar" style="width:25%;max-width:200px;background:rgba(255,51,85,.08);border:1px solid rgba(255,51,85,.2)"><div class="fb-vol" style="color:var(--red)">3</div><div><div class="fb-label" style="color:var(--red)">INCIDENTES</div><div class="fb-desc">Alertas validadas que requieren IR.</div></div></div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.2 — Diagrama de decisión</div>
+<div class="fw">
+<div class="fl">Flujo N.2: Arbol de decisión en cada transición</div>
+<div class="fv">
+<div class="fn" style="max-width:460px;opacity:.6"><div class="ni">DATO CRUDO</div><div class="nl2">LOG</div><div class="ns">Un registro atómico de algo que pasó en un sistema.</div></div>
+<div class="fa">↓ tiene relevancia de seguridad?</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+<div class="fn" style="min-width:180px;max-width:200px;opacity:.4"><div class="nl2" style="font-size:10px;color:var(--dim)">NO</div><div class="ns">Se almacena para compliance y forensics. No se procesa en tiempo real.</div></div>
+<div class="fn" style="min-width:180px;max-width:200px;border-color:rgba(0,229,255,.3)"><div class="nl2" style="font-size:10px;color:var(--cyan)">SI → EVENTO</div><div class="ns">Log + contexto de seguridad.</div></div>
+</div>
+<div class="fa">↓ coincide con una regla de detección?</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+<div class="fn" style="min-width:180px;max-width:200px;opacity:.4"><div class="nl2" style="font-size:10px;color:var(--dim)">NO</div><div class="ns">Se almacena en SIEM para correlación futura y hunting.</div></div>
+<div class="fn og" style="min-width:180px;max-width:200px"><div class="nl2" style="font-size:10px">SI → ALERTA</div><div class="ns">Evento que disparó una regla.</div></div>
+</div>
+<div class="fa">↓ es un verdadero positivo confirmado?</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+<div class="fn" style="min-width:180px;max-width:200px;opacity:.4"><div class="nl2" style="font-size:10px;color:var(--dim)">NO → FP</div><div class="ns">Se cierra. Se ajusta la regla si es recurrente.</div></div>
+<div class="fn rd" style="min-width:180px;max-width:200px"><div class="nl2" style="font-size:10px">SI → INCIDENTE</div><div class="ns">Se activa el proceso de IR.</div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 2: LOG ═══ -->
+<section class="sec rv" id="log">
+<div class="sh"><span class="sn">02</span><h2 class="st">1. <span class="ac">Log</span></h2></div>
+<div class="c">
+<div class="ct">Definición</div>
+<p>Un log es el <span class="hl">registro más básico y atómico</span> de una acción que ocurrió en un sistema. Es un dato crudo, sin interpretación — simplemente documenta que algo pasó, cuándo, y quién o qué lo hizo. Es la <span class="hl">materia prima</span> de toda la seguridad operativa. Sin logs, no hay visibilidad. Sin visibilidad, no hay detección. Sin detección, no hay respuesta.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.3 — Tipos de logs en ciberseguridad</div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">OS LOGS</div><div class="nl2" style="font-size:11px">Sistema operativo</div><div class="ns" style="text-align:left">Logins (4624/4625), privilegios (4672), procesos (4688), servicios. Sysmon agrega: conexiones de red, cargas de DLL, modificaciones de registro, creación de archivos.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">NETWORK LOGS</div><div class="nl2" style="font-size:11px">Infraestructura de red</div><div class="ns" style="text-align:left">Firewall (allow/deny), DNS queries, proxy HTTP/S, NetFlow/IPFIX. Registran conexiones, no contenido.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">APPLICATION LOGS</div><div class="nl2" style="font-size:11px">Aplicaciones</div><div class="ns" style="text-align:left">Accesos a BD, transacciones, errores, cambios de config. Cada app tiene su formato y detalle propio.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">SECURITY TOOL LOGS</div><div class="nl2" style="font-size:11px">Herramientas de seguridad</div><div class="ns" style="text-align:left">Detecciones del EDR, eventos IDS/IPS, actividad WAF. Ya tienen cierta interpretación incorporada.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">IDENTITY LOGS</div><div class="nl2" style="font-size:11px">Plano de identidad</div><div class="ns" style="text-align:left">Active Directory (TGT/TGS), Azure AD/Entra ID, MFA, Identity Provider. Autenticaciones y cambios.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">CLOUD LOGS</div><div class="nl2" style="font-size:11px">Infraestructura cloud</div><div class="ns" style="text-align:left">AWS CloudTrail, Azure Activity Log, GCP Audit Log. API calls, cambios IAM, configuración de seguridad.</div></div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Ejemplo de log crudo (Windows Event ID 4624)</div>
+<div class="codeblock"><span class="ky">Event ID:</span> <span class="vl">4624</span>
+<span class="ky">TimeCreated:</span> <span class="vl">2026-04-22T03:14:22.000Z</span>
+<span class="ky">Computer:</span> <span class="vl">WS-FIN-023.corp.local</span>
+<span class="ky">LogonType:</span> <span class="vl">10</span> <span class="cm">(Remote Desktop)</span>
+<span class="ky">TargetUserName:</span> <span class="vl">juan.perez</span>
+<span class="ky">TargetDomainName:</span> <span class="vl">CORP</span>
+<span class="ky">IpAddress:</span> <span class="vl">10.10.5.42</span>
+<span class="ky">WorkstationName:</span> <span class="vl">SRV-DC01</span></div>
+<p>Este log por si solo es <span class="hlo">solo un dato</span>: juan.perez inició sesión via RDP a las 03:14. No es un evento de seguridad todavía — necesita contexto para serlo.</p>
+
+<div class="br" style="margin-top:14px">
+<div class="bs brd2"><div class="btg">Perspectiva ofensiva</div><p>Desde el Red Team, los logs son el enemigo. Cada acción genera logs. Un operador competente sabe que <code>whoami</code> genera Event ID 4688, que Kerberoasting genera 4769 con RC4, que DCSync genera 4662. Intenta minimizar trazas, operar en memoria, y explotar gaps de logging (sistemas sin Sysmon, sin envío al SIEM).</p></div>
+<div class="ba2">→</div>
+<div class="bs bbl"><div class="btg">Perspectiva defensiva</div><p>El reto es cobertura + calidad. Gaps comunes: endpoints sin Sysmon, PowerShell sin ScriptBlock Logging (4104), segmentos de red sin captura, cloud sin audit logging, AD sin auditoría avanzada configurada (los eventos relevantes no se generan por defecto).</p></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 3: EVENTO ═══ -->
+<section class="sec rv" id="event">
+<div class="sh"><span class="sn">03</span><h2 class="st">2. <span class="ac">Evento</span></h2></div>
+<div class="c">
+<div class="ct">Definición</div>
+<p>Un evento es un <span class="hl">log que tiene relevancia para la seguridad</span>. Es el primer nivel de filtrado: de millones de logs, solo una fracción tiene implicaciones de seguridad. La transición ocurre cuando se aplica <span class="hl">contexto de seguridad</span> al dato crudo.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.4 — Transformación de log a evento</div>
+<div class="fw">
+<div class="fl">Flujo N.4: Antes y después del contexto</div>
+<div class="fv">
+<div class="fn" style="max-width:500px;text-align:left;opacity:.6"><div class="ni">LOG CRUDO (sin contexto)</div><div class="nl2" style="font-size:11px">Event ID 4624 | LogonType 10 | User: juan.perez | Source: 10.10.5.42 | 03:14</div><div class="ns" style="text-align:left">Un dato plano. No dice si es normal o anormal. Uno de millones.</div></div>
+<div class="fa">↓ SIEM normaliza + enriquece</div>
+<div class="fn" style="max-width:500px;text-align:left;border-color:rgba(0,229,255,.3)"><div class="ni">EVENTO (log + contexto de seguridad)</div><div class="nl2" style="color:var(--cyan);font-size:11px">Autenticación RDP exitosa a controlador de dominio</div><div class="ns" style="text-align:left">
+<span class="hl">Usuario</span>: juan.perez (Finanzas, Analista — sin privilegios de AD)<br>
+<span class="hl">Destino</span>: SRV-DC01 (controlador de dominio — activo critico)<br>
+<span class="hl">Hora</span>: 03:14 AM (fuera de horario: 08:00-18:00)<br>
+<span class="hl">Historial</span>: juan.perez nunca accedió a SRV-DC01 previamente<br>
+<span class="hlo">UEBA Score</span>: 78/100 (alto)
+</div></div>
+</div>
+</div>
+<p style="margin-top:8px">Ahora el dato tiene contexto. Un analista (o una regla) puede evaluar: login RDP a un DC desde un usuario de finanzas, a las 03:14, primera vez que accede. El evento pasa de "dato crudo" a <span class="hl">"algo que merece atención"</span>.</p>
+</div>
+
+<div class="c">
+<div class="ct">Tipos de eventos de seguridad</div>
+<div class="g3">
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:10px">Autenticación</div><div class="ns" style="text-align:left">Logins, cambios password, Kerberos, MFA</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:10px">Ejecución</div><div class="ns" style="text-align:left">Procesos, scripts, DLLs</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:10px">Red</div><div class="ns" style="text-align:left">Conexiones, DNS, tráfico web</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:10px">Configuración</div><div class="ns" style="text-align:left">Politicas, cuentas, GPOs, firewall</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:10px">Acceso a datos</div><div class="ns" style="text-align:left">Archivos, BD, shares de red</div></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 4: ALERTA ═══ -->
+<section class="sec rv" id="alert">
+<div class="sh"><span class="sn">04</span><h2 class="st">3. <span class="ac">Alerta</span></h2></div>
+<div class="c">
+<div class="ct">Definición</div>
+<p>Una alerta es un <span class="hl">evento (o correlación de eventos) que coincide con una regla de detección</span>. Es la señal que indica que algo potencialmente malicioso requiere atención humana. La transición de evento a alerta ocurre cuando las condiciones de una regla se cumplen.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.5 — Anatomía de una alerta bien construida</div>
+<div class="codeblock"><span class="ky">ALERTA GENERADA POR EL SIEM</span>
+<span class="cm">════════════════════════════════════</span>
+<span class="ky">Regla:</span>      <span class="vl">Suspicious RDP Login - Off-Hours to Domain Controller</span>
+<span class="ky">Severidad:</span>  <span class="wr">ALTA</span>
+<span class="ky">Timestamp:</span>  <span class="vl">2026-04-22T03:14:22Z</span>
+<span class="ky">Fuente:</span>     <span class="vl">Windows Security Log (Event ID 4624)</span>
+
+<span class="ky">Datos del evento:</span>
+  <span class="ky">Usuario:</span>    <span class="vl">juan.perez</span>
+  <span class="ky">Host dest:</span>  <span class="vl">SRV-DC01 (Domain Controller)</span>
+  <span class="ky">IP origen:</span>  <span class="vl">10.10.3.45 (WS-FIN-023)</span>
+  <span class="ky">LogonType:</span>  <span class="vl">10 (RDP)</span>
+  <span class="ky">Hora:</span>       <span class="wr">03:14 AM (fuera de horario)</span>
+
+<span class="ky">Contexto enriquecido (SOAR):</span>
+  <span class="ky">Departamento:</span> <span class="vl">Finanzas (sin historial de acceso a DCs)</span>
+  <span class="ky">Threat Intel:</span> <span class="vl">IP no en listas de IOCs conocidos</span>
+  <span class="ky">UEBA Score:</span>  <span class="wr">78/100 (alto)</span></div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.6 — Tipos de reglas que generan alertas</div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 1</div><div class="nl2" style="font-size:11px">Basada en firmas (IOC)</div><div class="ns" style="text-align:left">"Alerta si el hash coincide con Cobalt Strike." Simple pero frágil — el atacante cambia el hash y la regla es inútil.</div></div>
+<div class="fn gn" style="text-align:left;min-width:auto"><div class="ni">TIPO 2</div><div class="nl2" style="font-size:11px">Basada en comportamiento (IOA)</div><div class="ns" style="text-align:left">"Alerta si Office ejecuta cmd.exe o powershell.exe." Robusta — detecta el comportamiento sin importar los indicadores estáticos.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 3</div><div class="nl2" style="font-size:11px">Basada en umbrales</div><div class="ns" style="text-align:left">"Alerta si hay 10+ login failures en 5 min desde la misma IP." Detecta brute force y password spraying.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">TIPO 4</div><div class="nl2" style="font-size:11px">Basada en anomalías (UEBA)</div><div class="ns" style="text-align:left">"Alerta si un usuario accede a 50 archivos en 10 min (promedio: 5/hora)." Detecta lo estadísticamente anómalo.</div></div>
+<div class="fn pu" style="text-align:left;min-width:auto;grid-column:span 2"><div class="ni">TIPO 5</div><div class="nl2" style="font-size:11px">Correlación multi-fuente</div><div class="ns" style="text-align:left">"Alerta si: email con adjunto recibido (email gateway) Y adjunto ejecutado (EDR) Y conexión a IP externa nueva (firewall) en 30 minutos." La correlación reduce FP porque requiere múltiples condiciones simultáneas.</div></div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">El problema central: FP vs FN</div>
+<div class="br">
+<div class="bs" style="background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);text-align:center">
+<div class="btg" style="color:var(--orange)">Reglas muy sensibles</div>
+<p>Muchos FP → alert fatigue → analistas desensibilizados → se pierden alertas reales → <span class="hlr">MTTA sube</span></p>
+</div>
+<div class="ba2">vs</div>
+<div class="bs" style="background:rgba(170,68,255,.04);border:1px solid rgba(170,68,255,.15);text-align:center">
+<div class="btg" style="color:var(--purple)">Reglas poco sensibles</div>
+<p>Pocos FP, menos ruido → PERO → muchos FN → atacantes pasan sin ser detectados → <span class="hlr">MTTD sube</span></p>
+</div>
+</div>
+<div class="w"><div class="w-t">Datos reales — SANS 2025</div>
+<p><span class="hlr">73%</span> de equipos citan falsos positivos como desafío principal. <span class="hlr">40%</span> de alertas nunca se investigan. <span class="hlr">61%</span> admitieron ignorar alertas que resultaron críticas. <span class="hlr">80%</span> de analistas se sienten constantemente atrasados.</p></div>
+
+<div class="ins"><div class="ins-t">Perspectiva ofensiva — weaponizar alertas</div><p><span class="hlo">Alert flooding</span>: generar cientos de alertas de bajo nivel para saturar al SOC. <span class="hlo">Timing attacks</span>: ejecutar acciones ruidosas durante alta carga (post-Patch Tuesday, cambio de turno). <span class="hlo">Evasión de umbrales</span>: si la regla dice "10+ failures en 5 min", hacer 9 en 5 min y repetir — nunca cruza el umbral.</p></div>
+</div>
+</section>
+
+<!-- ═══ SEC 5: INCIDENTE ═══ -->
+<section class="sec rv" id="incident">
+<div class="sh"><span class="sn">05</span><h2 class="st">4. <span class="ac">Incidente</span></h2></div>
+<div class="c">
+<div class="ct">Definición</div>
+<p>Un incidente es una <span class="hl">alerta validada como verdadero positivo</span> que tiene impacto real o potencial en la confidencialidad, integridad o disponibilidad de los activos y <span class="hlr">requiere una respuesta coordinada</span>. Es el nivel más alto de la cadena y activa el proceso formal de IR.</p>
+<p>No todas las alertas se convierten en incidentes — solo las que pasan la validación del analista.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.7 — Proceso de escalamiento: de alerta a incidente</div>
+<div class="fw">
+<div class="fl">Flujo N.7: Escalamiento con puntos de decisión</div>
+<div class="fv">
+<div class="fn og" style="max-width:460px"><div class="ni">ENTRADA</div><div class="nl2">Alerta recibida por el SOC</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:460px;text-align:left"><div class="ni">TRIAGE INICIAL (L1)</div><div class="nl2" style="font-size:11px">Es un falso positivo obvio?</div><div class="ns" style="text-align:left">SI → Cerrar alerta. Documentar. Ajustar regla si es recurrente.<br>NO → Continuar investigación.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:460px;text-align:left"><div class="ni">INVESTIGACION (L1/L2)</div><div class="nl2" style="font-size:11px">Enriquecer con contexto</div><div class="ns" style="text-align:left">Threat intel, historial del usuario, correlación con otros eventos, verificación con el usuario si aplica. Es actividad maliciosa confirmada?<br>NO → Cerrar como FP o actividad legítima.<br>SI → Escalar.</div></div>
+<div class="fa">↓</div>
+<div class="fn rd" style="max-width:460px;text-align:left"><div class="ni">DECLARACION DE INCIDENTE</div><div class="nl2" style="font-size:11px">Se crea ticket formal de incidente</div><div class="ns" style="text-align:left">Asignar severidad (SEV-1 a SEV-4). Notificar equipo de IR y stakeholders según severidad. Iniciar proceso de contención.</div></div>
+<div class="fa">↓</div>
+<div class="fn pu" style="max-width:460px"><div class="ni">RESPUESTA (IR TEAM)</div><div class="nl2" style="font-size:11px">Contención → Erradicación → Recuperación → Lecciones</div></div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Clasificación de severidad</div>
+<table class="tb">
+<tr><th>Sev</th><th>Criterio</th><th>Ejemplos</th><th>SLA</th></tr>
+<tr><td class="r0">SEV-1</td><td>Impacto masivo. Datos sensibles comprometidos. Sistemas criticos caidos.</td><td>Ransomware activo, compromiso de AD, exfiltración masiva.</td><td>Respuesta inmediata. Contención en menos de 1h.</td></tr>
+<tr><td class="r0">SEV-2</td><td>Impacto significativo pero contenido. Amenaza activa.</td><td>Lateral movement, malware activo, cuenta privilegiada comprometida.</td><td>Respuesta menos de 30 min. Contención menos de 4h.</td></tr>
+<tr><td style="color:var(--orange)">SEV-3</td><td>Impacto potencial. Amenaza existe sin daño confirmado.</td><td>Phishing exitoso sin payload, software no autorizado.</td><td>Respuesta menos de 4h.</td></tr>
+<tr><td>SEV-4</td><td>Impacto minimo. Anomalía que requiere seguimiento.</td><td>Port scan externo, brute force bloqueado.</td><td>Siguiente turno.</td></tr>
+</table>
+</div>
+
+<div class="c">
+<div class="ct">Alerta vs Incidente — Diferencia critica</div>
+<div class="br">
+<div class="bs" style="background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);text-align:center">
+<div class="btg" style="color:var(--orange)">Alerta</div>
+<p><span class="hlo">Señal automática</span> de algo potencialmente malo. Generada por una herramienta (SIEM, EDR). No validada (puede ser FP). Requiere triage. Cientos por dia.</p>
+</div>
+<div class="ba2">≠</div>
+<div class="bs brd2" style="text-align:center">
+<div class="btg">Incidente</div>
+<p><span class="hlr">Confirmación</span> de actividad maliciosa real. Declarada por un analista. Validada como TP. Requiere IR coordinado. Unidades por dia (o semana).</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SEC 6: EJEMPLO LIVE ═══ -->
+<section class="sec rv" id="live">
+<div class="sh"><span class="sn">06</span><h2 class="st">Ejemplo <span class="ac">Completo</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.8 — De punta a punta: un incidente real</div>
+<p>Un solo escenario atravesando los 4 niveles de la cadena para ver cómo cada eslabón alimenta al siguiente:</p>
+<div class="tl">
+<div class="tl-ln"></div>
+<div class="ti"><div class="td2"></div><div class="tt2">03:14 AM — LOG</div><div class="tit2">El dato crudo aparece</div><div class="tds2">SRV-DC01 registra Event ID 4624: juan.perez, LogonType 10, Source 10.10.3.45. Es uno de 2 millones de logs de ese dia. Por si solo, no significa nada.</div></div>
+<div class="ti"><div class="td2 cyn"></div><div class="tt2">03:14 AM — EVENTO</div><div class="tit2">El SIEM agrega contexto</div><div class="tds2">Normalización + enriquecimiento: Finanzas, sin historial en DCs, fuera de horario, UEBA score 78/100. Ahora es un evento de seguridad con contexto.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tt2">03:14 AM — ALERTA (SIEM)</div><div class="tit2">Regla disparada</div><div class="tds2">Coincide con regla "RDP a DC fuera de horario por usuario sin privilegios de AD". Severidad: ALTA.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tt2">03:14 AM — ALERTA (EDR)</div><div class="tit2">Segunda alerta simultánea</div><div class="tds2">EDR en WS-FIN-023 detecta: "rundll32.exe ejecutando DLL desde AppData\Local\Temp". Alerta independiente.</div></div>
+<div class="ti"><div class="td2 pur"></div><div class="tt2">03:14 AM — CORRELACION</div><div class="tit2">SIEM conecta ambas alertas</div><div class="tds2">La autenticación RDP sospechosa + ejecución sospechosa provienen del mismo host en 2 minutos. Correlación escala a severidad CRITICA.</div></div>
+<div class="ti"><div class="td2"></div><div class="tt2">03:26 AM — INVESTIGACION</div><div class="tit2">Analista nocturno investiga (MTTA = 12 min)</div><div class="tds2">Confirma: sin mantenimiento programado. Hash de DLL = 0 detecciones en VT. Proceso hace callbacks HTTPS cada 60s a dominio de 48h. C2 confirmado.</div></div>
+<div class="ti"><div class="td2 red"></div><div class="tt2">03:28 AM — INCIDENTE SEV-1</div><div class="tit2">Declaración formal de incidente</div><div class="tds2">Compromiso confirmado de WS-FIN-023 con C2 activo y acceso no autorizado al DC. Se activa IR: isolation, bloqueo C2, notificación a IR Lead y CISO.</div></div>
+</div>
+<div class="fm">1 log entre millones → 1 evento con contexto → 2 alertas correlacionadas → 1 incidente SEV-1<br><br>La cadena funcionó porque: el log existía (Sysmon instalado), el SIEM tenía regla para RDP a DC fuera de horario, el EDR detectó la ejecución sospechosa, el SIEM correlacionó ambas fuentes, el analista estaba disponible (24x7), y la decisión de declarar fue clara (C2 confirmado).</div>
+</div>
+</section>
+
+<!-- ═══ SEC 7: REGLAS ═══ -->
+<section class="sec rv" id="rules">
+<div class="sh"><span class="sn">07</span><h2 class="st">Reglas de <span class="ac">Detección</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.9 — Ejemplos de reglas por tipo</div>
+
+<div class="acc op"><div class="ah" onclick="tA(this)"><span class="at2">Regla basada en firma (IOC) — Base de la pirámide</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="codeblock"><span class="cm"># Bloquear hash conocido de Cobalt Strike</span>
+<span class="ky">rule:</span> <span class="vl">Known Malware Hash</span>
+<span class="ky">condition:</span> file.hash.sha256 == <span class="vl">"a1b2c3d4e5f6..."</span>
+<span class="ky">action:</span> <span class="wr">BLOCK + ALERT</span>
+
+<span class="cm"># Debilidad: cambiar 1 byte del archivo genera</span>
+<span class="cm"># un hash completamente nuevo. Dolor: trivial.</span></div>
+</div></div></div>
+
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">Regla basada en umbral — Brute Force</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="codeblock"><span class="cm"># Detectar password spraying</span>
+<span class="ky">rule:</span> <span class="vl">Multiple Failed Logins</span>
+<span class="ky">condition:</span> count(EventID == 4625) > <span class="vl">10</span>
+           <span class="ky">within:</span> <span class="vl">5 minutes</span>
+           <span class="ky">group_by:</span> <span class="vl">source_ip</span>
+<span class="ky">action:</span> <span class="wr">ALERT severity HIGH</span>
+
+<span class="cm"># Evasión ofensiva: hacer 9 en 5 min y repetir.</span>
+<span class="cm"># Nunca cruza el umbral de 10.</span></div>
+</div></div></div>
+
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">Regla basada en comportamiento (IOA) — Cúspide de la pirámide</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="codeblock"><span class="cm"># Detectar macro maliciosa ejecutando shell (Sigma)</span>
+<span class="ky">title:</span> <span class="vl">Suspicious Office Application Child Process</span>
+<span class="ky">detection:</span>
+  <span class="ky">parent:</span>
+    <span class="ky">Image|endswith:</span>
+      - <span class="vl">'\WINWORD.EXE'</span>
+      - <span class="vl">'\EXCEL.EXE'</span>
+  <span class="ky">child:</span>
+    <span class="ky">Image|endswith:</span>
+      - <span class="vl">'\cmd.exe'</span>
+      - <span class="vl">'\powershell.exe'</span>
+  <span class="ky">condition:</span> <span class="vl">parent AND child</span>
+
+<span class="cm"># Detecta el COMPORTAMIENTO (Office → Shell),</span>
+<span class="cm"># no el indicador. Funciona contra Emotet, QakBot,</span>
+<span class="cm"># IcedID, y cualquier malware futuro con macros.</span>
+<span class="cm"># El atacante NO puede evadir cambiando hash/IP/dominio.</span></div>
+</div></div></div>
+
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">Regla de correlación multi-fuente — Máxima fidelidad</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<div class="codeblock"><span class="cm"># Phishing completo detectado por correlación</span>
+<span class="ky">rule:</span> <span class="vl">Phishing to Execution Chain</span>
+<span class="ky">condition:</span>
+  <span class="ky">step1:</span> email.attachment.received == <span class="vl">true</span>  <span class="cm">(Email Gateway)</span>
+  <span class="ky">step2:</span> process.parent == <span class="vl">"OUTLOOK.EXE"</span>
+         AND file.executed == <span class="vl">true</span>             <span class="cm">(EDR)</span>
+  <span class="ky">step3:</span> network.connection.external == <span class="vl">true</span>
+         AND dest.ip.new == <span class="vl">true</span>               <span class="cm">(Firewall)</span>
+  <span class="ky">within:</span> <span class="vl">30 minutes</span>
+  <span class="ky">same:</span> <span class="vl">host</span>
+<span class="ky">action:</span> <span class="wr">ALERT severity CRITICAL</span>
+
+<span class="cm"># Requiere 3 fuentes diferentes confirmando la</span>
+<span class="cm"># misma cadena de ataque. Tasa de FP: mínima.</span></div>
+</div></div></div>
+</div>
+</section>
+
+<!-- ═══ SEC 8: FALLAS ═══ -->
+<section class="sec rv" id="fail">
+<div class="sh"><span class="sn">08</span><h2 class="st">Cuando la Cadena <span class="ac">Falla</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.10 — Puntos de falla y sus consecuencias</div>
+<div class="fw">
+<div class="fl">Flujo N.10: Cada eslabón puede romperse</div>
+<div class="fv" style="gap:8px">
+<div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">FALLA 1</div><div class="nl2" style="font-size:11px">No hay log</div><div class="ns" style="text-align:left">Invisibilidad total. El atacante opera sin dejar rastro. Ejemplo: Sysmon no instalado — no se registra la ejecución del beacon. Sin dato crudo, la cadena entera no existe.</div></div>
+<div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">FALLA 2</div><div class="nl2" style="font-size:11px">Log no se envía al SIEM</div><div class="ns" style="text-align:left">El dato existe localmente pero nadie lo ve. El atacante puede borrar el log local. Ejemplo: Sysmon instalado pero no configurado para enviar al SIEM.</div></div>
+<div class="fn og" style="max-width:520px;text-align:left"><div class="ni">FALLA 3</div><div class="nl2" style="font-size:11px">No hay regla de detección</div><div class="ns" style="text-align:left">El evento se almacena pero no genera alerta. Solo disponible para hunting retroactivo. Ejemplo: no existe regla para "RDP a DC fuera de horario".</div></div>
+<div class="fn og" style="max-width:520px;text-align:left"><div class="ni">FALLA 4</div><div class="nl2" style="font-size:11px">Regla genera demasiados FP</div><div class="ns" style="text-align:left">La alerta se pierde en el ruido. El analista la ignora por fatigue. Ejemplo: la regla genera 200 alertas diarias, 195 son FP. La real se pierde.</div></div>
+<div class="fn" style="max-width:520px;text-align:left;border-color:rgba(170,68,255,.3)"><div class="ni">FALLA 5</div><div class="nl2" style="font-size:11px;color:var(--purple)">Alerta no se investiga</div><div class="ns" style="text-align:left">El verdadero positivo se cierra sin investigar. El atacante continúa operando. Ejemplo: 500 alertas en cola, analista cierra las de severidad media sin mirar.</div></div>
+<div class="fn" style="max-width:520px;text-align:left;border-color:rgba(170,68,255,.3)"><div class="ni">FALLA 6</div><div class="nl2" style="font-size:11px;color:var(--purple)">Incidente no se declara</div><div class="ns" style="text-align:left">El compromiso confirmado no activa IR. Sin contención, sin erradicación. Ejemplo: el analista ve la actividad sospechosa pero "no quiere molestar al CISO a las 03:00 AM".</div></div>
+</div>
+</div>
+<div class="fm">Cada falla es acumulativa. La cadena es tan fuerte como su eslabón más débil. Una organización con EDR de última generación pero sin reglas adecuadas, o con reglas perfectas pero analistas sobrecargados, tendrá la misma tasa de detección efectiva que si no tuviera nada.</div>
+</div>
+</section>
+
+<footer>
+<div class="author">Toshiro Nagata</div>
+<div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">SOC PIPELINE // LOG → EVENTO → ALERTA → INCIDENTE</div>
+<div class="fli">Fuentes: NIST SP 800-61 Rev.3 // NIST SP 800-92 // SANS 2025 SOC Survey // AI SOC Market 2025</div>
+<div class="fli" style="margin-top:5px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+<script>
+function tA(h){h.closest('.acc').classList.toggle('op')}
+// animated counters
+document.querySelectorAll('[data-c]').forEach(el=>{const t=+el.dataset.c;let c=0;const step=Math.max(1,Math.ceil(t/40));const fmt=n=>n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':n;const i=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(i)}el.textContent=fmt(c)},25)})
+// scroll reveal
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+// nav highlight
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+// keyboard
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>
