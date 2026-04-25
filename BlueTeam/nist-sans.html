@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IR Frameworks // NIST Rev.3 & SANS PICERL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#07f;border-radius:3px}
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+.hero{text-align:center;padding:60px 0 40px}.hero h1{font-family:var(--fd);font-size:clamp(22px,5vw,42px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:10px}.hero .sub{font-family:var(--fc);font-size:13px;color:var(--dim);letter-spacing:2px}
+.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+.sec{margin-bottom:55px;scroll-margin-top:56px}.sh{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--brd)}.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}.st{font-family:var(--fd);font-size:clamp(15px,3vw,20px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;transition:border-color .3s}.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:7px}.c h3{font-size:14px;color:var(--cyan);margin-bottom:8px;font-weight:600}.c p{font-size:13px;margin-bottom:7px}
+.fm{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:12px 16px;margin:12px 0;font-family:var(--fc);font-size:12px;color:var(--cyan)}
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:14px 16px;margin:12px 0}.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:22px;margin:12px 0;overflow-x:auto}.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:11px 15px;text-align:center;min-width:130px;max-width:500px;transition:.3s;cursor:default;flex-shrink:0}.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 14px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:2px}.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:2px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fa{color:var(--dim);font-size:15px;padding:3px 0;animation:pa 2s infinite;text-align:center}.fa2{font-size:9px;color:var(--dim);padding:1px 0}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:9px;margin:12px 0}
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:12px 0;align-items:stretch}.bs{padding:14px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}.bgr{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15)}
+.ba2{display:flex;align-items:center;padding:0 8px;font-size:20px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px}.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}.bgr .btg{color:var(--green)}
+.tb{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:8px 9px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}.tb td{padding:7px 9px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+.g{color:var(--green);font-weight:600}.r{color:var(--red);font-weight:600}
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:5px;overflow:hidden}.ah{padding:11px 14px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}.ah:hover{background:var(--bg3)}.at2{font-size:12px;font-weight:600;color:var(--blue)}.aa2{color:var(--dim);transition:transform .3s;font-size:12px}.acc.op .aa2{transform:rotate(180deg)}.ab2{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab2{max-height:5000px}.ai2{padding:12px 14px}
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}.tag-p{background:rgba(170,68,255,.08);color:var(--purple);border:1px solid rgba(170,68,255,.2)}
+.rv{opacity:0;transform:translateY(22px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+.tl{position:relative;padding:18px 0 18px 34px;margin:12px 0}.tl-ln{position:absolute;left:11px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan),var(--green),var(--orange))}
+.ti{position:relative;margin-bottom:14px;padding-left:16px;opacity:0;transform:translateX(-12px);animation:si .5s forwards}
+.ti:nth-child(1){animation-delay:.1s}.ti:nth-child(2){animation-delay:.2s}.ti:nth-child(3){animation-delay:.3s}.ti:nth-child(4){animation-delay:.35s}.ti:nth-child(5){animation-delay:.4s}.ti:nth-child(6){animation-delay:.45s}.ti:nth-child(7){animation-delay:.5s}.ti:nth-child(8){animation-delay:.55s}
+@keyframes si{to{opacity:1;transform:translateX(0)}}
+.td2{position:absolute;left:-22px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--blue);border:2px solid var(--bg);box-shadow:0 0 7px var(--glow)}
+.td2.red{background:var(--red);box-shadow:0 0 7px rgba(255,51,85,.3)}.td2.grn{background:var(--green);box-shadow:0 0 7px rgba(0,255,136,.3)}.td2.org{background:var(--orange)}.td2.pur{background:var(--purple)}
+.tt2{font-family:var(--fd);font-size:10px;font-weight:600;color:var(--cyan)}.tit2{font-size:11px;font-weight:600;color:var(--blue)}.tds2{font-size:10px;color:var(--dim)}
+.tabs{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap}.tb3{background:var(--bg3);color:var(--dim);border:1px solid var(--brd);border-radius:5px 5px 0 0;padding:7px 13px;font-family:var(--fc);font-size:11px;cursor:pointer;transition:.3s}.tb3:hover{color:var(--blue);border-color:rgba(0,170,255,.3)}.tb3.on{color:var(--blue);background:rgba(0,170,255,.07);border-color:var(--blue);border-bottom-color:transparent}.tp{display:none}.tp.on{display:block}
+.wm{position:fixed;bottom:14px;right:18px;font-family:var(--fd);font-size:10px;font-weight:700;color:rgba(0,170,255,.1);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;writing-mode:vertical-rl}
+footer{text-align:center;padding:35px 16px 25px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}footer .fli{margin-bottom:3px}
+.author{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+/* phase cards */
+.phase{border:1px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:10px;transition:border-color .3s}.phase:hover{border-color:rgba(0,170,255,.3)}
+.phase-head{padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;transition:.3s}
+.phase-head:hover{background:rgba(0,170,255,.04)}
+.phase-num{font-family:var(--fd);font-size:20px;font-weight:800;min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid}
+.phase-info{flex:1}.phase-name{font-family:var(--fd);font-size:14px;font-weight:700;letter-spacing:1px}.phase-sub{font-size:11px;color:var(--dim);margin-top:2px}
+.phase-arrow{color:var(--dim);transition:transform .3s;font-size:13px}
+.phase.op .phase-arrow{transform:rotate(180deg)}
+.phase-body{max-height:0;overflow:hidden;transition:max-height .5s ease;background:var(--bg)}.phase.op .phase-body{max-height:8000px}
+.phase-inner{padding:16px 18px}
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:6px}.ba2{transform:rotate(90deg);padding:4px 0;justify-content:center}.g2{grid-template-columns:1fr}.wm{display:none}}
+</style>
+</head>
+<body>
+<div class="wm">Toshiro Nagata</div>
+<nav id="nav"><div class="logo">IR<b>::</b>FW</div><div class="nl">
+<a href="#nist-model">NIST Modelo</a><a href="#nist-detect">Detect</a><a href="#nist-respond">Respond</a><a href="#nist-recover">Recover</a><a href="#sans">SANS</a><a href="#sans-phases">6 Fases</a><a href="#compare">Comparativa</a><a href="#teams">Equipos</a>
+</div></nav>
+<main>
+
+<section class="hero">
+<h1>Frameworks de<br>Incident Response</h1>
+<div class="sub">// NIST SP 800-61 Rev. 3 (Abril 2025) & SANS PICERL<span class="blink"></span></div>
+</section>
+
+<!-- ═══ NIST INTRO ═══ -->
+<section class="sec rv" id="nist-model">
+<div class="sh"><span class="sn">01</span><h2 class="st">NIST Rev. 3 — <span class="ac">El Modelo</span></h2></div>
+
+<div class="c">
+<div class="ct">Que es</div>
+<p>NIST SP 800-61 Rev. 3 (abril 2025) organiza el IR como un <span class="hl">CSF 2.0 Community Profile</span> — usa las 6 Funciones del Cybersecurity Framework 2.0. El IR no es una actividad aislada: es parte integral de la gestión de riesgo cibernético que debe estar integrada en todas las operaciones.</p>
+<div class="fm">IR es un PROCESO ORGANIZACIONAL — no un producto ni una herramienta. Integra personas, procedimientos y tecnología para gestionar incidentes de forma estructurada y repetible.</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.1 — Las 3 definiciones fundamentales</div>
+<div class="fw">
+<div class="fl">Flujo N.1: De evento a incidente</div>
+<div class="fv">
+<div class="fn" style="max-width:460px;text-align:left;opacity:.6"><div class="ni">NIVEL 1</div><div class="nl2" style="font-size:12px">Evento</div><div class="ns" style="text-align:left">Cualquier ocurrencia observable que involucra activos de computación. La inmensa mayoría son normales y benignos. Millones por dia.</div></div>
+<div class="fa">↓ tiene consecuencia negativa?</div>
+<div class="fn og" style="max-width:460px;text-align:left"><div class="ni">NIVEL 2</div><div class="nl2" style="font-size:12px">Evento Adverso de Ciberseguridad</div><div class="ns" style="text-align:left">Un evento con consecuencia negativa para la ciberseguridad. Requiere análisis adicional para determinar si es un incidente. Miles por dia.</div></div>
+<div class="fa">↓ pone en peligro la CIA?</div>
+<div class="fn rd" style="max-width:460px;text-align:left"><div class="ni">NIVEL 3</div><div class="nl2" style="font-size:12px">Incidente de Ciberseguridad</div><div class="ns" style="text-align:left">Pone en peligro actual o inminente la integridad, confidencialidad o disponibilidad de información o sistemas. Incluye "amenaza inminente" — no es necesario que el compromiso ya haya ocurrido. Unidades por dia.</div></div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.2 — El modelo de ciclo de vida CSF 2.0</div>
+<div class="fw">
+<div class="fl">Flujo N.2: Las 6 Funciones organizadas en 3 niveles</div>
+<div class="fv">
+<div style="border:1px solid rgba(0,170,255,.2);border-radius:8px;padding:14px;width:100%;max-width:500px;text-align:center;margin-bottom:6px">
+<div style="font-family:var(--fd);font-size:9px;color:var(--blue);letter-spacing:2px;margin-bottom:10px">NIVEL SUPERIOR — INCIDENT RESPONSE</div>
+<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+<div class="fn" style="min-width:120px;flex:1"><div class="nl2">DETECT</div><div class="ns">Encontrar ataques</div></div>
+<div class="fn og" style="min-width:120px;flex:1"><div class="nl2">RESPOND</div><div class="ns">Tomar acción</div></div>
+<div class="fn gn" style="min-width:120px;flex:1"><div class="nl2">RECOVER</div><div class="ns">Restaurar</div></div>
+</div>
+</div>
+<div class="fa2">↕ Mejora Continua (ID.IM) fluye en ambas direcciones ↕</div>
+<div style="border:1px solid rgba(0,170,255,.1);border-radius:8px;padding:14px;width:100%;max-width:500px;text-align:center;opacity:.6">
+<div style="font-family:var(--fd);font-size:9px;color:var(--dim);letter-spacing:2px;margin-bottom:10px">NIVEL INFERIOR — PREPARACION (soporte al IR)</div>
+<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+<div class="fn" style="min-width:120px;flex:1;opacity:.7"><div class="nl2" style="color:var(--dim)">GOVERN</div><div class="ns">Politicas</div></div>
+<div class="fn" style="min-width:120px;flex:1;opacity:.7"><div class="nl2" style="color:var(--dim)">IDENTIFY</div><div class="ns">Riesgos</div></div>
+<div class="fn" style="min-width:120px;flex:1;opacity:.7"><div class="nl2" style="color:var(--dim)">PROTECT</div><div class="ns">Controles</div></div>
+</div>
+</div>
+</div>
+</div>
+<p style="margin-top:8px">Govern, Identify y Protect <span class="hl">no son parte del IR en si</span> — son actividades de gestión de riesgo más amplias que soportan el IR. Detect, Respond y Recover son el IR operativo.</p>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.3 — Preparación (Govern + Identify + Protect)</div>
+<div class="acc op"><div class="ah" onclick="tA(this)"><span class="at2">GOVERN — Politica de IR, Roles, Playbooks</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p><span class="hl">Politica de IR</span>: compromiso de gerencia, propósito, alcance, definiciones, roles y autoridades (quién puede desconectar activos), guías de priorización, métricas.</p>
+<p style="margin-top:6px"><span class="hl">Roles</span>: Liderazgo (supervisa, presupuesto, decisiones de alto impacto), incident handlers (internos/MSSP/on-demand), profesionales técnicos, legal, asuntos públicos, RRHH, seguridad física, propietarios de activos.</p>
+<p style="margin-top:6px"><span class="hl">Playbooks</span>: pasos accionables para escenarios específicos. Componentes: alcance, criterios de activación, roles, pasos secuenciados, puntos de decisión (si X → Y), escalamiento, documentación. Analogía: el "código azul" del hospital — cuando llega el paciente con infarto, se sigue el protocolo, no se improvisa.</p>
+</div></div></div>
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">IDENTIFY — Assets, Threat Intel, Mejora Continua</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p><span class="hl">Asset Management</span>: inventarios actualizados de hardware, software, servicios, datos. Priorizados por criticidad. Durante un incidente, el IR necesita saber inmediatamente qué fue afectado y qué datos contenía.</p>
+<p style="margin-top:6px"><span class="hl">Threat Intelligence</span> (prioridad ALTA): CTI de feeds automatizados y foros. Información sobre nuevas amenazas, mejorar precisión de detección, entender TTPs.</p>
+<p style="margin-top:6px"><span class="hl">Improvement (ID.IM)</span>: mejora continua que fluye hacia TODAS las funciones durante todo el ciclo — no solo al final.</p>
+</div></div></div>
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">PROTECT — Logs y Backups (prioridad Alta)</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p><span class="hl">Logs</span> (PR.PS-04): vitales para detección, respuesta y recuperación. Sin logs, no hay visibilidad.</p>
+<p style="margin-top:6px"><span class="hl">Backups</span> (PR.DS-11): particularmente importantes cuando la integridad o disponibilidad de datos se ve afectada. Verificar integridad ANTES de usar para restauración.</p>
+</div></div></div>
+</div>
+</section>
+
+<!-- ═══ NIST DETECT ═══ -->
+<section class="sec rv" id="nist-detect">
+<div class="sh"><span class="sn">02</span><h2 class="st">NIST — <span class="ac">DETECT</span></h2></div>
+
+<div class="c">
+<div class="ct">Flujo N.4 — Que monitorear (DE.CM)</div>
+<p>Todo en Detect tiene prioridad <span class="hlr">Alta</span>. Es donde opera el SOC.</p>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DE.CM-01</div><div class="nl2" style="font-size:11px">Redes</div><div class="ns" style="text-align:left">Cableadas, inalámbricas, flujos, servicios (DNS, BGP), redes rogue.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DE.CM-02</div><div class="nl2" style="font-size:11px">Entorno fisico</div><div class="ns" style="text-align:left">Accesos a áreas controladas, movimiento de personas, tampering.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DE.CM-03</div><div class="nl2" style="font-size:11px">Actividad de personal</div><div class="ns" style="text-align:left">Actividad anómala, autenticación, uso de deception (honeypots).</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DE.CM-06</div><div class="nl2" style="font-size:11px">Servicios externos</div><div class="ns" style="text-align:left">Admin remota de proveedores, desviaciones de servicios cloud/ISP.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">DE.CM-09</div><div class="nl2" style="font-size:11px">Hardware y software</div><div class="ns" style="text-align:left">Email, web, file sharing para malware/phishing/exfiltración. Autenticaciones. Configuraciones vs baselines.</div></div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.5 — Pipeline de análisis de eventos adversos (DE.AE)</div>
+<div class="fw">
+<div class="fl">Flujo N.5: De evento crudo a declaración de incidente</div>
+<div class="fv">
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 1 — FILTRADO</div><div class="nl2" style="font-size:11px">Filtrado automatizado (SIEM/SOAR)</div><div class="ns" style="text-align:left">El volumen es muy alto. Usar soluciones técnicas que filtren grandes datasets a un subconjunto adecuado para análisis humano.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 2 — CTI</div><div class="nl2" style="font-size:11px">Integración de Threat Intelligence</div><div class="ns" style="text-align:left">CTI actualizada en herramientas para mejorar precisión, caracterizar threat actors, métodos e IOCs.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 3 — CORRELACION</div><div class="nl2" style="font-size:11px">Correlación multi-fuente</div><div class="ns" style="text-align:left">Centralizar logs. Usar SIEM/SOAR para reunir datos relacionados de múltiples fuentes. CTI para correlacionar entre fuentes.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 4 — IMPACTO</div><div class="nl2" style="font-size:11px">Estimación de impacto y alcance</div><div class="ns" style="text-align:left">Medios automatizados y/o manuales. Revisar y refinar estimaciones a medida que avanza el análisis.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">PASO 5 — ALERTAS</div><div class="nl2" style="font-size:11px">Distribución de información</div><div class="ns" style="text-align:left">Generar alertas para SOC e IR. Hacer hallazgos accesibles en todo momento. Considerar tickets automáticos.</div></div>
+<div class="fa">↓</div>
+<div class="fn rd" style="max-width:480px;text-align:left"><div class="ni">PASO 6 — DECLARACION</div><div class="nl2" style="font-size:11px">Declaración de incidente</div><div class="ns" style="text-align:left">Aplicar criterios de incidente. Considerar FP conocidos. Si cumple criterios → se declara incidente y se activa Respond.</div></div>
+</div>
+</div>
+<div class="ins"><div class="ins-t">Cita clave de la Rev. 3</div><p>"Las organizaciones deben esforzarse por encontrar incidentes más temprano en el ciclo de vida del ataque. Los signos pueden ser más obvios más tarde, pero el impacto y alcance serán mucho mayores."</p></div>
+</div>
+</section>
+
+<!-- ═══ NIST RESPOND ═══ -->
+<section class="sec rv" id="nist-respond">
+<div class="sh"><span class="sn">03</span><h2 class="st">NIST — <span class="ac">RESPOND</span></h2></div>
+
+<div class="c">
+<div class="ct">Flujo N.6 — Gestión del incidente (RS.MA)</div>
+<p>Los incidentes <span class="hlr">no se manejan en orden de llegada</span> — se priorizan por riesgo.</p>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 1</div><div class="nl2" style="font-size:11px">Criticidad del activo</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 2</div><div class="nl2" style="font-size:11px">Impacto funcional</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 3</div><div class="nl2" style="font-size:11px">Impacto en datos</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 4</div><div class="nl2" style="font-size:11px">Etapa del ataque observada</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 5</div><div class="nl2" style="font-size:11px">Caracterización del threat actor</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">FACTOR 6</div><div class="nl2" style="font-size:11px">Recuperabilidad</div></div>
+</div>
+<div class="w"><div class="w-t">Trade-off critico (RS.MA-03)</div><p>"Toda decisión de estrategia de respuesta tiene trade-offs." Ejemplo: detectan un APT. <span class="hlg">Opción A</span>: contener inmediatamente (detiene daño pero puede haber persistencia no descubierta). <span class="hlr">Opción B</span>: observar 48h para entender alcance completo (más riesgo pero erradicación más completa).</p></div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.7 — Análisis, contención y erradicación</div>
+<div class="acc op"><div class="ah" onclick="tA(this)"><span class="at2">RS.AN — Análisis del incidente</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p>1. Determinar secuencia de eventos y activos involucrados<br>2. Identificar vulnerabilidades, amenazas y threat actors<br>3. Encontrar causas raíz subyacentes o sistémicas<br>4. Verificar tecnología de deception para info adicional</p>
+<p style="margin-top:8px"><span class="hlr">Magnitud (RS.AN-08)</span>: "Buscar IOCs y evidencia de persistencia tanto en activos conocidos como en otros objetivos potenciales. Saltarse esta actividad o realizarla superficialmente puede causar subestimación de la magnitud." Este es el <span class="hl">sweep</span> que determina si la contención será completa o parcial.</p>
+</div></div></div>
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">RS.MI-01 — Contención</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p>Considerar automatización: cuarentena de malware, transferir endpoint a red aislada, detener contenedor infectado. Considerar autorizar a terceros (ISPs, CSPs) a contener ciertos tipos de incidentes (DDoS) automáticamente. Permitir también acciones manuales de incident handlers.</p>
+</div></div></div>
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">RS.MI-02 — Erradicación</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p>Identificar TODOS los hosts y servicios afectados para que todas las fallas sean remediadas. Eliminar persistencia, parchar vulnerabilidad, reimaginar sistemas donde sea necesario.</p>
+</div></div></div>
+<div class="acc"><div class="ah" onclick="tA(this)"><span class="at2">RS.CO — Comunicación (4 categorías)</span><span class="aa2">▾</span></div><div class="ab2"><div class="ai2">
+<p><span class="hl">1. Coordinación</span>: actividades de IR entre partes internas y externas.<br><span class="hl">2. Notificación</span>: informar formalmente a afectados (clientes, empleados, reguladores).<br><span class="hl">3. Comunicación pública</span>: responder a consultas de medios.<br><span class="hl">4. Compartición</span>: compartir threat info con ISACs — "la compartición de técnicas de detección reduce el ROI de los atacantes."</p>
+</div></div></div>
+<div class="br" style="margin-top:12px">
+<div class="bs brd2"><div class="btg">Perspectiva ofensiva</div><p>La contención simultánea es la más temida. Si todos los hosts se aíslan al mismo tiempo, el atacante no puede reaccionar. Si se contiene host por host, el atacante detecta que su beacon dejó de recibir callbacks y activa fallback C2 o wipers.</p></div>
+<div class="ba2">→</div>
+<div class="bs bbl"><div class="btg">Perspectiva defensiva</div><p>La contención debe estar <span class="hl">pre-aprobada</span> en playbooks para que el analista pueda ejecutar sin esperar autorización. Cada minuto de espera es MTTC adicional y más sistemas cifrados.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ NIST RECOVER ═══ -->
+<section class="sec rv" id="nist-recover">
+<div class="sh"><span class="sn">04</span><h2 class="st">NIST — <span class="ac">RECOVER</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.8 — Pasos de recuperación</div>
+<div class="fw">
+<div class="fl">Flujo N.8: Pipeline de recuperación según NIST Rev. 3</div>
+<div class="fv">
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">RC.RP-03</div><div class="nl2" style="font-size:11px">Verificar integridad de backups ANTES de usar</div><div class="ns" style="text-align:left">Buscar IOCs, corrupción, problemas de integridad. Backups hechos durante el Dwell Time pueden contener artefactos del atacante.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">RC.RP-04</div><div class="nl2" style="font-size:11px">Restaurar en orden de criticidad de negocio</div><div class="ns" style="text-align:left">Servicios esenciales primero. Confirmar restauración con propietarios. Monitorear rendimiento post-restauración.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left"><div class="ni">RC.RP-05</div><div class="nl2" style="font-size:11px">Verificar activos restaurados y remediar causa raiz</div><div class="ns" style="text-align:left">Buscar IOCs en sistemas restaurados. Remediar la vulnerabilidad explotada ANTES de poner en producción.</div></div>
+<div class="fa">↓</div>
+<div class="fn gn" style="max-width:480px;text-align:left"><div class="ni">RC.RP-06</div><div class="nl2" style="font-size:11px">After-action report y cierre</div><div class="ns" style="text-align:left">Documentar incidente, acciones tomadas, y lecciones aprendidas. Declarar fin de recuperación.</div></div>
+</div>
+</div>
+<p style="margin-top:8px">En intrusiones de threat actors altamente sofisticados donde el alcance completo no se revela, puede ser necesario <span class="hlr">reemplazar el hardware (bare metal)</span> de todos los sistemas comprometidos.</p>
+</div>
+</section>
+
+<!-- ═══ SANS INTRO ═══ -->
+<section class="sec rv" id="sans">
+<div class="sh"><span class="sn">05</span><h2 class="st">SANS <span class="ac">PICERL</span></h2></div>
+<div class="c">
+<div class="ct">Que es</div>
+<p>SANS PICERL es el framework de IR más adoptado en la <span class="hl">práctica operativa</span>. Desarrollado por el SANS Institute (SEC504). A diferencia de NIST que es un framework de gestión de riesgo, PICERL es un <span class="hl">modelo operativo</span> — dice qué hacer, en qué orden, y cómo ejecutar cada paso.</p>
+<div class="fm"><strong>P</strong>reparation → <strong>I</strong>dentification → <strong>C</strong>ontainment → <strong>E</strong>radication → <strong>R</strong>ecovery → <strong>L</strong>essons Learned</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.9 — El ciclo PICERL</div>
+<div class="fw">
+<div class="fl">Flujo N.9: Ciclo lineal con retroalimentación</div>
+<div class="fv">
+<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap">
+<div class="fn gn" style="min-width:auto;padding:8px 12px"><div class="nl2" style="font-size:10px">P</div><div class="ns">Preparation</div></div>
+<div class="fa" style="padding:0 4px">→</div>
+<div class="fn" style="min-width:auto;padding:8px 12px"><div class="nl2" style="font-size:10px">I</div><div class="ns">Identification</div></div>
+<div class="fa" style="padding:0 4px">→</div>
+<div class="fn og" style="min-width:auto;padding:8px 12px"><div class="nl2" style="font-size:10px">C</div><div class="ns">Containment</div></div>
+<div class="fa" style="padding:0 4px">→</div>
+<div class="fn rd" style="min-width:auto;padding:8px 12px"><div class="nl2" style="font-size:10px">E</div><div class="ns">Eradication</div></div>
+<div class="fa" style="padding:0 4px">→</div>
+<div class="fn" style="min-width:auto;padding:8px 12px;border-color:rgba(0,229,255,.3)"><div class="nl2" style="font-size:10px;color:var(--cyan)">R</div><div class="ns">Recovery</div></div>
+<div class="fa" style="padding:0 4px">→</div>
+<div class="fn pu" style="min-width:auto;padding:8px 12px"><div class="nl2" style="font-size:10px">L</div><div class="ns">Lessons</div></div>
+</div>
+<div class="fa">↩ Retroalimenta Preparation</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ SANS 6 FASES ═══ -->
+<section class="sec rv" id="sans-phases">
+<div class="sh"><span class="sn">06</span><h2 class="st">SANS — <span class="ac">Las 6 Fases</span></h2></div>
+
+<!-- P -->
+<div class="phase op">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(0,255,136,.03)">
+<div class="phase-num" style="color:var(--green);border-color:var(--green)">P</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--green)">PREPARATION</div><div class="phase-sub">Todo lo que sucede ANTES del incidente — la fase más importante</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<p>Un plan que vive en un drive y nunca se testea es un artefacto de compliance, no una herramienta operativa. Componentes:</p>
+<div class="g2" style="margin-top:10px">
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Equipo CSIRT</div><div class="ns" style="text-align:left">Roster con roles, contactos y autoridades de decisión pre-definidas. Quién puede aislar sin esperar aprobación.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Playbooks</div><div class="ns" style="text-align:left">Guías paso a paso por tipo de incidente referenciando herramientas reales del entorno.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Jump Bag Digital</div><div class="ns" style="text-align:left">Autopsy, KAPE, Volatility, medios de reimaging, credenciales de emergencia, documentación de red.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Logging verificado</div><div class="ns" style="text-align:left">Sysmon, PowerShell ScriptBlock, auditoría AD, todo fluyendo al SIEM. Sin logs no hay detección.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Canales out-of-band</div><div class="ns" style="text-align:left">Signal, teléfonos, plataformas separadas. El email corporativo puede estar comprometido.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="nl2" style="font-size:11px">Tabletop exercises</div><div class="ns" style="text-align:left">Simulaciones que validan playbooks, roles y escalamiento sin ejecutar acciones reales.</div></div>
+</div>
+</div></div>
+</div>
+
+<!-- I -->
+<div class="phase">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(0,170,255,.03)">
+<div class="phase-num" style="color:var(--blue);border-color:var(--blue)">I</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--blue)">IDENTIFICATION</div><div class="phase-sub">Detectar y confirmar el incidente — la fase más técnicamente desafiante</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<div class="tl">
+<div class="tl-ln"></div>
+<div class="ti"><div class="td2"></div><div class="tt2">Paso 1</div><div class="tit2">Recibir la señal</div><div class="tds2">SIEM, EDR, IDS, usuario, tercero, o threat hunter.</div></div>
+<div class="ti"><div class="td2"></div><div class="tt2">Paso 2</div><div class="tit2">Validar TP vs FP</div><div class="tds2">Confirmar con evidencia, no con suposición. Si no se puede confirmar ni descartar, tratar como TP.</div></div>
+<div class="ti"><div class="td2"></div><div class="tt2">Paso 3</div><div class="tit2">Categorizar</div><div class="tds2">Malware, phishing, ransomware, account compromise, insider, DDoS. Activar playbook correspondiente.</div></div>
+<div class="ti"><div class="td2"></div><div class="tt2">Paso 4</div><div class="tit2">Determinar alcance inicial</div><div class="tds2">Sistemas, usuarios, datos afectados. Esta estimación puede cambiar.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tt2">Paso 5</div><div class="tit2">Identificar vector de acceso</div><div class="tds2">Phishing? Vulnerabilidad? Credenciales robadas? Supply chain? Determina qué parchar.</div></div>
+<div class="ti"><div class="td2 org"></div><div class="tt2">Paso 6</div><div class="tit2">Estimar impacto</div><div class="tds2">Datos comprometidos? Implicaciones regulatorias? Impacto operativo? Financiero?</div></div>
+<div class="ti"><div class="td2"></div><div class="tt2">Paso 7</div><div class="tit2">Documentar con timestamps UTC</div><div class="tds2">Consistencia temporal cuando múltiples equipos en diferentes zonas horarias participan.</div></div>
+<div class="ti"><div class="td2 red"></div><div class="tt2">Paso 8</div><div class="tit2">Asignar severidad y notificar</div><div class="tds2">SEV-1 a SEV-4 basado en impacto. Notificar según nivel de severidad.</div></div>
+</div>
+<div class="ex"><div class="ex-t">Ejemplo completo</div>
+<p><span class="hl">08:15</span> — Alerta SIEM: tráfico SMB anómalo WS-FIN-023 → FS-01, 47GB<br>
+<span class="hl">08:20</span> — Validación: juan.perez sin historial de acceso a FS-01 fuera de horario → TP<br>
+<span class="hl">08:25</span> — EDR: rundll32.exe con DLL desconocida desde AppData\Local\Temp<br>
+<span class="hl">08:30</span> — Categorización: Compromiso con C2 activo → Playbook "Malware Infection"<br>
+<span class="hl">08:40</span> — Impacto: posible exfiltración de 47GB de datos financieros<br>
+<span class="hl">08:42</span> — Severidad: <span class="hlr">SEV-1</span>. Notificación: IR Lead, CISO, Legal.</p></div>
+</div></div>
+</div>
+
+<!-- C -->
+<div class="phase">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(255,136,0,.03)">
+<div class="phase-num" style="color:var(--orange);border-color:var(--orange)">C</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--orange)">CONTAINMENT</div><div class="phase-sub">Limitar el daño — debe ser simultánea, no secuencial</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<div class="br">
+<div class="bs" style="background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15)"><div class="btg" style="color:var(--orange)">Short-term (minutos)</div>
+<p>Aislamiento de host vía EDR (simultáneo — no host por host). Bloqueo de IOCs en perímetro (C2 en firewall + DNS sinkhole). Segmentación de emergencia si el alcance es masivo.</p>
+</div>
+<div class="ba2">+</div>
+<div class="bs bbl"><div class="btg">Long-term (horas)</div>
+<p>Segmentación reforzada. Rebuilds temporales. Cambio de credenciales comprometidas. Monitoreo intensificado del segmento afectado.</p>
+</div>
+</div>
+<div class="w"><div class="w-t">Principio critico de SANS</div><p>La contención <span class="hlr">debe ser simultánea</span>. Contener host por host alerta al adversario (su beacon deja de recibir callbacks) y puede activar fallback C2 o wipers. Todos los hosts comprometidos se aíslan al mismo momento.</p></div>
+</div></div>
+</div>
+
+<!-- E -->
+<div class="phase">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(255,51,85,.03)">
+<div class="phase-num" style="color:var(--red);border-color:var(--red)">E</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--red)">ERADICATION</div><div class="phase-sub">Eliminar completamente la amenaza — no dejar ni un artefacto</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<p>Eliminar malware, scripts, webshells, implantes. Eliminar <span class="hlr">TODOS</span> los mecanismos de persistencia: scheduled tasks, services, WMI subscriptions, registry keys, DLL hijack, COM hijack. Parchar vulnerabilidad explotada. Reimaginar sistemas (más confiable que limpieza manual). Validar con sweep del EDR.</p>
+<div class="w"><div class="w-t">Punto critico</div><p>Erradicación incompleta = retorno del adversario. Un atacante sofisticado establece múltiples persistencias redundantes. Si el IR no los encuentra <span class="hlr">TODOS</span>, el adversario regresa en dias. La erradicación debe ser verificable: para cada artefacto, confirmación documentada de que fue eliminado.</p></div>
+</div></div>
+</div>
+
+<!-- R -->
+<div class="phase">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(0,229,255,.03)">
+<div class="phase-num" style="color:var(--cyan);border-color:var(--cyan)">R</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--cyan)">RECOVERY</div><div class="phase-sub">Restaurar a operación normal mejorada</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<p><span class="hl">Backups LIMPIOS</span> verificados (regla 3-2-1: 3 copias, 2 medios, 1 off-site). Verificar que no contienen artefactos del atacante. <span class="hl">Rebuild</span>: reinstalación limpia del OS + IaC. <span class="hl">Hardening post-incidente</span>: MFA, segmentación, nuevas reglas de detección. <span class="hl">Monitoreo intensificado</span> por semanas — las primeras 48-72 horas son criticas para detectar re-compromiso.</p>
+</div></div>
+</div>
+
+<!-- L -->
+<div class="phase">
+<div class="phase-head" onclick="tP(this)" style="background:rgba(170,68,255,.03)">
+<div class="phase-num" style="color:var(--purple);border-color:var(--purple)">L</div>
+<div class="phase-info"><div class="phase-name" style="color:var(--purple)">LESSONS LEARNED</div><div class="phase-sub">Cerrar el ciclo y retroalimentar Preparation</div></div>
+<div class="phase-arrow">▾</div>
+</div>
+<div class="phase-body"><div class="phase-inner">
+<p>Reunión formal (máximo 2 semanas post-cierre) con todos los participantes. Informe post-incidente con timeline completa. Nuevas reglas de detección basadas en TTPs observadas. Actualización de playbooks. Calcular métricas (MTTD, MTTA, MTTI, MTTC, MTT-Recover, MTT-Resolve). Todo <span class="hl">retroalimenta Preparation</span> — el ciclo se cierra y comienza de nuevo.</p>
+</div></div>
+</div>
+</section>
+
+<!-- ═══ COMPARATIVA ═══ -->
+<section class="sec rv" id="compare">
+<div class="sh"><span class="sn">07</span><h2 class="st"><span class="ac">Comparativa</span></h2></div>
+
+<div class="c">
+<div class="ct">Flujo N.10 — Mapeo directo NIST ↔ SANS</div>
+<div class="fw">
+<div class="fl">Flujo N.10: Equivalencias entre frameworks</div>
+<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;font-size:11px">
+<div style="text-align:center;padding:8px;border:1px solid var(--brd);border-radius:6px 0 0 0;background:rgba(0,170,255,.05)"><span class="hl">NIST Rev. 3</span></div>
+<div style="padding:8px;text-align:center;color:var(--dim)"></div>
+<div style="text-align:center;padding:8px;border:1px solid var(--brd);border-radius:0 6px 0 0;background:rgba(170,68,255,.05)"><span class="hlp" style="color:var(--purple)">SANS PICERL</span></div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">Govern + Identify + Protect</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">1. Preparation</div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">Detect + ID.IM</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">2. Identification</div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">Respond (RS.MI-01)</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">3. Containment</div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">Respond (RS.MI-02)</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">4. Eradication</div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">Recover</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0">5. Recovery</div>
+
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0;border-radius:0 0 0 6px">ID.IM (Improvement)</div>
+<div style="padding:8px;text-align:center;color:var(--dim)">↔</div>
+<div style="padding:8px 12px;border:1px solid var(--brd);border-top:0;border-radius:0 0 6px 0">6. Lessons Learned</div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Tabla comparativa</div>
+<table class="tb">
+<tr><th>Aspecto</th><th>NIST Rev. 3</th><th>SANS PICERL</th></tr>
+<tr><td>Tipo</td><td>CSF 2.0 Community Profile</td><td>Framework operativo</td></tr>
+<tr><td>Estructura</td><td>6 Funciones CSF en 3 niveles</td><td>6 fases lineales (PICERL)</td></tr>
+<tr><td>C-E-R</td><td>Respond agrupa C+E; Recover separado</td><td>3 fases individuales</td></tr>
+<tr><td>Audiencia</td><td>Liderazgo, gestión, compliance</td><td>Incident handlers, SOC, técnicos</td></tr>
+<tr><td>Detalle técnico</td><td>Alto nivel; detalle en recursos online</td><td>Procedural y operativo</td></tr>
+<tr><td>Mejora continua</td><td>Integrada en todo el ciclo (ID.IM)</td><td>Fase 6 → retroalimenta Fase 1</td></tr>
+<tr><td>Gobernanza</td><td>Función explícita (Govern)</td><td>Dentro de Preparation</td></tr>
+<tr><td>Certificaciones</td><td>No específicas</td><td>GCIH, GCFA, GCFE</td></tr>
+</table>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.11 — Cuando usar cada uno</div>
+<div class="tabs">
+<button class="tb3 on" onclick="sT('cmp-t','t-nist')">NIST Rev. 3</button>
+<button class="tb3" onclick="sT('cmp-t','t-sans')">SANS PICERL</button>
+<button class="tb3" onclick="sT('cmp-t','t-both')">Ambos juntos</button>
+</div>
+<div id="cmp-t">
+<div class="tp on" id="t-nist">
+<div class="ex"><div class="ex-t">Usar NIST cuando</div>
+<p>Se comunica con dirección y board. Se reporta a reguladores. Se integra IR con gestión de riesgo empresarial. Se justifican inversiones en IR. Se definen políticas y gobernanza. Se necesita lenguaje común reconocido (CSF 2.0).</p></div>
+</div>
+<div class="tp" id="t-sans">
+<div class="ex" style="border-left-color:var(--purple)"><div class="ex-t" style="color:var(--purple)">Usar SANS cuando</div>
+<p>Se ejecuta un IR real bajo presión. Se crean playbooks operativos. Se entrena analistas. Se mide rendimiento fase por fase. Se necesita granularidad entre C, E y R. Se preparan ejercicios prácticos.</p></div>
+</div>
+<div class="tp" id="t-both">
+<div class="ex" style="border-left-color:var(--cyan)"><div class="ex-t" style="color:var(--cyan)">Usar ambos cuando</div>
+<p>Se opera con PICERL en el campo y se reporta con NIST a la dirección. NIST define el "qué" y el "por qué"; PICERL define el "cómo". Para evaluaciones: NIST como marco de referencia, PICERL como evidencia de ejecución.</p></div>
+</div>
+</div>
+<div class="fm" style="margin-top:10px">NIST responde: "¿Tenemos las capacidades correctas?"<br>PICERL responde: "¿Estamos ejecutando correctamente?"<br>Son complementarios, no competidores.</div>
+</div>
+</section>
+
+<!-- ═══ TEAMS ═══ -->
+<section class="sec rv" id="teams">
+<div class="sh"><span class="sn">08</span><h2 class="st">Equipos <span class="ac">Involucrados</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.12 — Roles en un incidente significativo</div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 1</div><div class="nl2" style="font-size:11px">SOC</div><div class="ns" style="text-align:left">Triaje inicial, monitoreo de telemetría, detección, generación de alertas.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 2</div><div class="nl2" style="font-size:11px">Threat Intel</div><div class="ns" style="text-align:left">Contexto de amenazas, identificación de threat actors, TTPs conocidas.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 3</div><div class="nl2" style="font-size:11px">Threat Hunting</div><div class="ns" style="text-align:left">Retrohunts con IOCs del IR, ampliar scope de investigación.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 4</div><div class="nl2" style="font-size:11px">Forensics</div><div class="ns" style="text-align:left">Evidencia, cadena de custodia, reconstrucción de timeline del ataque.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 5</div><div class="nl2" style="font-size:11px">Malware Analysis</div><div class="ns" style="text-align:left">Análisis estático y dinámico, extracción de IOCs, entender funcionalidad.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 6</div><div class="nl2" style="font-size:11px">IT Ops</div><div class="ns" style="text-align:left">Contención operativa, recuperación de sistemas, restauración de servicios.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 7</div><div class="nl2" style="font-size:11px">Legal / Compliance</div><div class="ns" style="text-align:left">Obligaciones regulatorias, coordinación con fuerzas del orden, evidencia para litigio.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">EQUIPO 8</div><div class="nl2" style="font-size:11px">Comms / PR</div><div class="ns" style="text-align:left">Comunicación externa (clientes, medios) e interna (empleados, board).</div></div>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="author">Toshiro Nagata</div>
+<div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">IR FRAMEWORKS // NIST SP 800-61 REV. 3 & SANS PICERL</div>
+<div class="fli">Fuentes: NIST SP 800-61r3 (abril 2025) // NIST CSF 2.0 // SANS Incident Handler's Handbook // SANS SEC504</div>
+<div class="fli" style="margin-top:5px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+
+<script>
+function tA(h){h.closest('.acc').classList.toggle('op')}
+function tP(h){h.closest('.phase').classList.toggle('op')}
+function sT(c,t){const p=document.getElementById(c);p.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));document.getElementById(t).classList.add('on');p.closest('.c').querySelectorAll('.tb3').forEach(b=>b.classList.remove('on'));event.target.classList.add('on')}
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>

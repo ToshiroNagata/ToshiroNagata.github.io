@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pirámide del Dolor // Blue Team CTI Reference</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Oxanium:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#060610;--bg2:#0b0b18;--bg3:#10101f;--pnl:#0e0e1c;--blue:#0af;--cyan:#0ef;--green:#0f8;--red:#f35;--orange:#f80;--yellow:#fc0;--purple:#a4f;--glow:rgba(0,170,255,.22);--txt:#b0c4d8;--dim:#445;--brd:#152030;--fd:'Oxanium',sans-serif;--fb:'JetBrains Mono',monospace;--fc:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--txt);font-family:var(--fb);font-size:13.5px;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,170,255,.01) 3px,rgba(0,170,255,.01) 4px)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#07f;border-radius:3px}
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,6,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);height:48px;display:flex;align-items:center;padding:0 20px;gap:18px}
+.logo{font-family:var(--fd);font-weight:800;font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 20px var(--glow)}.logo b{color:var(--cyan)}
+.nl{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}.nl::-webkit-scrollbar{display:none}
+.nl a{color:var(--dim);text-decoration:none;font-size:11px;padding:6px 10px;border-radius:4px;white-space:nowrap;transition:.3s;font-family:var(--fc)}.nl a:hover,.nl a.on{color:var(--blue);background:rgba(0,170,255,.07)}
+main{max-width:1080px;margin:0 auto;padding:68px 20px 50px}
+.hero{text-align:center;padding:70px 0 50px}.hero h1{font-family:var(--fd);font-size:clamp(24px,5vw,46px);font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:4px;line-height:1.15;text-shadow:0 0 40px var(--glow);margin-bottom:12px}.hero .sub{font-family:var(--fc);font-size:14px;color:var(--dim);letter-spacing:2px}.blink{display:inline-block;width:9px;height:16px;background:var(--blue);vertical-align:middle;animation:bk 1s step-end infinite}@keyframes bk{50%{opacity:0}}
+.sec{margin-bottom:60px;scroll-margin-top:56px}.sh{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:11px;border-bottom:1px solid var(--brd)}.sn{font-family:var(--fd);font-size:11px;font-weight:700;color:var(--bg);background:var(--blue);padding:3px 9px;border-radius:3px;letter-spacing:1px}.st{font-family:var(--fd);font-size:clamp(16px,3vw,21px);font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px}.st .ac{color:var(--cyan)}
+.c{background:var(--pnl);border:1px solid var(--brd);border-radius:8px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}.c:hover{border-color:rgba(0,170,255,.25)}.c::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--blue);opacity:0;transition:.3s}.c:hover::before{opacity:1}
+.ct{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.c h3{font-size:15px;color:var(--cyan);margin-bottom:10px;font-weight:600}.c p{font-size:13px;margin-bottom:8px}
+.fm{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.18);border-radius:6px;padding:14px 18px;margin:14px 0;font-family:var(--fc);font-size:13px;color:var(--cyan);position:relative}.fm::after{content:'CONCEPTO';position:absolute;top:5px;right:10px;font-size:8px;color:rgba(0,170,255,.3);letter-spacing:2px;font-family:var(--fd);font-weight:700}
+.ex{background:rgba(0,255,136,.03);border:1px solid rgba(0,255,136,.12);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}.ex-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.w{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}.w-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.ins{background:rgba(255,136,0,.04);border:1px solid rgba(255,136,0,.15);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:16px 18px;margin:14px 0}.ins-t{font-family:var(--fd);font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.fw{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:24px;margin:14px 0;overflow-x:auto}.fl{font-family:var(--fd);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;text-align:center}
+.fv{display:flex;flex-direction:column;align-items:center;gap:0}
+.fn{background:rgba(0,170,255,.06);border:1px solid rgba(0,170,255,.25);border-radius:6px;padding:12px 16px;text-align:center;min-width:140px;max-width:520px;transition:.3s;cursor:default;flex-shrink:0}.fn:hover{border-color:var(--blue);background:rgba(0,170,255,.12);transform:scale(1.02);box-shadow:0 0 16px var(--glow)}
+.fn .ni{font-family:var(--fd);font-size:8px;color:rgba(0,170,255,.4);letter-spacing:1px;margin-bottom:3px}.fn .nl2{font-size:11px;font-weight:600;color:var(--cyan)}.fn .ns{font-size:10px;color:var(--dim);margin-top:3px}
+.fn.rd{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05)}.fn.rd .nl2{color:var(--red)}
+.fn.gn{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.05)}.fn.gn .nl2{color:var(--green)}
+.fn.og{border-color:rgba(255,136,0,.3);background:rgba(255,136,0,.05)}.fn.og .nl2{color:var(--orange)}
+.fn.pu{border-color:rgba(170,68,255,.3);background:rgba(170,68,255,.05)}.fn.pu .nl2{color:var(--purple)}
+.fa{color:var(--dim);font-size:16px;padding:4px 0;animation:pa 2s infinite;text-align:center}.fa2{font-size:10px;color:var(--dim);padding:2px 0}
+@keyframes pa{0%,100%{opacity:.35}50%{opacity:1;color:var(--blue)}}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.br{display:grid;grid-template-columns:1fr auto 1fr;margin:14px 0;align-items:stretch}.bs{padding:16px;border-radius:6px;font-size:12px}
+.brd2{background:rgba(255,51,85,.04);border:1px solid rgba(255,51,85,.15)}.bbl{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15)}
+.ba{display:flex;align-items:center;padding:0 10px;font-size:22px;color:var(--dim);animation:pa 2s infinite}
+.btg{font-family:var(--fd);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}.brd2 .btg{color:var(--red)}.bbl .btg{color:var(--blue)}
+.tb{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}.tb th{background:rgba(0,170,255,.08);color:var(--blue);font-family:var(--fd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:9px 10px;text-align:left;border-bottom:2px solid rgba(0,170,255,.2)}.tb td{padding:8px 10px;border-bottom:1px solid var(--brd)}.tb tr:hover td{background:rgba(0,170,255,.02)}
+.g{color:var(--green);font-weight:600}.o{color:var(--orange);font-weight:600}.r{color:var(--red);font-weight:600}
+.acc{border:1px solid var(--brd);border-radius:6px;margin-bottom:6px;overflow:hidden}.ah{padding:12px 16px;background:var(--pnl);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:.3s;user-select:none}.ah:hover{background:var(--bg3)}.at{font-size:12px;font-weight:600;color:var(--blue)}.aa{color:var(--dim);transition:transform .3s;font-size:13px}.acc.op .aa{transform:rotate(180deg)}.ab{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--bg)}.acc.op .ab{max-height:4000px}.ai{padding:14px 16px}
+.hl{color:var(--cyan);font-weight:600}.hlr{color:var(--red);font-weight:600}.hlg{color:var(--green);font-weight:600}.hlo{color:var(--orange);font-weight:600}
+.tag{display:inline-block;font-family:var(--fd);font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:1px;margin-right:3px}
+.tag-b{background:rgba(0,170,255,.12);color:var(--blue);border:1px solid rgba(0,170,255,.25)}.tag-g{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.2)}.tag-r{background:rgba(255,51,85,.08);color:var(--red);border:1px solid rgba(255,51,85,.2)}.tag-o{background:rgba(255,136,0,.08);color:var(--orange);border:1px solid rgba(255,136,0,.2)}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}.rv.vis{opacity:1;transform:translateY(0)}
+/* PYRAMID SVG */
+.pyr-wrap{display:flex;justify-content:center;margin:20px 0}
+.pyr-wrap svg{max-width:100%;height:auto}
+/* PAIN METER */
+.pain{display:flex;align-items:center;gap:8px;margin:8px 0}
+.pain-bar{height:8px;border-radius:4px;flex:1;position:relative;overflow:hidden;background:var(--bg3)}
+.pain-fill{height:100%;border-radius:4px;transition:width 1.5s ease-out}
+.pain-label{font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:1px;min-width:60px}
+footer{text-align:center;padding:40px 16px 30px;border-top:1px solid var(--brd);color:var(--dim);font-size:10px}footer .fli{margin-bottom:3px}
+.author{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+.wm{position:fixed;bottom:16px;right:20px;font-family:var(--fd);font-size:10px;font-weight:700;color:rgba(0,170,255,.1);letter-spacing:3px;text-transform:uppercase;pointer-events:none;z-index:100;writing-mode:vertical-rl}
+@media(max-width:768px){main{padding:56px 12px 36px}.br{grid-template-columns:1fr;gap:8px}.ba{transform:rotate(90deg);padding:6px 0;justify-content:center}.g2{grid-template-columns:1fr}.wm{display:none}}
+</style>
+</head>
+<body>
+<div class="wm">Toshiro Nagata</div>
+<nav id="nav"><div class="logo">PYR<b>::</b>PAIN</div><div class="nl">
+<a href="#pyramid">Piramide</a><a href="#n1">Hashes</a><a href="#n2">IPs</a><a href="#n3">Dominios</a><a href="#n4">Artefactos</a><a href="#n5">Tools</a><a href="#n6">TTPs</a><a href="#ai">AI/LLM</a><a href="#evo">Evolucion</a><a href="#stp">STP</a><a href="#summary">Resumen</a>
+</div></nav>
+<main>
+
+<section class="hero">
+<h1>La Piramide<br>del Dolor</h1>
+<div class="sub">// David J. Bianco (2013) → Realidad Operativa 2026<span class="blink"></span></div>
+</section>
+
+<!-- ═══ PIRAMIDE VISUAL ═══ -->
+<section class="sec rv" id="pyramid">
+<div class="sh"><span class="sn">00</span><h2 class="st">La <span class="ac">Piramide</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.1 — Estructura completa de la Piramide del Dolor</div>
+<p>Creada por David J. Bianco en 2013 tras la publicación del reporte APT1 de Mandiant. Jerarquiza los tipos de indicadores según <span class="hl">cuánto dolor causan al adversario</span> cuando el defensor los detecta y les niega su uso. Cuanto más alto en la pirámide, más costoso y difícil es para el atacante adaptarse.</p>
+<div class="fw">
+<div class="fl">Flujo N.1: Piramide del Dolor — 6 niveles</div>
+<div class="fv">
+<div class="fn pu" style="max-width:200px"><div class="ni">NIVEL 6</div><div class="nl2">TTPs</div><div class="ns">Dolor: MAXIMO</div></div>
+<div class="fa2">▲ Más dolor al atacante</div>
+<div class="fn rd" style="max-width:260px"><div class="ni">NIVEL 5</div><div class="nl2">Herramientas (Tools)</div><div class="ns">Dolor: ALTO</div></div>
+<div class="fa2">|</div>
+<div class="fn og" style="max-width:320px"><div class="ni">NIVEL 4</div><div class="nl2">Artefactos de Red y Host</div><div class="ns">Dolor: MODERADO</div></div>
+<div class="fa2">|</div>
+<div class="fn" style="max-width:380px"><div class="ni">NIVEL 3</div><div class="nl2">Nombres de Dominio</div><div class="ns">Dolor: BAJO-MODERADO</div></div>
+<div class="fa2">|</div>
+<div class="fn" style="max-width:440px"><div class="ni">NIVEL 2</div><div class="nl2">Direcciones IP</div><div class="ns">Dolor: BAJO</div></div>
+<div class="fa2">▼ Menos dolor al atacante</div>
+<div class="fn" style="max-width:500px;opacity:.7"><div class="ni">NIVEL 1</div><div class="nl2">Valores Hash</div><div class="ns">Dolor: TRIVIAL</div></div>
+</div>
+</div>
+<div class="fm">Principio central: No todos los indicadores son iguales. El verdadero impacto defensivo viene de enfocarse en detecciones que imponen costos operativos significativos al adversario, forzándolo a invertir tiempo, dinero y expertise sustancial para mantener su campaña.</div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 1: HASHES ═══ -->
+<section class="sec rv" id="n1">
+<div class="sh"><span class="sn">01</span><h2 class="st">Nivel 1: <span class="ac">Hash Values</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Trivial</div>
+<p>Un hash (MD5, SHA-1, SHA-256) es la huella digital criptográfica de un archivo. Si se cambia <span class="hlr">un solo byte</span>, el hash resultante es completamente diferente. En defensa, se usan para identificar malware conocido: si el hash coincide, se bloquea.</p>
+<div class="pain"><span class="pain-label" style="color:var(--dim)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:8%;background:var(--dim)" data-w="8"></div></div><span class="tag" style="color:var(--dim);border-color:var(--dim)">Trivial</span></div>
+<div class="ex"><div class="ex-t">Ejemplo</div><p><code>beacon.exe</code> → SHA256: <span class="hl">a1b2c3d4e5f6...</span><br>Agregar 1 byte → SHA256: <span class="hlr">9z8y7x6w5v4u...</span> (completamente diferente)<br>Misma funcionalidad, diferente huella. El atacante evade con recompilar, re-empaquetar, o cambiar un string.</p></div>
+<div class="br">
+<div class="bs brd2"><div class="btg">2013</div><p>Los analistas mantenían listas de hashes <span class="hlr">manualmente</span>, copiando desde reportes de threat intel a consolas de antivirus. Proceso lento y completamente reactivo.</p></div>
+<div class="ba">→</div>
+<div class="bs bbl"><div class="btg">2026</div><p>TIPs (MISP, OpenCTI) y feeds comerciales distribuyen hashes en <span class="hlg">milisegundos</span> vía APIs a EDR, SIEM y firewalls. Los humanos ya no tocan este nivel — lo gestionan máquinas. Pero los hashes siguen siendo triviales para el atacante.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 2: IPs ═══ -->
+<section class="sec rv" id="n2">
+<div class="sh"><span class="sn">02</span><h2 class="st">Nivel 2: <span class="ac">IP Addresses</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Bajo</div>
+<p>Las IPs identifican la ubicación de red de la infraestructura del atacante: servidores C2, servidores de exfiltración, proxies. Bloquear una IP maliciosa corta la comunicación entre el implante y el C2.</p>
+<div class="pain"><span class="pain-label" style="color:var(--blue)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:0%;background:var(--blue)" data-w="18"></div></div><span class="tag tag-b">Bajo</span></div>
+<p>Cambiar IPs es rápido y barato: VPNs, Tor, VPS desechables, bulletproof hosting con rotación automática. Además, bloquear IPs legítimas compartidas (AWS, Cloudflare) causa daño colateral masivo.</p>
+<div class="ex"><div class="ex-t">Ejemplo</div><p>Dia 1: C2 en <code>185.100.87.42</code> → Bloqueada.<br>Dia 2: Atacante rota a <code>91.234.56.78</code> → Operativo en minutos.<br>Dia 3: Redirector en Cloudflare → Bloquear la IP bloquea miles de sitios legítimos.</p></div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 3: DOMINIOS ═══ -->
+<section class="sec rv" id="n3">
+<div class="sh"><span class="sn">03</span><h2 class="st">Nivel 3: <span class="ac">Domain Names</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Bajo-Moderado</div>
+<p>Registrar un dominio nuevo cuesta pocos dólares y toma minutos, pero ofrece una oportunidad defensiva que las IPs no tienen: <span class="hl">análisis de patrones de registro</span>. Un dominio de 24h con WHOIS privado tiene un perfil muy diferente a un dominio legítimo establecido.</p>
+<div class="pain"><span class="pain-label" style="color:var(--cyan)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:0%;background:var(--cyan)" data-w="30"></div></div><span class="tag" style="color:var(--cyan);border-color:rgba(0,229,255,.3)">Bajo-Mod</span></div>
+<div class="acc op"><div class="ah" onclick="tA(this)"><span class="at">Técnicas de evasión modernas (2024-2026)</span><span class="aa">▾</span></div><div class="ab"><div class="ai">
+<p><span class="hl">DGA (Domain Generation Algorithm)</span>: el malware genera dominios pseudoaleatorios diariamente (ej: xk7rf9m2.com). El atacante solo registra el dominio del día. El defensor tendría que predecir o bloquear miles de posibles dominios.</p>
+<p style="margin-top:8px"><span class="hl">Dominios legítimos como C2</span>: usar APIs de servicios legítimos (Slack webhooks, Telegram bots, Google Sheets) como canal C2. El tráfico va a dominios de confianza que no se pueden bloquear sin impacto al negocio.</p>
+<p style="margin-top:8px"><span class="hl">Fast Flux DNS</span>: el dominio C2 rota entre docenas de IPs cada pocos minutos, dificultando bloqueo por IP.</p>
+</div></div></div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 4: ARTEFACTOS ═══ -->
+<section class="sec rv" id="n4">
+<div class="sh"><span class="sn">04</span><h2 class="st">Nivel 4: <span class="ac">Artefactos</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Moderado</div>
+<p>Patrones observables que el atacante deja como <span class="hl">efecto secundario</span> de sus operaciones — no son indicadores que elige usar, sino consecuencias técnicas de cómo opera.</p>
+<div class="pain"><span class="pain-label" style="color:var(--orange)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:0%;background:var(--orange)" data-w="50"></div></div><span class="tag tag-o">Moderado</span></div>
+<div class="g2">
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">ARTEFACTOS DE RED</div><div class="nl2" style="font-size:11px">Patrones observables en el tráfico</div><div class="ns" style="text-align:left">User-Agent strings del C2, estructuras de URI (/api/v1/beacon), intervalos de beaconing, JA3/JA3S fingerprints del handshake TLS, certificados autogenerados, tamaños de paquete característicos.</div></div>
+<div class="fn" style="text-align:left;min-width:auto"><div class="ni">ARTEFACTOS DE HOST</div><div class="nl2" style="font-size:11px">Registros en el endpoint</div><div class="ns" style="text-align:left">Claves de registro de persistencia, rutas de archivo del malware, nombres de servicios o scheduled tasks, mutex names, named pipes para IPC, prefetch entries, Shimcache artifacts.</div></div>
+</div>
+<div class="ex"><div class="ex-t">Ejemplo</div>
+<p><span class="hl">Red</span>: User-Agent <code>"Mozilla/5.0 (compatible; MSIE 9.0)"</code> → En 2026, IE9 no existe. Este User-Agent es un beacon de Cobalt Strike con un Malleable Profile mal configurado.</p>
+<p style="margin-top:6px"><span class="hl">Host</span>: Scheduled Task <code>"WindowsUpdate"</code> ejecutando <code>C:\ProgramData\svchost.exe</code> → svchost.exe NUNCA se ejecuta desde ProgramData. La ruta lo delata como malicioso.</p>
+</div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 5: TOOLS ═══ -->
+<section class="sec rv" id="n5">
+<div class="sh"><span class="sn">05</span><h2 class="st">Nivel 5: <span class="ac">Tools</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Alto</div>
+<p>Las herramientas son el software que el atacante usa: frameworks C2 (Cobalt Strike, Brute Ratel, Sliver, Havoc, Mythic), exploit kits, RATs, herramientas de post-explotación (Mimikatz, Rubeus, SharpHound), y utilidades de exfiltración.</p>
+<div class="pain"><span class="pain-label" style="color:var(--red)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:0%;background:var(--red)" data-w="75"></div></div><span class="tag tag-r">Alto</span></div>
+<p>Desarrollar o adquirir una herramienta efectiva requiere inversión significativa. Los atacantes desarrollan workflows y familiaridad — cambiar de Cobalt Strike a Brute Ratel no es solo instalar otro software, es reentrenar al equipo, reescribir playbooks y reconstruir la infraestructura.</p>
+<div class="ex"><div class="ex-t">Ejemplo — Detección por named pipe de Cobalt Strike</div><p>El SOC detecta Cobalt Strike por su patrón de named pipes: <code>\\.\pipe\msagent_##</code>. Cada instancia en la red es detectada automáticamente, sin importar el hash, la IP o el dominio. El atacante debe migrar a otro C2 (semanas de trabajo + riesgo de errores en la transición).</p></div>
+<div class="ins"><div class="ins-t">Evolución critica 2013 → 2026</div><p>En 2013, Metasploit dominaba y la detección era por firmas estáticas. En 2026, hay docenas de C2 frameworks (muchos open source), lo que reduce el dolor de cambiar de herramienta. Pero los EDR modernos detectan herramientas por <span class="hl">comportamiento en tiempo de ejecución</span> — si la nueva herramienta usa la misma técnica de inyección, será detectada por la misma regla. Esto conecta directamente con el nivel 6.</p></div>
+</div>
+</section>
+
+<!-- ═══ NIVEL 6: TTPs ═══ -->
+<section class="sec rv" id="n6">
+<div class="sh"><span class="sn">06</span><h2 class="st">Nivel 6: <span class="ac">TTPs</span></h2></div>
+<div class="c">
+<div class="ct">Dolor: Maximo — La cúspide de la piramide</div>
+<p>Las TTPs representan el <span class="hl">comportamiento</span> del atacante: no qué herramienta usa ni qué indicador deja, sino <span class="hl">cómo opera</span>. Es el nivel más abstracto y más valioso.</p>
+<div class="pain"><span class="pain-label" style="color:var(--purple)">DOLOR</span><div class="pain-bar"><div class="pain-fill" style="width:0%;background:linear-gradient(to right,var(--red),var(--purple))" data-w="95"></div></div><span class="tag" style="color:var(--purple);border-color:rgba(170,68,255,.3)">Maximo</span></div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.2 — Desglose de TTPs</div>
+<div class="fw">
+<div class="fl">Flujo N.2: Tácticas → Técnicas → Procedimientos</div>
+<div class="fv">
+<div class="fn pu" style="max-width:480px;text-align:left"><div class="ni">TACTICAS</div><div class="nl2" style="font-size:12px">El objetivo de alto nivel</div><div class="ns" style="text-align:left">Que quiere lograr el atacante en esta fase: Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Credential Access, Discovery, Lateral Movement, Collection, Exfiltration, Impact. Son las 14 columnas de MITRE ATT&CK.</div></div>
+<div class="fa">↓</div>
+<div class="fn" style="max-width:480px;text-align:left;border-color:rgba(0,229,255,.3)"><div class="ni">TECNICAS</div><div class="nl2" style="color:var(--cyan);font-size:12px">El método específico para lograr la táctica</div><div class="ns" style="text-align:left">Cómo lo hace: Spearphishing Attachment (T1566.001), Registry Run Keys (T1547.001), WMI Remote Execution (T1047), OS Credential Dumping (T1003). ATT&CK documenta cientos de técnicas y sub-técnicas.</div></div>
+<div class="fa">↓</div>
+<div class="fn rd" style="max-width:480px;text-align:left"><div class="ni">PROCEDIMIENTOS</div><div class="nl2" style="font-size:12px">La implementación concreta por un actor específico</div><div class="ns" style="text-align:left">Como lo hace un actor particular: APT29 usa scheduled tasks con nombres que imitan servicios de Windows para persistencia. FIN7 usa SQL stored procedures para exfiltrar datos de POS. Es la huella operativa específica del grupo.</div></div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.3 — Por que el dolor es máximo</div>
+<p>Cambiar TTPs requiere que el atacante <span class="hlr">reinvente su operación desde cero</span>. No puede simplemente cambiar un hash o una IP — necesita cambiar fundamentalmente cómo ejecuta su ataque.</p>
+<div class="fw">
+<div class="fl">Flujo N.3: Detección basada en TTP vs detección basada en IOC</div>
+<div class="fv">
+<div class="fn gn" style="max-width:500px;text-align:left"><div class="ni">DETECCION BASADA EN TTP (CUSPIDE)</div><div class="nl2" style="font-size:12px">Regla Sigma: Office ejecutando un shell</div><div class="ns" style="text-align:left;font-family:var(--fc);font-size:11px;margin-top:8px">ParentImage: *\WINWORD.EXE o *\EXCEL.EXE<br>ChildImage: *\cmd.exe o *\powershell.exe<br><br>Detecta el COMPORTAMIENTO, no el indicador.<br>Funciona contra Emotet, QakBot, IcedID, y cualquier<br>malware futuro que use macros de Office para ejecutar shells.<br><br>El atacante NO puede evadir cambiando hash, IP o dominio.<br>Solo puede evadir cambiando FUNDAMENTALMENTE<br>cómo ejecuta Initial Access.</div></div>
+<div style="height:14px"></div>
+<div class="fn rd" style="max-width:500px;text-align:left"><div class="ni">DETECCION BASADA EN IOC (BASE)</div><div class="nl2" style="font-size:12px">Regla: bloquear hash específico</div><div class="ns" style="text-align:left;font-family:var(--fc);font-size:11px;margin-top:8px">Hash: a1b2c3d4e5f6...<br><br>Detecta exactamente UNA instancia del malware.<br>La siguiente compilación pasa desapercibida.<br>No tiene valor duradero.<br><br>El atacante evade en segundos recompilando.</div></div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.4 — MITRE ATT&CK: el mapa de la cúspide</div>
+<p>En 2013, Bianco dijo "bloquear TTPs es lo más doloroso" pero <span class="hlr">no existía un catálogo</span> de cuáles eran esos TTPs. Hoy, <span class="hl">MITRE ATT&CK</span> es exactamente ese catálogo.</p>
+<div class="fw">
+<div class="fl">Flujo N.4: Como ATT&CK operacionaliza la cúspide</div>
+<div class="fv">
+<div class="fn pu" style="max-width:300px"><div class="nl2">Piramide: Detectar TTPs</div><div class="ns">Concepto filosófico (2013)</div></div>
+<div class="fa">↓ se operacionaliza con</div>
+<div class="fn" style="max-width:450px;text-align:left"><div class="ni">MITRE ATT&CK (2015-2026)</div><div class="nl2" style="font-size:12px">El mapa táctico operacional</div><div class="ns" style="text-align:left">14 tácticas, cientos de técnicas y sub-técnicas.<br>Miles de procedimientos documentados por threat actor.<br>Detecciones sugeridas para cada técnica.<br>Data sources necesarias para detectar cada técnica.<br>Mitigaciones recomendadas por técnica.</div></div>
+<div class="fa">↓ genera</div>
+<div class="fn gn" style="max-width:450px;text-align:left"><div class="ni">DETECTION ENGINEERING</div><div class="nl2" style="font-size:12px">La disciplina que nació de la cúspide</div><div class="ns" style="text-align:left">Sigma: reglas portables entre SIEMs.<br>KQL: queries de hunting en Microsoft Sentinel/Defender.<br>YARA-L: detecciones temporales en Chronicle (Google).<br>Atomic Red Team: testeo de detecciones con técnicas ATT&CK.<br>Una disciplina completa que no existía en 2013.</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ AI / LLM ═══ -->
+<section class="sec rv" id="ai">
+<div class="sh"><span class="sn">07</span><h2 class="st">AI y LLMs: <span class="ac">Impacto en la Piramide</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.5 — Cómo la IA transforma cada nivel de la piramide</div>
+<p>La inteligencia artificial no inventó nuevos niveles en la pirámide, pero <span class="hlr">aceleró dramáticamente</span> la velocidad a la que los atacantes rotan los niveles bajos y <span class="hl">reforzó la importancia</span> de los niveles altos. La IA es un multiplicador de fuerza para ambos lados.</p>
+<div class="fw">
+<div class="fl">Flujo N.5: Impacto de AI/LLM en cada nivel</div>
+<div class="fv" style="gap:10px">
+<div class="fn rd" style="max-width:520px;text-align:left"><div class="ni">BASE — HASHES, IPs, DOMINIOS</div><div class="nl2" style="font-size:12px">AI acelera la rotación al punto de hacerla irrelevante</div><div class="ns" style="text-align:left">Malware polimórfico generado por LLM (BlackMamba, LAMEHUG) produce hashes únicos en cada ejecución sin intervención humana. Infrastructure-as-Code automatiza la creación de servidores C2 desechables. La base de la pirámide se volvió aún más irrelevante como mecanismo defensivo primario.</div></div>
+<div class="fn og" style="max-width:520px;text-align:left"><div class="ni">NIVEL MEDIO — ARTEFACTOS</div><div class="nl2" style="font-size:12px">AI permite evasión adaptativa</div><div class="ns" style="text-align:left">El malware AI-enabled (como LAMEHUG de CERT Ucrania, 2025) no contiene instrucciones hardcodeadas — solo prompts para un LLM. El LLM genera comandos adaptados al entorno local en tiempo real, eliminando artefactos estáticos predecibles. Los patrones observables cambian en cada ejecución.</div></div>
+<div class="fn pu" style="max-width:520px;text-align:left"><div class="ni">CUSPIDE — TTPS</div><div class="nl2" style="font-size:12px">Las TTPs se mantienen como la defensa más robusta</div><div class="ns" style="text-align:left">Incluso con AI, el atacante todavía necesita ejecutar acciones fundamentales: acceder al sistema, ejecutar código, persistir, moverse lateralmente, exfiltrar. La AI puede cambiar CÓMO se implementa cada paso, pero no puede eliminar los pasos en sí. La detección basada en comportamiento sigue siendo efectiva.</div></div>
+</div>
+</div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.6 — AI como arma ofensiva y defensiva</div>
+<div class="br">
+<div class="bs brd2"><div class="btg">AI para el atacante</div>
+<p><span class="hlr">Phishing hiper-personalizado</span>: LLMs generan miles de emails convincentes en segundos, personalizados con datos de LinkedIn de cada víctima.<br><br>
+<span class="hlr">Malware polimórfico</span>: payloads que mutan en cada ejecución, generando hashes únicos automáticamente.<br><br>
+<span class="hlr">Agentic AI</span>: agentes autónomos que re-planifican secuencias de ataque cuando una acción falla, sin intervención humana.<br><br>
+<span class="hlr">Deepfakes</span>: voz clonada del CEO para ejecutar fraudes BEC. El FBI advirtió en 2025 sobre ataques con voz AI a funcionarios de gobierno.</p>
+</div>
+<div class="ba">vs</div>
+<div class="bs bbl"><div class="btg">AI para el defensor</div>
+<p><span class="hlg">Correlación automática</span>: AI correlaciona indicadores de niveles bajos en patrones de comportamiento de niveles altos, "subiendo" automáticamente en la pirámide.<br><br>
+<span class="hlg">Detección de anomalías</span>: UEBA con ML identifica comportamiento anómalo que las reglas estáticas no pueden capturar.<br><br>
+<span class="hlg">Triage automatizado</span>: AI SOC copilots pre-analizan alertas, reduciendo MTTA y MTTI dramáticamente.<br><br>
+<span class="hlg">Hunting asistido</span>: LLMs generan hipótesis de hunting basadas en threat intel y traducen queries entre SIEMs.</p>
+</div>
+</div>
+<div class="w"><div class="w-t">Dato SecurityWeek febrero 2026</div><p>"A medida que los adversarios dependen menos de artefactos estáticos en la base de la pirámide, los defensores deberán subir más alto para enfocarse proactivamente en disrumpir herramientas, comportamientos y TTPs del atacante." — La AI <span class="hlr">refuerza</span> la relevancia de la Pirámide del Dolor; no la invalida.</p></div>
+</div>
+
+<div class="c">
+<div class="ct">Flujo N.7 — Amenazas emergentes: malware AI-enabled</div>
+<div class="fw">
+<div class="fl">Flujo N.7: Evolucion del malware con IA</div>
+<div class="fv">
+<div class="fn" style="max-width:500px;text-align:left"><div class="ni">2023 — PROOF OF CONCEPT</div><div class="nl2" style="font-size:12px">BlackMamba</div><div class="ns" style="text-align:left">Malware polimórfico que mutaba sin intervención humana usando LLMs públicos. Demostró que la AI puede hacer que la detección por firmas sea completamente inútil.</div></div>
+<div class="fa">↓</div>
+<div class="fn og" style="max-width:500px;text-align:left"><div class="ni">2025 — EN EL CAMPO</div><div class="nl2" style="font-size:12px">LAMEHUG (CERT Ucrania)</div><div class="ns" style="text-align:left">Malware basado en Python sin instrucciones hardcodeadas — solo prompts embebidos para un LLM. El LLM generaba comandos adaptados al entorno local del objetivo. Primer caso documentado de malware que usa IA en vivo durante la operación.</div></div>
+<div class="fa">↓</div>
+<div class="fn rd" style="max-width:500px;text-align:left"><div class="ni">2025-2026 — PRODUCCION</div><div class="nl2" style="font-size:12px">MalTerminal (SentinelOne) + GhostGPT</div><div class="ns" style="text-align:left">MalTerminal: primer malware GPT4-powered capaz de generar ransomware o reverse-shell en runtime. GhostGPT: LLM malicioso por 50 USD sin restricciones éticas. El robo de credenciales impulsado por IA aumentó un 160% en 2025.</div></div>
+<div class="fa">↓</div>
+<div class="fn pu" style="max-width:500px;text-align:left"><div class="ni">2026+ — PREDICCION</div><div class="nl2" style="font-size:12px">Agentic AI autónomo en ataques</div><div class="ns" style="text-align:left">Agentes AI que orquestan ataques completos: reconocimiento, acceso inicial, escalación, movimiento lateral, exfiltración — todo encadenado y adaptativo. Northwave predice que estamos en el punto de inflexión. El Breakout Time seguirá comprimiéndose.</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ EVOLUCION ═══ -->
+<section class="sec rv" id="evo">
+<div class="sh"><span class="sn">08</span><h2 class="st">Tabla <span class="ac">Comparativa</span> 2013 vs 2026</h2></div>
+<div class="c">
+<div class="ct">Flujo N.8 — Evolucion completa en 13 años</div>
+<table class="tb">
+<tr><th>Aspecto</th><th>2013</th><th>2026</th></tr>
+<tr><td>Gestión de hashes</td><td>Manual: copiar y pegar en AV</td><td class="g">Automatizada: TIPs + APIs en milisegundos</td></tr>
+<tr><td>Gestión de IPs/dominios</td><td>Listas manuales cada horas</td><td class="g">Feeds en tiempo real a firewalls, proxies, DNS</td></tr>
+<tr><td>Detección de artefactos</td><td>Analistas revisando logs manualmente</td><td class="g">Sysmon + JA3/JA3S + JARM fingerprinting</td></tr>
+<tr><td>Detección de herramientas</td><td>Firmas estáticas de antivirus</td><td class="g">EDR con detección conductual en runtime</td></tr>
+<tr><td>Detección de TTPs</td><td class="r">Sin catálogo estándar</td><td class="g">MITRE ATT&CK con cientos de técnicas</td></tr>
+<tr><td>Ingeniería de detección</td><td class="r">No existía como disciplina</td><td class="g">Madura: Sigma, KQL, YARA-L, Atomic Red Team</td></tr>
+<tr><td>Medición de robustez</td><td class="r">No existía</td><td class="g">Summiting the Pyramid v3.0 con scoring</td></tr>
+<tr><td>Quien gestiona la base</td><td>Analistas humanos</td><td class="g">APIs, TIPs, SOAR (automatización total)</td></tr>
+<tr><td>Quien opera la cúspide</td><td class="r">No había metodología</td><td class="g">Detection Engineers + Threat Hunters + ATT&CK</td></tr>
+<tr><td>Evasión del atacante</td><td>Malware con packer nuevo</td><td class="r">82% malware-free, LOTL, AI polimórfico</td></tr>
+<tr><td>Factor AI</td><td>No existía en este contexto</td><td class="o">Multiplicador para ambos lados</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══ SUMMITING THE PYRAMID ═══ -->
+<section class="sec rv" id="stp">
+<div class="sh"><span class="sn">09</span><h2 class="st">Summiting the <span class="ac">Pyramid</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.9 — La extensión moderna de MITRE CTID</div>
+<p>En 2023, el MITRE Center for Threat-Informed Defense (CTID) lanzó <span class="hl">"Summiting the Pyramid"</span> (STP), actualizado a <span class="hl">v3.0 en diciembre 2024</span>. Transforma el concepto original en una <span class="hl">metodología cuantificable</span>.</p>
+<div class="fw">
+<div class="fl">Flujo N.9: Que resuelve Summiting the Pyramid</div>
+<div class="fv">
+<div class="fn rd" style="max-width:480px;text-align:left"><div class="ni">PROBLEMA</div><div class="nl2" style="font-size:12px">La piramide original es conceptual</div><div class="ns" style="text-align:left">Dice "detectar en niveles más altos es mejor" pero no dice COMO MEDIR si una detección específica está realmente en un nivel alto. Una regla que detecta "powershell.exe" por nombre parece nivel 5, pero es trivial de evadir renombrando el ejecutable — realmente es nivel 1.</div></div>
+<div class="fa">↓ STP resuelve esto con</div>
+<div class="fn gn" style="max-width:480px;text-align:left"><div class="ni">SOLUCION</div><div class="nl2" style="font-size:12px">Robustez analítica cuantificable</div><div class="ns" style="text-align:left">Puntuación de Nivel 1 (fácilmente evadible) a Nivel 5 (requiere cambio fundamental de TTP). Frameworks separados para análisis de host y tráfico de red. Integración con el repositorio Sigma para reglas pre-evaluadas. Organizaciones reportan un aumento del 30% en costo operativo para el atacante.</div></div>
+<div class="fa">↓ v3.0 agrega</div>
+<div class="fn pu" style="max-width:480px;text-align:left"><div class="ni">TECNICAS AMBIGUAS (v3.0, dic 2024)</div><div class="nl2" style="font-size:12px">Resolver Living Off The Land</div><div class="ns" style="text-align:left">Muchas técnicas ATT&CK son idénticas a actividad legítima (PowerShell, wmic, certutil). STP v3.0 define tres niveles de contexto para resolverla:<br><br>1. Contexto periférico: inteligencia externa sobre el actor<br>2. Contexto encadenado: que técnicas ocurrieron antes/después<br>3. Contexto de técnica: parámetros específicos de la ejecución</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══ RESUMEN ═══ -->
+<section class="sec rv" id="summary">
+<div class="sh"><span class="sn">10</span><h2 class="st">Resumen <span class="ac">Operativo</span></h2></div>
+<div class="c">
+<div class="ct">Flujo N.10 — Cómo usar la piramide en 2026</div>
+<div class="fw">
+<div class="fl">Flujo N.10: Modelo operativo en tres capas</div>
+<div class="fv">
+<div class="fn" style="max-width:500px;text-align:left;opacity:.6"><div class="ni">CAPA 1 — BASE AUTOMATIZADA</div><div class="nl2" style="font-size:12px">Hashes, IPs, Dominios</div><div class="ns" style="text-align:left">Gestionada por máquinas (TIPs, SOAR, feeds).<br>Sin intervención humana.<br>Costo de mantenimiento cercano a cero una vez configurado.<br>Valor defensivo bajo pero necesario como primera capa.<br>Los humanos ya no tocan este nivel.</div></div>
+<div class="fa">↑</div>
+<div class="fn og" style="max-width:500px;text-align:left"><div class="ni">CAPA 2 — ENGINEERING</div><div class="nl2" style="font-size:12px">Artefactos + Herramientas</div><div class="ns" style="text-align:left">Gestionada por Detection Engineers.<br>Reglas en Sigma/KQL mapeadas a ATT&CK.<br>Requiere expertise técnico y mantenimiento regular.<br>Se valida con Atomic Red Team y STP scoring.<br>Valor defensivo moderado-alto.</div></div>
+<div class="fa">↑</div>
+<div class="fn pu" style="max-width:500px;text-align:left"><div class="ni">CAPA 3 — HUNTING</div><div class="nl2" style="font-size:12px">TTPs</div><div class="ns" style="text-align:left">Gestionada por Threat Hunters.<br>Hipótesis basadas en threat intel + ATT&CK.<br>Máximo expertise humano requerido.<br>Las detecciones generadas aquí son las más robustas.<br>Valor defensivo máximo.<br>Es donde la AI defensiva tiene el mayor impacto como copiloto.</div></div>
+</div>
+</div>
+<div class="fm" style="margin-top:16px">Pirámide del Dolor como concepto filosófico<br>+ MITRE ATT&CK como mapa táctico<br>+ Summiting the Pyramid como metodología de scoring<br>+ Detection Engineering como disciplina operativa<br>+ AI como multiplicador defensivo<br>= Defensa madura basada en comportamiento en 2026</div>
+</div>
+</section>
+
+<footer>
+<div class="author">Toshiro Nagata</div>
+<div class="fli" style="color:var(--blue);font-family:var(--fd);font-size:9px;letter-spacing:2px">PYRAMID OF PAIN // CTI REFERENCE 2026</div>
+<div class="fli">Fuentes: Bianco (2013) // MITRE ATT&CK // MITRE CTID STP v3.0 (2024) // CrowdStrike GTR 2026</div>
+<div class="fli">SecurityWeek (2026) // Northwave (2025) // SentinelOne (2025) // Vectra AI (2026) // Picus Security (2025)</div>
+<div class="fli" style="margin-top:6px">Maestria en Ciberseguridad — Material de clase</div>
+</footer>
+</main>
+<script>
+function tA(h){h.closest('.acc').classList.toggle('op')}
+const ro=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){en.target.classList.add('vis');ro.unobserve(en.target)}})},{threshold:.08});document.querySelectorAll('.rv').forEach(el=>ro.observe(el))
+// pain bars
+document.querySelectorAll('.pain-fill[data-w]').forEach(b=>{const o=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){setTimeout(()=>{b.style.width=b.dataset.w+'%'},200);o.unobserve(b)}})},{threshold:.3});o.observe(b)})
+// nav
+const secs=document.querySelectorAll('.sec'),lks=document.querySelectorAll('.nl a');
+const no=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){lks.forEach(l=>l.classList.remove('on'));const a=document.querySelector(`.nl a[href="#${en.target.id}"]`);if(a)a.classList.add('on')}})},{threshold:.2,rootMargin:'-56px 0px -50% 0px'});secs.forEach(s=>no.observe(s))
+// keyboard
+document.addEventListener('keydown',e=>{const ss=[...document.querySelectorAll('.sec')];const ci=ss.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-80&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='j'){e.preventDefault();ss[Math.min(ci+1,ss.length-1)].scrollIntoView({behavior:'smooth'})}else if(e.key==='ArrowUp'||e.key==='k'){e.preventDefault();ss[Math.max(ci-1,0)].scrollIntoView({behavior:'smooth'})}})
+</script>
+</body>
+</html>
