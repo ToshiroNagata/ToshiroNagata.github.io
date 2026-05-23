@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTI — Tipos, Ciclo, Diamond Model & Cyber Kill Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --bg-card: #0f1520;
+  --bg-card-hover: #141c2b;
+  --border: #1a2540;
+  --border-bright: #243560;
+  --blue-primary: #3b82f6;
+  --blue-light: #60a5fa;
+  --blue-dark: #1e40af;
+  --blue-glow: rgba(59,130,246,0.15);
+  --blue-glow-strong: rgba(59,130,246,0.3);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.6);
+  --text: #c8d6e5;
+  --text-bright: #e8f0fe;
+  --text-dim: #6b7fa3;
+  --red-accent: #ef4444;
+  --red-dim: rgba(239,68,68,0.15);
+  --amber: #f59e0b;
+  --green: #10b981;
+  --purple: #8b5cf6;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--blue-primary); }
+
+/* GRID BACKGROUND */
+.grid-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* SCAN LINE */
+.scanline {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: rgba(10,14,23,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,.5); }
+.nav-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.nav-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: .9rem;
+  color: var(--blue-light);
+  letter-spacing: 2px;
+}
+.nav-brand span { color: var(--text-dim); }
+.nav-links { display: flex; gap: 1.5rem; }
+.nav-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .5px;
+  transition: color .2s;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-links a:hover { color: var(--blue-light); }
+
+@media (max-width: 900px) {
+  .nav-links { display: none; }
+}
+
+/* MAIN CONTENT */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding-top: 56px;
+  position: relative;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--blue-glow);
+  border: 1px solid var(--border-bright);
+  border-radius: 100px;
+  padding: .4rem 1.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  color: var(--blue-light);
+  margin-bottom: 2rem;
+  animation: fadeSlideUp .8s ease;
+}
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  background: var(--blue-primary);
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(59,130,246,.5); }
+  50% { opacity: .7; box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+.hero h1 {
+  font-size: clamp(2.5rem,6vw,4.5rem);
+  font-weight: 900;
+  color: var(--text-bright);
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  animation: fadeSlideUp .8s ease .1s both;
+}
+.hero h1 .accent { color: var(--blue-primary); }
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 700px;
+  animation: fadeSlideUp .8s ease .2s both;
+  margin-bottom: 2.5rem;
+}
+.hero-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fadeSlideUp .8s ease .3s both;
+}
+.hero-meta-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.hero-meta-item .label { color: var(--blue-light); }
+.scroll-indicator {
+  position: absolute;
+  bottom: 3rem;
+  animation: float 3s ease-in-out infinite;
+}
+.scroll-indicator svg { width: 24px; height: 24px; stroke: var(--text-dim); }
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* SECTIONS */
+section { padding: 6rem 0; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--blue-primary);
+  margin-bottom: .75rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.section-label::before {
+  content: '';
+  width: 30px; height: 1px;
+  background: var(--blue-primary);
+}
+.section-title {
+  font-size: clamp(1.8rem,4vw,2.8rem);
+  font-weight: 800;
+  color: var(--text-bright);
+  margin-bottom: 1.5rem;
+  line-height: 1.15;
+}
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  max-width: 800px;
+  margin-bottom: 3rem;
+}
+
+/* REVEAL ANIMATION */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* TERMINAL BLOCK */
+.terminal {
+  background: #080c14;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 2rem 0;
+}
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--border);
+}
+.terminal-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.terminal-dot.r { background: #ef4444; }
+.terminal-dot.y { background: #f59e0b; }
+.terminal-dot.g { background: #10b981; }
+.terminal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  color: var(--text-dim);
+  margin-left: .5rem;
+}
+.terminal-body {
+  padding: 1.25rem 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .8rem;
+  line-height: 1.8;
+  color: var(--text);
+  overflow-x: auto;
+}
+.terminal-body .prompt { color: var(--blue-light); }
+.terminal-body .comment { color: var(--text-dim); font-style: italic; }
+.terminal-body .string { color: var(--green); }
+.terminal-body .keyword { color: var(--cyan); }
+.terminal-body .alert { color: var(--red-accent); }
+.terminal-body .highlight { color: var(--amber); }
+
+/* CARDS */
+.card-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+.card-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.card-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.card-grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: all .3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue-primary), var(--cyan));
+  opacity: 0;
+  transition: opacity .3s;
+}
+.card:hover {
+  border-color: var(--border-bright);
+  background: var(--bg-card-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.4);
+}
+.card:hover::before { opacity: 1; }
+.card-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  background: var(--blue-glow);
+  border: 1px solid var(--border-bright);
+}
+.card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: .5rem;
+}
+.card p {
+  font-size: .9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.card-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  padding: .2rem .6rem;
+  border-radius: 4px;
+  background: var(--blue-glow);
+  color: var(--blue-light);
+  border: 1px solid var(--border-bright);
+  margin-top: .75rem;
+}
+
+/* INFO TABLE */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: .88rem;
+}
+.info-table th {
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--blue-light);
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border-bright);
+  background: rgba(59,130,246,.05);
+}
+.info-table td {
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+.info-table tr:hover td { background: rgba(255,255,255,.02); }
+
+/* DATA VS INFO VS INTEL ESCALATOR */
+.escalator {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 2rem 0;
+}
+.esc-step {
+  padding: 1.5rem 2rem;
+  border-left: 3px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: all .4s ease;
+}
+.esc-step.active {
+  background: var(--bg-card);
+  border-left-color: var(--blue-primary);
+  border-radius: 0 12px 12px 0;
+}
+.esc-step .esc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: .3rem;
+  transition: color .3s;
+}
+.esc-step:nth-child(1) .esc-label { color: var(--text-dim); }
+.esc-step:nth-child(2) .esc-label { color: var(--amber); }
+.esc-step:nth-child(3) .esc-label { color: var(--blue-light); }
+.esc-step .esc-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: .4rem;
+}
+.esc-step .esc-example {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  color: var(--text-dim);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .5s ease, padding .3s ease;
+}
+.esc-step.active .esc-example {
+  max-height: 300px;
+  padding-top: .5rem;
+}
+.esc-arrow {
+  color: var(--text-dim);
+  text-align: center;
+  padding: .3rem 0;
+  font-size: .8rem;
+}
+
+/* CYCLE DIAGRAM */
+.cycle-container {
+  display: flex;
+  justify-content: center;
+  margin: 3rem 0;
+  perspective: 1000px;
+}
+.cycle-ring {
+  position: relative;
+  width: min(500px, 85vw);
+  height: min(500px, 85vw);
+}
+.cycle-node {
+  position: absolute;
+  width: 130px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s ease;
+}
+.cycle-node:hover { transform: scale(1.08); }
+.cycle-node .cn-num {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--blue-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: .9rem;
+  color: var(--blue-light);
+  margin: 0 auto .5rem;
+  transition: all .3s;
+  box-shadow: 0 0 15px rgba(59,130,246,.2);
+}
+.cycle-node:hover .cn-num,
+.cycle-node.active .cn-num {
+  background: var(--blue-primary);
+  color: #fff;
+  box-shadow: 0 0 25px rgba(59,130,246,.5);
+}
+.cycle-node .cn-title {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.cycle-node .cn-sub {
+  font-size: .65rem;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.cycle-detail {
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  min-height: 180px;
+  transition: all .3s ease;
+}
+.cycle-detail h4 {
+  font-size: 1.15rem;
+  color: var(--blue-light);
+  margin-bottom: .75rem;
+  font-weight: 700;
+}
+.cycle-detail p { color: var(--text); font-size: .92rem; }
+.cycle-detail ul {
+  list-style: none;
+  margin-top: .75rem;
+}
+.cycle-detail ul li {
+  padding: .3rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+  font-size: .88rem;
+  color: var(--text);
+}
+.cycle-detail ul li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--blue-primary);
+  font-weight: 700;
+}
+
+/* DIAMOND SVG */
+.diamond-container {
+  display: flex;
+  justify-content: center;
+  margin: 3rem 0;
+}
+.diamond-svg {
+  max-width: 600px;
+  width: 100%;
+}
+.diamond-vertex {
+  cursor: pointer;
+  transition: all .3s;
+}
+.diamond-vertex:hover .dv-circle,
+.diamond-vertex.active .dv-circle {
+  filter: drop-shadow(0 0 15px rgba(59,130,246,.6));
+}
+.diamond-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.di-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all .3s ease;
+}
+.di-card:hover, .di-card.active {
+  border-color: var(--blue-primary);
+  background: var(--bg-card-hover);
+}
+.di-card h4 {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  margin-bottom: .3rem;
+}
+.di-card p {
+  font-size: .82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* KILL CHAIN */
+.kc-timeline {
+  position: relative;
+  margin: 3rem 0;
+}
+.kc-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 28px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--blue-primary), var(--cyan), var(--blue-dark));
+}
+.kc-phase {
+  position: relative;
+  padding-left: 72px;
+  margin-bottom: 2rem;
+  cursor: pointer;
+}
+.kc-num {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--blue-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--blue-light);
+  z-index: 2;
+  transition: all .3s;
+}
+.kc-phase:hover .kc-num,
+.kc-phase.open .kc-num {
+  background: var(--blue-primary);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(59,130,246,.4);
+}
+.kc-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 0;
+}
+.kc-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  transition: color .2s;
+}
+.kc-phase:hover .kc-title { color: var(--blue-light); }
+.kc-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  color: var(--text-dim);
+}
+.kc-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .5s ease;
+  padding-right: 1rem;
+}
+.kc-phase.open .kc-content {
+  max-height: 1000px;
+}
+.kc-inner {
+  padding: 1rem 0;
+}
+.kc-inner p {
+  font-size: .9rem;
+  color: var(--text);
+  margin-bottom: .75rem;
+}
+.kc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .5rem;
+}
+.kc-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  padding: .15rem .5rem;
+  border-radius: 3px;
+  background: var(--blue-glow);
+  color: var(--blue-light);
+  border: 1px solid var(--border);
+}
+.kc-tag.red {
+  background: var(--red-dim);
+  color: var(--red-accent);
+  border-color: rgba(239,68,68,.2);
+}
+
+/* DEFENSE MATRIX */
+.matrix-scroll {
+  overflow-x: auto;
+  margin: 2rem 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.def-matrix {
+  width: 100%;
+  min-width: 750px;
+  border-collapse: collapse;
+  font-size: .78rem;
+}
+.def-matrix th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: .6rem .5rem;
+  background: rgba(59,130,246,.06);
+  color: var(--blue-light);
+  border-bottom: 1px solid var(--border-bright);
+  text-align: center;
+}
+.def-matrix th:first-child { text-align: left; padding-left: 1rem; }
+.def-matrix td {
+  padding: .5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  color: var(--text);
+  vertical-align: middle;
+}
+.def-matrix td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-bright);
+  padding-left: 1rem;
+  font-size: .8rem;
+}
+.def-matrix tr:hover td { background: rgba(255,255,255,.02); }
+.m-check { color: var(--green); font-weight: 700; }
+.m-none { color: var(--text-dim); }
+
+/* COMPARISON CARDS */
+.comp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px,1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.comp-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  position: relative;
+  overflow: hidden;
+  transition: all .3s;
+}
+.comp-card:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+}
+.comp-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: .25rem;
+}
+.comp-card .comp-year {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+.comp-row {
+  display: flex;
+  justify-content: space-between;
+  padding: .4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .85rem;
+}
+.comp-row:last-child { border-bottom: none; }
+.comp-row .cr-label { color: var(--text-dim); }
+.comp-row .cr-value { color: var(--text-bright); font-weight: 500; text-align: right; }
+
+/* CASE STUDY */
+.case-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.case-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all .3s;
+}
+.case-card:hover {
+  border-color: var(--border-bright);
+}
+.case-card-header {
+  padding: 1rem 1.25rem;
+  background: rgba(59,130,246,.05);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.case-card-header .ccn {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: .8rem;
+  color: var(--blue-primary);
+}
+.case-card-header h4 {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.case-card-body {
+  padding: 1.25rem;
+  font-size: .85rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* PYRAMID OF PAIN INLINE */
+.pyramid-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+.pyramid-levels {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 600px;
+}
+.pyr-level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: .6rem 1rem;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .3s;
+  position: relative;
+}
+.pyr-level:hover { transform: scale(1.03); }
+.pyr-level .pyr-pain {
+  position: absolute;
+  right: -80px;
+  font-size: .65rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+@media (max-width: 700px) { .pyr-level .pyr-pain { display: none; } }
+
+/* STATS */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+}
+.stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  line-height: 1;
+  margin-bottom: .25rem;
+}
+.stat-label {
+  font-size: .8rem;
+  color: var(--text-dim);
+}
+.stat-source {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .6rem;
+  color: var(--text-dim);
+  margin-top: .3rem;
+  opacity: .6;
+}
+
+/* REQS TABLE */
+.reqs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.req-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  transition: all .3s;
+}
+.req-card:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+}
+.req-card h4 {
+  font-size: .85rem;
+  color: var(--blue-light);
+  font-weight: 700;
+  margin-bottom: .25rem;
+}
+.req-card .req-es {
+  font-size: .7rem;
+  color: var(--text-dim);
+  margin-bottom: .5rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.req-card p { font-size: .82rem; color: var(--text); }
+.req-bad { color: var(--red-accent); font-size: .75rem; margin-top: .5rem; }
+.req-good { color: var(--green); font-size: .75rem; margin-top: .3rem; }
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 3rem 2rem;
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+}
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  color: var(--text-dim);
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  padding: .5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.tab-btn.active {
+  background: var(--blue-glow);
+  border-color: var(--blue-primary);
+  color: var(--blue-light);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* INTEGRATION FLOW */
+.int-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.int-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  transition: all .3s;
+}
+.int-step:hover {
+  border-color: var(--border-bright);
+}
+.int-num {
+  width: 36px; height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+  background: var(--blue-glow);
+  border: 1px solid var(--border-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: .8rem;
+  color: var(--blue-light);
+}
+.int-text h4 {
+  font-size: .95rem;
+  color: var(--text-bright);
+  font-weight: 700;
+  margin-bottom: .25rem;
+}
+.int-text p {
+  font-size: .85rem;
+  color: var(--text-dim);
+}
+.int-text code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  background: rgba(59,130,246,.08);
+  padding: .1rem .4rem;
+  border-radius: 3px;
+  color: var(--blue-light);
+}
+
+/* GLOW EFFECTS */
+.glow-box {
+  position: relative;
+}
+.glow-box::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(59,130,246,.15), transparent, rgba(34,211,238,.1));
+  z-index: -1;
+  filter: blur(20px);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.glow-box:hover::after { opacity: 1; }
+
+/* TYPING EFFECT */
+.typing-cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--blue-primary);
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ACCORDION */
+.accordion-item { margin-bottom: .5rem; }
+.accordion-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.accordion-header:hover { border-color: var(--border-bright); }
+.accordion-header.open {
+  border-color: var(--blue-primary);
+  border-radius: 8px 8px 0 0;
+}
+.accordion-chevron {
+  margin-left: auto;
+  transition: transform .3s;
+  color: var(--text-dim);
+  font-size: .8rem;
+}
+.accordion-header.open .accordion-chevron { transform: rotate(180deg); }
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .4s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+.accordion-body-inner {
+  padding: 1.25rem;
+  font-size: .88rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-inner">
+    <div class="nav-brand">CTI<span> // DFIR</span></div>
+    <div class="nav-links">
+      <a href="#tipos">Tipos</a>
+      <a href="#ciclo">Ciclo</a>
+      <a href="#diamond">Diamond</a>
+      <a href="#killchain">Kill Chain</a>
+      <a href="#comparativa">Comparativa</a>
+      <a href="#caso">Caso Práctico</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Semana 5 — Maestría DFIR</div>
+  <h1>Cyber Threat<br><span class="accent">Intelligence</span></h1>
+  <p class="hero-sub">Tipos de CTI, Ciclo de Inteligencia, Diamond Model of Intrusion Analysis y Cyber Kill Chain — marcos analíticos para transformar datos en inteligencia accionable.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="label">Fecha</span> 23/05/2026</div>
+    <div class="hero-meta-item"><span class="label">Enfoque</span> Red Team ↔ Blue Team</div>
+    <div class="hero-meta-item"><span class="label">Módulo</span> Análisis Forense</div>
+  </div>
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+  </div>
+</section>
+
+<!-- QUE ES CTI -->
+<section id="quees">
+  <div class="reveal">
+    <div class="section-label">01 — Fundamentos</div>
+    <h2 class="section-title">¿Qué es la Cyber Threat Intelligence?</h2>
+    <p class="section-desc">Proceso de recopilar, procesar, analizar y diseminar información sobre amenazas cibernéticas para producir <strong style="color:var(--blue-light)">conocimiento accionable</strong> que permita tomar decisiones de seguridad informadas.</p>
+  </div>
+
+  <!-- DATA → INFO → INTEL -->
+  <div class="reveal">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">Dato → Información → Inteligencia</h3>
+    <div class="escalator" id="escalator">
+      <div class="esc-step active" onclick="activateEsc(0)">
+        <div class="esc-label">Nivel 1 — Dato (Raw Data)</div>
+        <div class="esc-title">Sin contexto. No sirve por sí solo.</div>
+        <div class="esc-example">"La IP 185.234.72.15 apareció en un log del firewall."<br>→ Es solo un registro. No podemos actuar con esto.</div>
+      </div>
+      <div class="esc-arrow">▼</div>
+      <div class="esc-step" onclick="activateEsc(1)">
+        <div class="esc-label">Nivel 2 — Información</div>
+        <div class="esc-title">Contexto temporal y de comportamiento.</div>
+        <div class="esc-example">"La IP 185.234.72.15 envió 500 requests a /admin en 5 minutos."<br>→ Ya tiene contexto, pero no sabemos el significado.</div>
+      </div>
+      <div class="esc-arrow">▼</div>
+      <div class="esc-step" onclick="activateEsc(2)">
+        <div class="esc-label">Nivel 3 — Inteligencia</div>
+        <div class="esc-title">Contexto + Atribución + Acción + Relevancia.</div>
+        <div class="esc-example">"La IP pertenece a APT28 (GRU ruso). Targets: defensa LATAM. Explotan CVE-2024-XXXX. Recomendación: bloquear 185.234.72.0/24, parchear el CVE, hunting últimos 30 días."<br>→ Permite tomar una decisión concreta AHORA.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 REQUISITOS -->
+  <div class="reveal" style="margin-top: 3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">Los 5 requisitos de la buena inteligencia</h3>
+    <div class="reqs-grid">
+      <div class="req-card glow-box">
+        <h4>Timely</h4>
+        <div class="req-es">Oportuna</div>
+        <p>Llega a tiempo para poder actuar antes de que sea tarde.</p>
+        <div class="req-bad">✗ IOCs compartidos 3 meses después</div>
+        <div class="req-good">✓ IOCs en las primeras 24 horas</div>
+      </div>
+      <div class="req-card glow-box">
+        <h4>Relevant</h4>
+        <div class="req-es">Relevante</div>
+        <p>Aplica al contexto específico de nuestra organización.</p>
+        <div class="req-bad">✗ Amenazas nucleares para un banco</div>
+        <div class="req-good">✓ Amenazas financieras para un banco</div>
+      </div>
+      <div class="req-card glow-box">
+        <h4>Accurate</h4>
+        <div class="req-es">Precisa</div>
+        <p>Los datos están correctos y verificados contra múltiples fuentes.</p>
+        <div class="req-bad">✗ IP falso positivo → caída de servicio</div>
+        <div class="req-good">✓ IP verificada antes de bloquear</div>
+      </div>
+      <div class="req-card glow-box">
+        <h4>Specific</h4>
+        <div class="req-es">Específica</div>
+        <p>Suficientemente detallada para que se pueda actuar.</p>
+        <div class="req-bad">✗ "Hay amenazas crecientes"</div>
+        <div class="req-good">✓ "APT28 usa CVE-XXXX contra VPNs LATAM"</div>
+      </div>
+      <div class="req-card glow-box">
+        <h4>Actionable</h4>
+        <div class="req-es">Accionable</div>
+        <p>Permite tomar una acción concreta e inmediata.</p>
+        <div class="req-bad">✗ "El panorama es complejo"</div>
+        <div class="req-good">✓ "Bloquear 15 IOCs, parchear 3 CVEs"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="reveal" style="margin-top: 3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">Panorama de amenazas 2025–2026</h3>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">82%</div>
+        <div class="stat-label">Detecciones malware-free</div>
+        <div class="stat-source">CrowdStrike GTR 2026</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">30%</div>
+        <div class="stat-label">Brechas vía terceros (2× vs 2024)</div>
+        <div class="stat-source">Verizon DBIR 2025</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">109</div>
+        <div class="stat-label">Grupos de ransomware activos</div>
+        <div class="stat-source">IBM X-Force 2025/2026</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">194K+</div>
+        <div class="stat-label">Eventos C2 observados (H1 2025)</div>
+        <div class="stat-source">Recorded Future</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPOS DE CTI -->
+<section id="tipos">
+  <div class="reveal">
+    <div class="section-label">02 — Clasificación</div>
+    <h2 class="section-title">Tipos de CTI</h2>
+    <p class="section-desc">La CTI se clasifica en 4 tipos según la audiencia, el nivel de detalle técnico y el horizonte temporal. Cada tipo responde a preguntas diferentes y sirve a personas diferentes dentro de la organización.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="tabs" id="ctiTabs">
+      <button class="tab-btn active" onclick="switchTab('ctiTabs','ctiPanels',0)">Strategic</button>
+      <button class="tab-btn" onclick="switchTab('ctiTabs','ctiPanels',1)">Operational</button>
+      <button class="tab-btn" onclick="switchTab('ctiTabs','ctiPanels',2)">Tactical</button>
+      <button class="tab-btn" onclick="switchTab('ctiTabs','ctiPanels',3)">Technical</button>
+    </div>
+    <div id="ctiPanels">
+      <!-- STRATEGIC -->
+      <div class="tab-panel active">
+        <div class="card" style="border-left:3px solid var(--purple);">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div class="card-icon" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3);">🏛️</div>
+            <div>
+              <h3>Strategic Intelligence</h3>
+              <div class="card-tag">C-Level / Board / CISO</div>
+            </div>
+          </div>
+          <table class="info-table">
+            <tr><td style="color:var(--blue-light);font-weight:600;width:160px;">Pregunta clave</td><td>¿Cuáles son las amenazas más grandes para nuestro negocio en los próximos 12–24 meses? ¿Dónde invertir?</td></tr>
+            <tr><td style="color:var(--blue-light);font-weight:600;">Horizonte</td><td>Meses a años</td></tr>
+            <tr><td style="color:var(--blue-light);font-weight:600;">Nivel técnico</td><td>No técnico — lenguaje de negocio y riesgo</td></tr>
+            <tr><td style="color:var(--blue-light);font-weight:600;">Formato</td><td>Reportes ejecutivos, briefings, presentaciones, risk assessments</td></tr>
+            <tr><td style="color:var(--blue-light);font-weight:600;">Fuentes</td><td>Verizon DBIR, CrowdStrike GTR, IBM X-Force, análisis geopolítico</td></tr>
+          </table>
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+              <span class="terminal-title">ejemplo_strategic.txt</span>
+            </div>
+            <div class="terminal-body">
+              <span class="comment">// Ejemplo: Verizon DBIR 2025</span><br>
+              <span class="string">"Las brechas a través de terceros se duplicaron del 15% al 30%."</span><br><br>
+              <span class="keyword">→ Impacto:</span> Le dice al CISO que necesita invertir en monitoreo de riesgo de proveedores.<br>
+              <span class="keyword">→ Acción:</span> Justifica presupuesto ante el board para vendor risk management.<br><br>
+              <span class="alert">⚠ La inteligencia estratégica NO dice qué IP bloquear.</span><br>
+              <span class="highlight">★ Dice DÓNDE poner el dinero.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- OPERATIONAL -->
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--amber);">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div class="card-icon" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);">🎯</div>
+            <div>
+              <h3>Operational Intelligence</h3>
+              <div class="card-tag">Security Managers / IR Leads / Threat Hunters</div>
+            </div>
+          </div>
+          <table class="info-table">
+            <tr><td style="color:var(--amber);font-weight:600;width:160px;">Pregunta clave</td><td>¿Quién nos está atacando, cómo operan y qué están buscando?</td></tr>
+            <tr><td style="color:var(--amber);font-weight:600;">Horizonte</td><td>Semanas a meses</td></tr>
+            <tr><td style="color:var(--amber);font-weight:600;">Nivel técnico</td><td>Medio — TTPs, campañas, grupos de amenaza</td></tr>
+            <tr><td style="color:var(--amber);font-weight:600;">Formato</td><td>Threat actor profiles, campaign reports, adversary playbooks</td></tr>
+            <tr><td style="color:var(--amber);font-weight:600;">Fuentes</td><td>Investigación de incidentes, dark web, ISACs, MITRE ATT&CK</td></tr>
+          </table>
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+              <span class="terminal-title">ejemplo_operational.txt</span>
+            </div>
+            <div class="terminal-body">
+              <span class="keyword">Grupo:</span> Lazarus (APT38, Corea del Norte)<br>
+              <span class="keyword">Campaña:</span> Exchanges de criptomonedas en LATAM<br>
+              <span class="keyword">Vector:</span> Phishing con .docx → CVE-2023-XXXX<br>
+              <span class="keyword">TTPs:</span> spearphishing → macro → PowerShell → custom RAT → DNS tunneling<br>
+              <span class="keyword">Actividad:</span> <span class="alert">Últimas 6 semanas</span><br><br>
+              <span class="highlight">★ Dice QUIÉN, CÓMO y POR QUÉ.</span><br>
+              <span class="string">→ Permite al equipo de hunting buscar proactivamente los TTPs en la red.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- TACTICAL -->
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--cyan);">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div class="card-icon" style="background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);">🔍</div>
+            <div>
+              <h3>Tactical Intelligence</h3>
+              <div class="card-tag">SOC Analysts L1–L3 / IR / Detection Engineers</div>
+            </div>
+          </div>
+          <table class="info-table">
+            <tr><td style="color:var(--cyan);font-weight:600;width:160px;">Pregunta clave</td><td>¿Qué TTPs específicos están usando y cómo los detectamos?</td></tr>
+            <tr><td style="color:var(--cyan);font-weight:600;">Horizonte</td><td>Días a semanas</td></tr>
+            <tr><td style="color:var(--cyan);font-weight:600;">Nivel técnico</td><td>Alto — técnicas de ataque, reglas de detección, playbooks</td></tr>
+            <tr><td style="color:var(--cyan);font-weight:600;">Formato</td><td>MITRE ATT&CK mappings, detection rules (Sigma, YARA, Snort)</td></tr>
+            <tr><td style="color:var(--cyan);font-weight:600;">Fuentes</td><td>Análisis de malware, sandbox reports, threat hunting findings</td></tr>
+          </table>
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+              <span class="terminal-title">detection_mapping.yaml</span>
+            </div>
+            <div class="terminal-body">
+              <span class="keyword">Ejecución:</span> T1059.001 (PowerShell) con flag <span class="string">-enc</span><br>
+              <span class="keyword">Persistencia:</span> T1547.001 (Registry Run Keys)<br>
+              <span class="keyword">C2:</span> T1071.001 (HTTPS) beacon 300s ±10% jitter<br><br>
+              <span class="prompt">Sigma rule:</span> <span class="string">proc_creation_win_powershell_encoded_cmd</span><br><br>
+              <span class="highlight">★ Dice CÓMO DETECTAR.</span><br>
+              <span class="string">→ Se traduce directamente en reglas, queries y playbooks.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- TECHNICAL -->
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--green);">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+            <div class="card-icon" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);">⚙️</div>
+            <div>
+              <h3>Technical Intelligence</h3>
+              <div class="card-tag">SIEM / EDR / Firewall / IDS — SOC L1</div>
+            </div>
+          </div>
+          <table class="info-table">
+            <tr><td style="color:var(--green);font-weight:600;width:160px;">Pregunta clave</td><td>¿Qué indicadores específicos debo buscar/bloquear ahora?</td></tr>
+            <tr><td style="color:var(--green);font-weight:600;">Horizonte</td><td>Horas a días (los IOCs caducan rápido)</td></tr>
+            <tr><td style="color:var(--green);font-weight:600;">Nivel técnico</td><td>Muy alto — IOCs atómicos</td></tr>
+            <tr><td style="color:var(--green);font-weight:600;">Formato</td><td>Feeds de IOCs (STIX/TAXII), blocklists, YARA rules, hashes</td></tr>
+            <tr><td style="color:var(--green);font-weight:600;">Fuentes</td><td>VirusTotal, AbuseIPDB, MalwareBazaar, ThreatFox, PhishTank</td></tr>
+          </table>
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+              <span class="terminal-title">ioc_feed.stix</span>
+            </div>
+            <div class="terminal-body">
+              <span class="keyword">SHA256:</span> <span class="string">a1b2c3d4e5f6...</span> (payload.exe)<br>
+              <span class="keyword">IP:</span> <span class="string">185.234.72.15</span> (C2)<br>
+              <span class="keyword">Domain:</span> <span class="string">cdn-updates[.]ru</span> (payload delivery)<br>
+              <span class="keyword">URL:</span> <span class="string">hxxps://cdn-updates[.]ru/stage2/beacon.exe</span><br>
+              <span class="keyword">JA3:</span> <span class="string">72a589da586844d7f0818ce684948eea</span> (Cobalt Strike)<br><br>
+              <span class="highlight">★ Es lo que COMEN LAS MÁQUINAS.</span><br>
+              <span class="string">→ Se ingesta automáticamente en las herramientas.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RELACION PIRAMIDAL -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">Jerarquía de los 4 tipos</h3>
+    <div class="card-grid cols-4">
+      <div class="card" style="text-align:center;border-top:3px solid var(--purple);">
+        <div style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--purple);margin-bottom:.5rem;">STRATEGIC</div>
+        <div style="font-size:.8rem;color:var(--text-bright);font-weight:600;">Board / CISO</div>
+        <div style="font-size:.75rem;color:var(--text-dim);margin-top:.3rem;">¿Dónde invertir?</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.3rem;">Horizonte: Años</div>
+        <div style="margin-top:.5rem;font-size:1.2rem;">↓</div>
+        <div style="font-size:.65rem;color:var(--text-dim);">Informa qué amenazas priorizar</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--amber);">
+        <div style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--amber);margin-bottom:.5rem;">OPERATIONAL</div>
+        <div style="font-size:.8rem;color:var(--text-bright);font-weight:600;">Security Managers</div>
+        <div style="font-size:.75rem;color:var(--text-dim);margin-top:.3rem;">¿Quién y cómo?</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.3rem;">Horizonte: Meses</div>
+        <div style="margin-top:.5rem;font-size:1.2rem;">↓</div>
+        <div style="font-size:.65rem;color:var(--text-dim);">Informa qué TTPs buscar</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--cyan);">
+        <div style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--cyan);margin-bottom:.5rem;">TACTICAL</div>
+        <div style="font-size:.8rem;color:var(--text-bright);font-weight:600;">SOC / Detection</div>
+        <div style="font-size:.75rem;color:var(--text-dim);margin-top:.3rem;">¿Cómo detectar?</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.3rem;">Horizonte: Semanas</div>
+        <div style="margin-top:.5rem;font-size:1.2rem;">↓</div>
+        <div style="font-size:.65rem;color:var(--text-dim);">Informa qué IOCs generar</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--green);">
+        <div style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--green);margin-bottom:.5rem;">TECHNICAL</div>
+        <div style="font-size:.8rem;color:var(--text-bright);font-weight:600;">SIEM / Herramientas</div>
+        <div style="font-size:.75rem;color:var(--text-dim);margin-top:.3rem;">¿Qué bloquear?</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.3rem;">Horizonte: Horas</div>
+        <div style="margin-top:.5rem;font-size:1.2rem;">↑</div>
+        <div style="font-size:.65rem;color:var(--text-dim);">Feedback hacia arriba</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CICLO DE INTELIGENCIA -->
+<section id="ciclo">
+  <div class="reveal">
+    <div class="section-label">03 — Proceso</div>
+    <h2 class="section-title">El Ciclo de Inteligencia</h2>
+    <p class="section-desc">Proceso iterativo de 6 fases que transforma datos crudos en inteligencia accionable. No es lineal — es un ciclo continuo donde cada vuelta refina y mejora la inteligencia producida.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="cycle-container">
+      <svg class="cycle-ring" viewBox="0 0 520 520" id="cycleSvg">
+        <!-- Arrows circle -->
+        <circle cx="260" cy="260" r="190" fill="none" stroke="rgba(59,130,246,0.12)" stroke-width="2" stroke-dasharray="8 4"/>
+        <!-- Animated rotating dashes -->
+        <circle cx="260" cy="260" r="190" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="2" stroke-dasharray="30 570" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 260 260" to="360 260 260" dur="12s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Nodes -->
+        <g class="cycle-svg-node" data-idx="0" onclick="selectCycleNode(0)" style="cursor:pointer">
+          <circle cx="260" cy="60" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="260" y="56" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">01</text>
+          <text x="260" y="72" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="9" font-weight="600">Direction</text>
+        </g>
+        <g class="cycle-svg-node" data-idx="1" onclick="selectCycleNode(1)" style="cursor:pointer">
+          <circle cx="448" cy="168" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="448" y="164" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">02</text>
+          <text x="448" y="180" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="9" font-weight="600">Collection</text>
+        </g>
+        <g class="cycle-svg-node" data-idx="2" onclick="selectCycleNode(2)" style="cursor:pointer">
+          <circle cx="448" cy="352" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="448" y="348" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">03</text>
+          <text x="448" y="364" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="9" font-weight="600">Processing</text>
+        </g>
+        <g class="cycle-svg-node" data-idx="3" onclick="selectCycleNode(3)" style="cursor:pointer">
+          <circle cx="260" cy="460" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="260" y="456" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">04</text>
+          <text x="260" y="472" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="9" font-weight="600">Analysis</text>
+        </g>
+        <g class="cycle-svg-node" data-idx="4" onclick="selectCycleNode(4)" style="cursor:pointer">
+          <circle cx="72" cy="352" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="72" y="348" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">05</text>
+          <text x="72" y="364" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="8.5" font-weight="600">Dissemination</text>
+        </g>
+        <g class="cycle-svg-node" data-idx="5" onclick="selectCycleNode(5)" style="cursor:pointer">
+          <circle cx="72" cy="168" r="32" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="72" y="164" text-anchor="middle" fill="#60a5fa" font-family="JetBrains Mono" font-size="11" font-weight="700">06</text>
+          <text x="72" y="180" text-anchor="middle" fill="#c8d6e5" font-family="Outfit" font-size="9" font-weight="600">Feedback</text>
+        </g>
+        <!-- Center label -->
+        <text x="260" y="255" text-anchor="middle" fill="rgba(59,130,246,0.3)" font-family="JetBrains Mono" font-size="11" font-weight="700">CTI</text>
+        <text x="260" y="272" text-anchor="middle" fill="rgba(59,130,246,0.2)" font-family="JetBrains Mono" font-size="8">LIFECYCLE</text>
+      </svg>
+    </div>
+
+    <div class="cycle-detail" id="cycleDetail">
+      <h4>01 — Direction (Requerimientos)</h4>
+      <p>Se definen las preguntas que la inteligencia debe responder. Sin requerimientos claros, el proceso produce ruido en vez de inteligencia.</p>
+      <ul>
+        <li><strong>CISO:</strong> ¿Cuáles son las amenazas más probables para nuestro sector?</li>
+        <li><strong>SOC Manager:</strong> ¿Qué grupos de amenaza están activos contra organizaciones similares?</li>
+        <li><strong>SOC Analyst:</strong> ¿Hay IOCs nuevos asociados a la campaña que investigamos?</li>
+        <li><strong>IR Lead:</strong> ¿Este incidente está relacionado con una campaña conocida?</li>
+        <li><strong>Red Team:</strong> ¿Qué TTPs usan los adversarios reales contra nuestro sector?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- DIAMOND MODEL -->
+<section id="diamond">
+  <div class="reveal">
+    <div class="section-label">04 — Modelo Analítico</div>
+    <h2 class="section-title">Diamond Model of Intrusion Analysis</h2>
+    <p class="section-desc">Creado en 2013 por Caltagirone, Pendergast y Betz para el Departamento de Defensa de EE.UU. Todo evento de intrusión se compone de 4 features fundamentales dispuestos en forma de diamante.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="diamond-container">
+      <svg class="diamond-svg" viewBox="0 0 500 420" id="diamondSvg">
+        <!-- Lines -->
+        <line x1="250" y1="60" x2="80" y2="210" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <line x1="250" y1="60" x2="420" y2="210" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <line x1="80" y1="210" x2="250" y2="360" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <line x1="420" y1="210" x2="250" y2="360" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <line x1="80" y1="210" x2="420" y2="210" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <line x1="250" y1="60" x2="250" y2="360" stroke="rgba(59,130,246,0.2)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <!-- ADVERSARY (top) -->
+        <g class="diamond-vertex" data-v="adversary" onclick="selectDiamondVertex('adversary')">
+          <circle class="dv-circle" cx="250" cy="50" r="36" fill="#0f1520" stroke="#3b82f6" stroke-width="2"/>
+          <text x="250" y="44" text-anchor="middle" fill="#60a5fa" font-size="16">👤</text>
+          <text x="250" y="62" text-anchor="middle" fill="#e8f0fe" font-family="JetBrains Mono" font-size="8" font-weight="600">ADVERSARY</text>
+          <text x="250" y="100" text-anchor="middle" fill="#6b7fa3" font-family="Outfit" font-size="11">¿Quién?</text>
+        </g>
+        <!-- CAPABILITY (left) -->
+        <g class="diamond-vertex" data-v="capability" onclick="selectDiamondVertex('capability')">
+          <circle class="dv-circle" cx="70" cy="210" r="36" fill="#0f1520" stroke="#22d3ee" stroke-width="2"/>
+          <text x="70" y="204" text-anchor="middle" fill="#22d3ee" font-size="16">⚔️</text>
+          <text x="70" y="222" text-anchor="middle" fill="#e8f0fe" font-family="JetBrains Mono" font-size="7.5" font-weight="600">CAPABILITY</text>
+          <text x="10" y="210" text-anchor="start" fill="#6b7fa3" font-family="Outfit" font-size="0">¿Cómo?</text>
+          <text x="70" y="260" text-anchor="middle" fill="#6b7fa3" font-family="Outfit" font-size="11">¿Cómo?</text>
+        </g>
+        <!-- INFRASTRUCTURE (right) -->
+        <g class="diamond-vertex" data-v="infrastructure" onclick="selectDiamondVertex('infrastructure')">
+          <circle class="dv-circle" cx="430" cy="210" r="36" fill="#0f1520" stroke="#f59e0b" stroke-width="2"/>
+          <text x="430" y="204" text-anchor="middle" fill="#f59e0b" font-size="16">🖥️</text>
+          <text x="430" y="222" text-anchor="middle" fill="#e8f0fe" font-family="JetBrains Mono" font-size="7" font-weight="600">INFRASTRUCTURE</text>
+          <text x="430" y="260" text-anchor="middle" fill="#6b7fa3" font-family="Outfit" font-size="11">¿Con qué?</text>
+        </g>
+        <!-- VICTIM (bottom) -->
+        <g class="diamond-vertex" data-v="victim" onclick="selectDiamondVertex('victim')">
+          <circle class="dv-circle" cx="250" cy="360" r="36" fill="#0f1520" stroke="#ef4444" stroke-width="2"/>
+          <text x="250" y="354" text-anchor="middle" fill="#ef4444" font-size="16">🎯</text>
+          <text x="250" y="372" text-anchor="middle" fill="#e8f0fe" font-family="JetBrains Mono" font-size="8" font-weight="600">VICTIM</text>
+          <text x="250" y="408" text-anchor="middle" fill="#6b7fa3" font-family="Outfit" font-size="11">¿A quién?</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="diamond-info" id="diamondInfo">
+      <div class="di-card active" onclick="selectDiamondVertex('adversary')">
+        <h4>👤 Adversary</h4>
+        <p>El actor de amenaza: <strong>Operator</strong> (quien ejecuta) y <strong>Customer</strong> (quien se beneficia). Identidad, motivación, recursos, afiliación.</p>
+        <p style="margin-top:.5rem;color:var(--text-dim);font-size:.75rem;"><em>Ej: APT28 — Operator: GRU Unit 26165. Customer: Gobierno de Rusia. Motivación: Espionaje geopolítico.</em></p>
+      </div>
+      <div class="di-card" onclick="selectDiamondVertex('capability')">
+        <h4>⚔️ Capability</h4>
+        <p>Herramientas, TTPs del ataque. <strong>Capacity</strong> (arsenal completo) vs <strong>Arsenal</strong> (lo usado en este evento).</p>
+        <p style="margin-top:.5rem;color:var(--text-dim);font-size:.75rem;"><em>Ej: X-Agent RAT, Mimikatz, Cobalt Strike. MITRE ATT&CK técnicas específicas.</em></p>
+      </div>
+      <div class="di-card" onclick="selectDiamondVertex('infrastructure')">
+        <h4>🖥️ Infrastructure</h4>
+        <p>Recursos físicos y lógicos: <strong>Type I</strong> (directa), <strong>Type II</strong> (tercero abusado), <strong>Service Provider</strong>.</p>
+        <p style="margin-top:.5rem;color:var(--text-dim);font-size:.75rem;"><em>Ej: VPS en Rusia (Type I), Cloudflare Workers (Type II), Namecheap (Service Provider).</em></p>
+      </div>
+      <div class="di-card" onclick="selectDiamondVertex('victim')">
+        <h4>🎯 Victim</h4>
+        <p><strong>Persona</strong> (identidad pública), <strong>Assets</strong> (IPs, hosts, cuentas), <strong>Vulnerabilities</strong> (CVEs, config débil, factor humano).</p>
+        <p style="margin-top:.5rem;color:var(--text-dim);font-size:.75rem;"><em>Ej: Empresa retail Perú, depto. finanzas, macros habilitadas, DMARC p=none.</em></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 RELACIONES -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">Las 6 relaciones entre vértices</h3>
+    <p style="color:var(--text-dim);margin-bottom:1.5rem;font-size:.92rem;"><strong style="color:var(--blue-light)">El poder del Diamond Model es el pivoting:</strong> conociendo 2–3 vértices, se puede inferir o buscar el cuarto.</p>
+    <div class="matrix-scroll">
+      <table class="info-table" style="min-width:600px;">
+        <thead><tr><th>Relación</th><th>Conecta</th><th>Pregunta que responde</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--blue-light)">Adversary ↔ Capability</td><td>Quién usa qué herramientas</td><td>¿Qué TTPs usa este grupo?</td></tr>
+          <tr><td style="color:var(--blue-light)">Adversary ↔ Infrastructure</td><td>Quién controla qué infra</td><td>¿Qué servidores/dominios usa este grupo?</td></tr>
+          <tr><td style="color:var(--blue-light)">Adversary ↔ Victim</td><td>Quién ataca a quién</td><td>¿Motivación del adversario?</td></tr>
+          <tr><td style="color:var(--blue-light)">Capability ↔ Infrastructure</td><td>Herramientas desde qué infra</td><td>¿Qué malware se descarga desde qué dominio?</td></tr>
+          <tr><td style="color:var(--blue-light)">Capability ↔ Victim</td><td>Técnicas contra quién</td><td>¿Qué exploit se usó contra esta vulnerabilidad?</td></tr>
+          <tr><td style="color:var(--blue-light)">Infrastructure ↔ Victim</td><td>Infra que contactó al victim</td><td>¿Desde qué IP/dominio llegó el ataque?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AXIOMAS -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">7 Axiomas del Diamond Model</h3>
+    <div id="axiomsAccordion">
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-1</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Todo ataque tiene los 4 componentes — siempre</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Para cada intrusión, un adversario toma un paso hacia un objetivo usando una capacidad sobre infraestructura contra un victim. Los 4 vértices están presentes en cada evento, incluso si alguno es desconocido al momento del análisis.</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-2</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">El universo de amenazas es acotable</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Existe un conjunto finito de adversarios que amenazan a un conjunto finito de víctimas. Las amenazas no son infinitas ni impredecibles — se pueden catalogar, priorizar y gestionar.</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-3</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Las capabilities se eligen intencionalmente</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Todo adversario desarrolla y selecciona capabilities para usar contra víctimas específicas. No es aleatorio: el adversario elige herramientas y técnicas basándose en el target.</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-4</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Sin infraestructura no hay ataque</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Todo adversario necesita infraestructura para entregar sus capabilities. Esto es una debilidad explotable: la infraestructura deja huellas, cuesta dinero y puede ser derribada.</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-5</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">La infraestructura es generalmente exclusiva</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Los adversarios usan infraestructura que otros adversarios desconocen (con excepciones como infraestructura compartida). Esto facilita la atribución por análisis de infraestructura.</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-6</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">El adversary es la causa raíz de todos los meta-features</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Existe una relación directa entre el adversario y cada meta-feature del evento (timestamp, phase, result, direction, methodology, resources).</div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--blue-light);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">AX-7</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Los ataques forman patrones agrupables (Activity Threading)</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">Existe un subconjunto de la actividad de cada adversario que se puede agrupar analíticamente. Los ataques no son eventos aislados — forman cadenas (Activity Threads) y grupos (Activity Groups) que revelan campañas completas.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CYBER KILL CHAIN -->
+<section id="killchain">
+  <div class="reveal">
+    <div class="section-label">05 — Modelo de Fases</div>
+    <h2 class="section-title">Cyber Kill Chain</h2>
+    <p class="section-desc">Desarrollada por Lockheed Martin en 2011, adaptada de la doctrina militar. Descompone un ciberataque en 7 fases secuenciales. La premisa: <strong style="color:var(--blue-light)">romper cualquier eslabón detiene el ataque completo.</strong></p>
+  </div>
+
+  <div class="reveal">
+    <div class="kc-timeline">
+      <div class="kc-line"></div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">1</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Reconnaissance</div>
+            <div class="kc-subtitle">Reconocimiento — Recopilación de información sobre el target</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>El atacante recopila información: OSINT, escaneo de infraestructura, emails, identificación de tecnologías, mapeo organizacional. La calidad de esta fase determina el éxito de todo lo demás.</p>
+          <p><strong style="color:var(--text-bright);">Herramientas ofensivas:</strong> theHarvester, Shodan, Maltego, LinkedIn, Google Dorks, Nmap, dnsrecon, FOCA</p>
+          <p><strong style="color:var(--text-bright);">Duración:</strong> Días a semanas (APTs: meses)</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0043</span>
+            <span class="kc-tag">T1595 Active Scanning</span>
+            <span class="kc-tag">T1592 Gather Victim Host Info</span>
+            <span class="kc-tag">T1589 Gather Victim Identity</span>
+            <span class="kc-tag red">🛡️ Detect: Logs de web, analytics</span>
+            <span class="kc-tag red">🛡️ Deny: Firewall, restrict public info</span>
+            <span class="kc-tag red">🛡️ Deceive: Honeypots con info falsa</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">2</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Weaponization</div>
+            <div class="kc-subtitle">Armamento — Desarrollo del payload y preparación de infraestructura</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Genera shellcode, escribe loader, crea documento malicioso, configura C2, prueba contra AV. El atacante combina exploit + backdoor en un deliverable.</p>
+          <p><strong style="color:var(--text-bright);">Herramientas ofensivas:</strong> msfvenom, Cobalt Strike, Sliver, GoPhish, custom loaders, macro builders</p>
+          <div class="kc-tags">
+            <span class="kc-tag">T1587 Develop Capabilities</span>
+            <span class="kc-tag">T1588 Obtain Capabilities</span>
+            <span class="kc-tag">T1584 Compromise Infrastructure</span>
+            <span class="kc-tag red">🛡️ Detect: Threat Intelligence</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">3</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Delivery</div>
+            <div class="kc-subtitle">Entrega — El payload llega al target</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Envío de phishing email, watering hole, USB, explotación de servicios expuestos. Primera interacción directa con la víctima.</p>
+          <p><strong style="color:var(--text-bright);">Estadística:</strong> Según Verizon DBIR 2025, phishing = 16% de accesos iniciales, credenciales robadas = 22%.</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0001 Initial Access</span>
+            <span class="kc-tag">T1566 Spearphishing</span>
+            <span class="kc-tag">T1189 Drive-by Compromise</span>
+            <span class="kc-tag">T1195 Supply Chain</span>
+            <span class="kc-tag red">🛡️ Detect: Email gateway, proxy, IDS</span>
+            <span class="kc-tag red">🛡️ Deny: SPF/DKIM/DMARC, inline AV</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">4</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Exploitation</div>
+            <div class="kc-subtitle">Explotación — El payload se ejecuta en el sistema de la víctima</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Exploit de vulnerabilidad de software, social engineering (usuario habilita macros), configuración débil. El código malicioso cobra vida.</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0002 Execution</span>
+            <span class="kc-tag">T1204 User Execution</span>
+            <span class="kc-tag">T1059 Command & Scripting</span>
+            <span class="kc-tag red">🛡️ Detect: EDR, HIDS, Sysmon</span>
+            <span class="kc-tag red">🛡️ Deny: Patch mgmt, hardening</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">5</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Installation</div>
+            <div class="kc-subtitle">Instalación — Foothold persistente en el sistema</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Instalar backdoor/RAT, crear persistencia (registry, scheduled task, service), mecanismo de sobrevivencia a reinicios.</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0003 Persistence</span>
+            <span class="kc-tag">T1547 Boot/Logon Autostart</span>
+            <span class="kc-tag">T1053 Scheduled Task</span>
+            <span class="kc-tag">T1543 Create/Modify System Process</span>
+            <span class="kc-tag red">🛡️ Detect: Sysmon, EDR</span>
+            <span class="kc-tag red">🛡️ Deny: Application whitelisting</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">6</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Command & Control</div>
+            <div class="kc-subtitle">C2 — Canal cifrado de comunicación con el atacante</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Canal C2 cifrado, beaconing, recepción de comandos. Protocolos comunes: HTTPS, DNS tunneling, SMB named pipes, WebSockets.</p>
+          <p><strong style="color:var(--text-bright);">Estadística:</strong> Según Recorded Future H1 2025, TA0011 (C2) fue la táctica más observada con más de 194,000 eventos.</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0011 Command and Control</span>
+            <span class="kc-tag">T1071 App Layer Protocol</span>
+            <span class="kc-tag">T1573 Encrypted Channel</span>
+            <span class="kc-tag red">🛡️ Detect: NIDS, proxy logs, NDR</span>
+            <span class="kc-tag red">🛡️ Deny: Block C2 IPs/domains</span>
+            <span class="kc-tag red">🛡️ Deceive: Redirect to honeypot</span>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="kc-phase" onclick="toggleKC(this)">
+        <div class="kc-num">7</div>
+        <div class="kc-header">
+          <div>
+            <div class="kc-title">Actions on Objectives</div>
+            <div class="kc-subtitle">Acciones sobre Objetivos — La misión real del atacante</div>
+          </div>
+        </div>
+        <div class="kc-content"><div class="kc-inner">
+          <p>Exfiltrar datos, cifrar archivos (ransomware), destruir datos (wiper), minar crypto, espiar comunicaciones, movimiento lateral. Lo que el atacante vino a hacer.</p>
+          <p><strong style="color:var(--text-bright);">Dwell time promedio:</strong> ~26 días en Américas (IBM X-Force 2025).</p>
+          <div class="kc-tags">
+            <span class="kc-tag">TA0009 Collection</span>
+            <span class="kc-tag">TA0010 Exfiltration</span>
+            <span class="kc-tag">TA0040 Impact</span>
+            <span class="kc-tag red">🛡️ Detect: DLP, UEBA, audit logs</span>
+            <span class="kc-tag red">🛡️ Deny: ACLs, least privilege</span>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIMITACIONES -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">Limitaciones del modelo</h3>
+    <div class="card-grid cols-2">
+      <div class="card">
+        <h3 style="color:var(--amber);font-size:.95rem;">⚠ Linealidad</h3>
+        <p>Asume que los ataques progresan en orden. Los ataques reales son no lineales: saltan fases, retroceden, bifurcan.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--amber);font-size:.95rem;">⚠ Foco en perímetro</h3>
+        <p>Diseñado para ataques externos. Débil para insider threats, credential abuse, cloud-native attacks.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--amber);font-size:.95rem;">⚠ Post-explotación limitada</h3>
+        <p>Las fases 5–7 agrupan demasiada actividad. MITRE ATT&CK tiene 14 tácticas vs 3 fases post-explotación del Kill Chain.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--amber);font-size:.95rem;">⚠ Sin cobertura cloud</h3>
+        <p>Creado en 2011, antes de la adopción masiva de cloud. No aborda ataques a SaaS, serverless, contenedores.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARATIVA -->
+<section id="comparativa">
+  <div class="reveal">
+    <div class="section-label">06 — Análisis Comparativo</div>
+    <h2 class="section-title">Comparativa de Frameworks</h2>
+    <p class="section-desc">Los tres frameworks no compiten — se complementan. Un SOC maduro los usa juntos.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="comp-grid">
+      <div class="comp-card" style="border-top:3px solid var(--blue-primary);">
+        <h3>Cyber Kill Chain</h3>
+        <div class="comp-year">Lockheed Martin — 2011</div>
+        <div class="comp-row"><span class="cr-label">Enfoque</span><span class="cr-value">Progresión temporal</span></div>
+        <div class="comp-row"><span class="cr-label">Estructura</span><span class="cr-value">7 fases lineales</span></div>
+        <div class="comp-row"><span class="cr-label">Fortaleza</span><span class="cr-value">Comunicar a no-técnicos</span></div>
+        <div class="comp-row"><span class="cr-label">Debilidad</span><span class="cr-value">Lineal, falta post-exploit</span></div>
+        <div class="comp-row"><span class="cr-label">Mejor para</span><span class="cr-value">Planificar defensas por fase</span></div>
+        <div class="comp-row"><span class="cr-label">Actualización</span><span class="cr-value" style="color:var(--red-accent);">Estático (2011)</span></div>
+      </div>
+      <div class="comp-card" style="border-top:3px solid var(--cyan);">
+        <h3>Diamond Model</h3>
+        <div class="comp-year">Caltagirone et al. / DoD — 2013</div>
+        <div class="comp-row"><span class="cr-label">Enfoque</span><span class="cr-value">Relaciones del ataque</span></div>
+        <div class="comp-row"><span class="cr-label">Estructura</span><span class="cr-value">4 vértices + relaciones</span></div>
+        <div class="comp-row"><span class="cr-label">Fortaleza</span><span class="cr-value">Attribution, pivoting</span></div>
+        <div class="comp-row"><span class="cr-label">Debilidad</span><span class="cr-value">No prescribe detecciones</span></div>
+        <div class="comp-row"><span class="cr-label">Mejor para</span><span class="cr-value">CTI analysis, profiling</span></div>
+        <div class="comp-row"><span class="cr-label">Actualización</span><span class="cr-value" style="color:var(--red-accent);">Estático (2013)</span></div>
+      </div>
+      <div class="comp-card" style="border-top:3px solid var(--green);">
+        <h3>MITRE ATT&CK</h3>
+        <div class="comp-year">MITRE Corporation — 2013+</div>
+        <div class="comp-row"><span class="cr-label">Enfoque</span><span class="cr-value">Catálogo de TTPs</span></div>
+        <div class="comp-row"><span class="cr-label">Estructura</span><span class="cr-value">14 tácticas × cientos de técnicas</span></div>
+        <div class="comp-row"><span class="cr-label">Fortaleza</span><span class="cr-value">Granularidad, detection eng.</span></div>
+        <div class="comp-row"><span class="cr-label">Debilidad</span><span class="cr-value">Overwhelming por tamaño</span></div>
+        <div class="comp-row"><span class="cr-label">Mejor para</span><span class="cr-value">SOC ops, detection rules</span></div>
+        <div class="comp-row"><span class="cr-label">Actualización</span><span class="cr-value" style="color:var(--green);">Múltiples/año ✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATION FLOW -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">Integración en la práctica — Flujo de trabajo de un SOC maduro</h3>
+    <div class="int-flow">
+      <div class="int-step">
+        <div class="int-num">1</div>
+        <div class="int-text">
+          <h4>Cyber Kill Chain → ¿En qué fase estamos?</h4>
+          <p>"Detectamos la fase de <code>Delivery</code> — un phishing pasó el gateway."</p>
+        </div>
+      </div>
+      <div class="int-step">
+        <div class="int-num">2</div>
+        <div class="int-text">
+          <h4>Diamond Model → ¿Quién, cómo, desde dónde, contra quién?</h4>
+          <p>Adversary: desconocido. Capability: <code>.docm + macro + PowerShell</code>. Infrastructure: <code>billing-service[.]xyz</code>. Victim: depto. de finanzas.</p>
+        </div>
+      </div>
+      <div class="int-step">
+        <div class="int-num">3</div>
+        <div class="int-text">
+          <h4>MITRE ATT&CK → ¿Qué TTPs exactos? ¿Qué detectar?</h4>
+          <p><code>T1566.001 → T1204.002 → T1059.001 → T1547.001 → T1071.001</code> → Reglas Sigma para cada técnica.</p>
+        </div>
+      </div>
+      <div class="int-step">
+        <div class="int-num">4</div>
+        <div class="int-text">
+          <h4>Pyramid of Pain → ¿Qué IOCs bloquear y cuál es su valor?</h4>
+          <p>Hash del .docm (<code>trivial</code>), IP del C2 (<code>easy</code>), dominio (<code>simple</code>), pero el TTP macro→PS→beacon es nivel 6 (<code style="color:var(--red-accent)">devastating</code>).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASO PRÁCTICO -->
+<section id="caso">
+  <div class="reveal">
+    <div class="section-label">07 — Caso Práctico Integrado</div>
+    <h2 class="section-title">Análisis de una Campaña Real</h2>
+    <p class="section-desc">Escenario: se detectan 5 emails de phishing dirigidos a empleados de finanzas de 3 empresas del sector retail en Perú durante la misma semana.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="terminal" style="margin-bottom:2rem;">
+      <div class="terminal-header">
+        <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+        <span class="terminal-title">diamond_analysis_FIN7.log</span>
+      </div>
+      <div class="terminal-body">
+        <span class="keyword">ADVERSARY:</span> <span class="string">FIN7</span> (alta confianza)<br>
+        &nbsp;&nbsp;→ Motivación: Financiera (robo de datos de tarjetas POS)<br>
+        &nbsp;&nbsp;→ Historial: Ataques a retail/hospitality en Américas<br><br>
+        <span class="keyword">CAPABILITY:</span><br>
+        &nbsp;&nbsp;→ T1566.001 (Spearphishing Attachment)<br>
+        &nbsp;&nbsp;→ T1059.001 (PowerShell encoded)<br>
+        &nbsp;&nbsp;→ T1547.001 + T1053.005 (Dual persistence)<br>
+        &nbsp;&nbsp;→ Cobalt Strike (JA3 matches known CS beacon)<br>
+        &nbsp;&nbsp;→ T1003.001 (LSASS credential dump)<br><br>
+        <span class="keyword">INFRASTRUCTURE:</span><br>
+        &nbsp;&nbsp;→ Type I: <span class="string">proveedor-xxx[.]com</span> (5 días de edad, Namecheap)<br>
+        &nbsp;&nbsp;→ Type I: <span class="string">45.67.89[.]10</span> (VPS, bulletproof hosting)<br>
+        &nbsp;&nbsp;→ Service Provider: Let's Encrypt (cert SSL)<br><br>
+        <span class="keyword">VICTIM:</span><br>
+        &nbsp;&nbsp;→ 3 empresas retail en Perú<br>
+        &nbsp;&nbsp;→ Targets: departamentos de finanzas<br>
+        &nbsp;&nbsp;→ Vulnerability: <span class="alert">DMARC p=none</span>, macros habilitadas
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">Análisis con Cyber Kill Chain</h3>
+    <div class="matrix-scroll">
+      <table class="info-table" style="min-width:600px;">
+        <thead><tr><th>Fase</th><th>Evidencia observada</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--blue-light)">Reconnaissance</td><td>Targets con acceso a sistemas de pago. LinkedIn OSINT probable.</td></tr>
+          <tr><td style="color:var(--blue-light)">Weaponization</td><td>.docm con macro VBA → PowerShell encoded. Payload: Cobalt Strike beacon.</td></tr>
+          <tr><td style="color:var(--blue-light)">Delivery</td><td>Spearphishing desde facturacion@proveedor-xxx[.]com (dominio 5 días).</td></tr>
+          <tr><td style="color:var(--blue-light)">Exploitation</td><td>Macro ejecutada al habilitar contenido.</td></tr>
+          <tr><td style="color:var(--blue-light)">Installation</td><td>Registry Run key HKCU\...\Run\OfficeSvc + Scheduled Task.</td></tr>
+          <tr><td style="color:var(--blue-light)">C2</td><td>HTTPS beacon a 45.67.89[.]10:443. Interval: 300s, jitter: 15%.</td></tr>
+          <tr><td style="color:var(--blue-light)">Actions</td><td>Mimikatz credential dump → lateral movement a servidor POS.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1rem;">Recomendaciones por nivel de inteligencia</h3>
+    <div class="card-grid cols-2">
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <h3 style="font-size:.95rem;">Strategic</h3>
+        <p>FIN7 está activamente atacando el sector retail en LATAM. Se requiere inversión en email security y segmentación de red POS.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber);">
+        <h3 style="font-size:.95rem;">Operational</h3>
+        <p>Hunting en los últimos 30 días buscando los TTPs de FIN7. Revisión de configuraciones DMARC de todos los dominios.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--cyan);">
+        <h3 style="font-size:.95rem;">Tactical</h3>
+        <p>Reglas Sigma para T1059.001 (PowerShell encoded) + T1547.001 (Registry Run). Snort rule para JA3 de Cobalt Strike.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);">
+        <h3 style="font-size:.95rem;">Technical</h3>
+        <p>Bloquear IOCs en SIEM/firewall/proxy. Compartir IOCs con el ISAC del sector retail.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCES -->
+<section id="refs">
+  <div class="reveal">
+    <div class="section-label">08 — Referencias</div>
+    <h2 class="section-title">Fuentes y herramientas</h2>
+  </div>
+  <div class="reveal">
+    <div class="card-grid cols-2">
+      <div class="card">
+        <h3 style="font-size:.95rem;margin-bottom:.75rem;">Documentos fundacionales</h3>
+        <div style="font-size:.82rem;color:var(--text);line-height:1.8;">
+          <div>› Hutchins, Cloppert, Amin — <em>Intelligence-Driven Computer Network Defense</em> (2011)</div>
+          <div>› Caltagirone, Pendergast, Betz — <em>The Diamond Model of Intrusion Analysis</em> (2013)</div>
+          <div>› MITRE Corporation — <em>ATT&CK Framework</em> (2013+)</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.95rem;margin-bottom:.75rem;">Reportes de inteligencia citados</h3>
+        <div style="font-size:.82rem;color:var(--text);line-height:1.8;">
+          <div>› Verizon DBIR 2025 — Brechas por terceros 15%→30%</div>
+          <div>› CrowdStrike GTR 2026 — 82% detecciones malware-free</div>
+          <div>› IBM X-Force 2025/2026 — 109 grupos ransomware activos</div>
+          <div>› Recorded Future H1 2025 — C2 táctica más observada</div>
+          <div>› ANY.RUN Malware Trends 2025 — Stealers/RATs ×3</div>
+        </div>
+      </div>
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3 style="font-size:.95rem;margin-bottom:.75rem;">Herramientas de CTI</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+          <span class="kc-tag">MISP</span>
+          <span class="kc-tag">OpenCTI</span>
+          <span class="kc-tag">MITRE ATT&CK Navigator</span>
+          <span class="kc-tag">Recorded Future</span>
+          <span class="kc-tag">Mandiant</span>
+          <span class="kc-tag">CrowdStrike</span>
+          <span class="kc-tag">AlienVault OTX</span>
+          <span class="kc-tag">MalwareBazaar</span>
+          <span class="kc-tag">ThreatFox</span>
+          <span class="kc-tag">URLhaus</span>
+          <span class="kc-tag">VirusTotal</span>
+          <span class="kc-tag">AbuseIPDB</span>
+          <span class="kc-tag">Shodan</span>
+          <span class="kc-tag">PhishTank</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>DFIR — Maestría en Ciberseguridad — Semana 5 — CTI, Diamond Model & Cyber Kill Chain</p>
+</footer>
+
+<script>
+// Nav scroll effect
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Reveal on scroll
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// Escalator
+function activateEsc(idx) {
+  document.querySelectorAll('.esc-step').forEach((s, i) => s.classList.toggle('active', i === idx));
+}
+
+// Tabs
+function switchTab(tabsId, panelsId, idx) {
+  document.querySelectorAll(`#${tabsId} .tab-btn`).forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll(`#${panelsId} .tab-panel`).forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+// Cycle nodes
+const cycleData = [
+  { title: '01 — Direction (Requerimientos)', desc: 'Se definen las preguntas que la inteligencia debe responder. Sin requerimientos claros, el proceso produce ruido en vez de inteligencia.', items: ['CISO: ¿Cuáles son las amenazas más probables para nuestro sector?', 'SOC Manager: ¿Qué grupos de amenaza están activos contra organizaciones similares?', 'SOC Analyst: ¿Hay IOCs nuevos asociados a la campaña que investigamos?', 'IR Lead: ¿Este incidente está relacionado con una campaña conocida?', 'Red Team: ¿Qué TTPs usan los adversarios reales contra nuestro sector?'] },
+  { title: '02 — Collection (Recolección)', desc: 'Recopilación de datos crudos de múltiples fuentes para responder las preguntas definidas.', items: ['OSINT: VirusTotal, AbuseIPDB, Shodan, URLScan.io, PhishTank', 'HUMINT: Contactos en la industria, ISACs, law enforcement', 'SIGINT: Logs de firewall, IDS/IPS, proxy, DNS, EDR, SIEM', 'Dark Web: Foros underground, paste sites, Telegram', 'Vendor feeds: CrowdStrike, Mandiant, Recorded Future', 'Government: CISA, FBI, CERTs nacionales', 'Community: MISP, OTX, ThreatFox, MalwareBazaar'] },
+  { title: '03 — Processing (Procesamiento)', desc: 'Datos crudos se normalizan, des-duplican, enriquecen y estructuran para ser analizables.', items: ['Normalización: formatos a STIX 2.1', 'De-duplicación: eliminar IOCs repetidos', 'Enriquecimiento: WHOIS, geolocalización, ASN, reputación', 'Correlación: vincular datos de distintas fuentes', 'Filtrado: eliminar falsos positivos conocidos'] },
+  { title: '04 — Analysis (Análisis)', desc: 'Interpretación de datos procesados para producir inteligencia. Aquí se usan Diamond Model, Kill Chain y MITRE ATT&CK.', items: ['SATs: Analysis of Competing Hypotheses, Devil\'s Advocacy', 'Pattern analysis: patrones en TTPs e infraestructura', 'Attribution: vincular actividad a un grupo conocido', 'Trend analysis: tendencias emergentes en vectores y sectores'] },
+  { title: '05 — Dissemination (Diseminación)', desc: 'La inteligencia se entrega a la audiencia correcta, en el formato correcto, en el momento correcto.', items: ['Board/CISO: Executive brief 1–2 páginas', 'SOC analysts: IOC feed (STIX/TAXII), Sigma rules', 'Herramientas: feeds automatizados de IOCs vía API', 'Comunidad: IOC sharing via MISP, OTX, ISACs'] },
+  { title: '06 — Feedback (Retroalimentación)', desc: 'Los consumidores evalúan si la inteligencia fue útil, oportuna, relevante y accionable. Refina el ciclo.', items: ['¿Respondió las preguntas planteadas?', '¿Llegó a tiempo para actuar?', '¿Los IOCs fueron precisos (falsos positivos)?', '¿Las reglas de detección generaron alertas útiles?', '¿Qué nuevas preguntas surgieron?'] }
+];
+
+function selectCycleNode(idx) {
+  const detail = document.getElementById('cycleDetail');
+  const d = cycleData[idx];
+  detail.innerHTML = `<h4>${d.title}</h4><p>${d.desc}</p><ul>${d.items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+  document.querySelectorAll('.cycle-svg-node circle').forEach((c, i) => {
+    if (i === idx) {
+      c.setAttribute('fill', '#1e40af');
+      c.setAttribute('stroke-width', '3');
+    } else {
+      c.setAttribute('fill', '#0f1520');
+      c.setAttribute('stroke-width', '2');
+    }
+  });
+}
+
+// Diamond
+function selectDiamondVertex(v) {
+  const cards = document.querySelectorAll('.di-card');
+  const map = ['adversary','capability','infrastructure','victim'];
+  cards.forEach((c, i) => c.classList.toggle('active', map[i] === v));
+}
+
+// Kill Chain accordion
+function toggleKC(el) {
+  el.classList.toggle('open');
+}
+
+// Accordion
+function toggleAccordion(header) {
+  const isOpen = header.classList.contains('open');
+  // close all
+  document.querySelectorAll('.accordion-header').forEach(h => {
+    h.classList.remove('open');
+    h.nextElementSibling.style.maxHeight = '0';
+  });
+  if (!isOpen) {
+    header.classList.add('open');
+    const body = header.nextElementSibling;
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+
+// Auto-cycle through cycle nodes for visual effect
+let cycleIdx = 0;
+setInterval(() => {
+  if (!document.hidden) {
+    // only auto-advance if user hasn't interacted recently
+  }
+}, 5000);
+</script>
+
+</body>
+</html>

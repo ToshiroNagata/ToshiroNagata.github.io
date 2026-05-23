@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat Hunting — YARA, Sigma & OSQuery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e17;--bg-card:#0f1520;--bg-card-hover:#141c2b;--border:#1a2540;--border-bright:#243560;--blue-primary:#3b82f6;--blue-light:#60a5fa;--blue-dark:#1e40af;--blue-glow:rgba(59,130,246,.15);--cyan:#22d3ee;--cyan-dim:rgba(34,211,238,.6);--text:#c8d6e5;--text-bright:#e8f0fe;--text-dim:#6b7fa3;--red:#ef4444;--red-dim:rgba(239,68,68,.15);--amber:#f59e0b;--green:#10b981;--purple:#8b5cf6;--green-dim:rgba(16,185,129,.15);--amber-dim:rgba(245,158,11,.15);--purple-dim:rgba(139,92,246,.15)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;line-height:1.7;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--blue-primary)}
+.grid-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);background-size:60px 60px}
+.scanline{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,14,23,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;transition:box-shadow .3s}
+nav.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.5)}
+.nav-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-brand{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.9rem;color:var(--blue-light);letter-spacing:2px}
+.nav-brand span{color:var(--text-dim)}
+.nav-links{display:flex;gap:1.5rem}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:.8rem;font-weight:500;letter-spacing:.5px;transition:color .2s;font-family:'JetBrains Mono',monospace}
+.nav-links a:hover{color:var(--blue-light)}
+@media(max-width:900px){.nav-links{display:none}}
+
+main{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 2rem}
+section{padding:6rem 0}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:3px;text-transform:uppercase;color:var(--blue-primary);margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem}
+.section-label::before{content:'';width:30px;height:1px;background:var(--blue-primary)}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;color:var(--text-bright);margin-bottom:1.5rem;line-height:1.15}
+.section-desc{font-size:1.05rem;color:var(--text-dim);max-width:800px;margin-bottom:3rem}
+
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:56px;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:var(--blue-glow);border:1px solid var(--border-bright);border-radius:100px;padding:.4rem 1.2rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--blue-light);margin-bottom:2rem;animation:fadeSlideUp .8s ease}
+.hero-badge .dot{width:6px;height:6px;background:var(--blue-primary);border-radius:50%;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.5)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(59,130,246,0)}}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;color:var(--text-bright);line-height:1.1;margin-bottom:1.5rem;animation:fadeSlideUp .8s ease .1s both}
+.hero h1 .accent{color:var(--blue-primary)}
+.hero-sub{font-size:1.15rem;color:var(--text-dim);max-width:700px;animation:fadeSlideUp .8s ease .2s both;margin-bottom:2.5rem}
+.hero-meta{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;animation:fadeSlideUp .8s ease .3s both}
+.hero-meta-item{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text-dim);display:flex;align-items:center;gap:.4rem}
+.hero-meta-item .label{color:var(--blue-light)}
+.scroll-indicator{position:absolute;bottom:3rem;animation:float 3s ease-in-out infinite}
+.scroll-indicator svg{width:24px;height:24px;stroke:var(--text-dim)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* TERMINAL */
+.terminal{background:#080c14;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:1.5rem 0}
+.terminal-header{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+.terminal-dot{width:10px;height:10px;border-radius:50%}.terminal-dot.r{background:#ef4444}.terminal-dot.y{background:#f59e0b}.terminal-dot.g{background:#10b981}
+.terminal-title{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim);margin-left:.5rem}
+.terminal-body{padding:1.25rem 1.5rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.8;color:var(--text);overflow-x:auto;white-space:pre-wrap}
+.terminal-body .prompt{color:var(--blue-light)}.terminal-body .comment{color:var(--text-dim);font-style:italic}.terminal-body .string{color:var(--green)}.terminal-body .keyword{color:var(--cyan)}.terminal-body .alert{color:var(--red)}.terminal-body .highlight{color:var(--amber)}
+
+/* CARDS */
+.card-grid{display:grid;gap:1.5rem}
+.card-grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card-grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card-grid.cols-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card-grid.cols-5{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.75rem;transition:all .3s ease;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue-primary),var(--cyan));opacity:0;transition:opacity .3s}
+.card:hover{border-color:var(--border-bright);background:var(--bg-card-hover);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.card:hover::before{opacity:1}
+.card h3{font-size:1.05rem;font-weight:700;color:var(--text-bright);margin-bottom:.5rem}
+.card p{font-size:.88rem;color:var(--text-dim);line-height:1.6}
+.card-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.2rem .6rem;border-radius:4px;background:var(--blue-glow);color:var(--blue-light);border:1px solid var(--border-bright);margin-top:.5rem;margin-right:.3rem}
+
+/* TABLE */
+.info-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.85rem}
+.info-table th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--blue-light);padding:.7rem 1rem;border-bottom:1px solid var(--border-bright);background:rgba(59,130,246,.05)}
+.info-table td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+.info-table tr:hover td{background:rgba(255,255,255,.02)}
+.matrix-scroll{overflow-x:auto;margin:1.5rem 0;border:1px solid var(--border);border-radius:10px}
+
+/* TABS */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab-btn{font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:.5rem 1rem;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s}
+.tab-btn:hover{border-color:var(--border-bright);color:var(--text)}
+.tab-btn.active{background:var(--blue-glow);border-color:var(--blue-primary);color:var(--blue-light)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ACCORDION */
+.accordion-item{margin-bottom:.5rem}
+.accordion-header{display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;width:100%;text-align:left;color:inherit;font:inherit}
+.accordion-header:hover{border-color:var(--border-bright)}
+.accordion-header.open{border-color:var(--blue-primary);border-radius:8px 8px 0 0}
+.accordion-chevron{margin-left:auto;transition:transform .3s;color:var(--text-dim);font-size:.8rem}
+.accordion-header.open .accordion-chevron{transform:rotate(180deg)}
+.accordion-body{max-height:0;overflow:hidden;transition:max-height .4s ease;background:var(--bg-card);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
+.accordion-body-inner{padding:1.25rem;font-size:.85rem;color:var(--text);line-height:1.7}
+
+/* HMM LEVELS */
+.hmm-bar{display:flex;flex-direction:column;gap:4px;margin:2rem 0}
+.hmm-level{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all .3s}
+.hmm-level:hover{border-color:var(--border-bright);transform:translateX(4px)}
+.hmm-level.active{border-color:var(--blue-primary);background:var(--bg-card-hover)}
+.hmm-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:2px solid var(--border-bright);transition:all .3s}
+.hmm-level.active .hmm-num{border-color:var(--blue-primary);background:var(--blue-glow);color:var(--blue-light)}
+.hmm-text h4{font-size:.95rem;color:var(--text-bright);font-weight:700}
+.hmm-text p{font-size:.82rem;color:var(--text-dim);margin-top:.15rem}
+.hmm-fill{height:4px;border-radius:2px;background:var(--border);margin-top:.5rem;overflow:hidden;position:relative}
+.hmm-fill-inner{height:100%;border-radius:2px;transition:width .6s ease}
+.hmm-detail{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:10px;padding:1.5rem;margin-top:1rem;min-height:60px;transition:all .3s}
+.hmm-detail p{font-size:.9rem;color:var(--text)}
+
+/* HUNT STEPS */
+.hunt-steps{display:flex;flex-direction:column;gap:0;margin:2rem 0;position:relative}
+.hunt-steps::before{content:'';position:absolute;left:23px;top:24px;bottom:24px;width:2px;background:linear-gradient(to bottom,var(--blue-primary),var(--cyan))}
+.hunt-step{display:flex;gap:1.25rem;align-items:flex-start;padding:1rem 0;position:relative;z-index:1}
+.hunt-step-num{width:48px;height:48px;min-width:48px;border-radius:50%;background:var(--bg-card);border:2px solid var(--blue-primary);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.9rem;color:var(--blue-light)}
+.hunt-step-content h4{font-size:1rem;color:var(--text-bright);font-weight:700;margin-bottom:.25rem}
+.hunt-step-content p{font-size:.88rem;color:var(--text-dim)}
+.hunt-step-content ul{list-style:none;margin-top:.5rem}
+.hunt-step-content ul li{padding:.2rem 0;padding-left:1rem;position:relative;font-size:.82rem;color:var(--text)}
+.hunt-step-content ul li::before{content:'→';position:absolute;left:0;color:var(--blue-primary)}
+
+/* TOOL DOMAINS */
+.domains-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:2rem 0}
+.domain-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;transition:all .3s}
+.domain-card:hover{border-color:var(--border-bright);transform:translateY(-3px)}
+.domain-icon{font-size:2rem;margin-bottom:.75rem}
+.domain-card h4{font-size:.95rem;color:var(--text-bright);font-weight:700;margin-bottom:.25rem}
+.domain-card .domain-tool{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--blue-light);margin-bottom:.5rem}
+.domain-card p{font-size:.8rem;color:var(--text-dim)}
+
+/* CODE BLOCKS */
+.code-block{background:#080c14;border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:1.8;color:var(--text);overflow-x:auto;margin:1rem 0;white-space:pre-wrap;word-break:break-all}
+.code-block .kw{color:var(--cyan)}.code-block .str{color:var(--green)}.code-block .cm{color:var(--text-dim)}.code-block .fn{color:var(--amber)}.code-block .al{color:var(--red)}
+
+/* KCH EXPANDABLE */
+.kc-phase{position:relative;padding-left:72px;margin-bottom:1.5rem;cursor:pointer}
+.kc-line-v{position:absolute;top:0;bottom:0;left:28px;width:2px;background:linear-gradient(to bottom,var(--blue-primary),var(--cyan),var(--blue-dark))}
+.kc-num{position:absolute;left:8px;top:0;width:42px;height:42px;border-radius:50%;background:var(--bg-card);border:2px solid var(--blue-primary);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.85rem;color:var(--blue-light);z-index:2;transition:all .3s}
+.kc-phase:hover .kc-num,.kc-phase.open .kc-num{background:var(--blue-primary);color:#fff;box-shadow:0 0 20px rgba(59,130,246,.4)}
+.kc-title{font-size:1.05rem;font-weight:700;color:var(--text-bright);transition:color .2s}
+.kc-phase:hover .kc-title{color:var(--blue-light)}
+.kc-subtitle{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim)}
+.kc-content{max-height:0;overflow:hidden;transition:max-height .5s ease}
+.kc-phase.open .kc-content{max-height:2000px}
+.kc-inner{padding:1rem 0}
+.kc-inner p{font-size:.88rem;color:var(--text);margin-bottom:.5rem}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:2rem 0}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;text-align:center}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;color:var(--blue-light);line-height:1;margin-bottom:.25rem}
+.stat-label{font-size:.8rem;color:var(--text-dim)}
+.stat-source{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);margin-top:.3rem;opacity:.6}
+
+/* INTEGRATION FLOW */
+.int-flow{display:flex;flex-direction:column;gap:1rem;margin:2rem 0}
+.int-step{display:flex;gap:1rem;align-items:flex-start;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;transition:all .3s}
+.int-step:hover{border-color:var(--border-bright)}
+.int-num{width:36px;height:36px;min-width:36px;border-radius:8px;background:var(--blue-glow);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;color:var(--blue-light)}
+.int-text h4{font-size:.95rem;color:var(--text-bright);font-weight:700;margin-bottom:.25rem}
+.int-text p{font-size:.85rem;color:var(--text-dim)}
+.int-text code{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:rgba(59,130,246,.08);padding:.1rem .4rem;border-radius:3px;color:var(--blue-light)}
+
+/* GLOW */
+.glow-box{position:relative}
+.glow-box::after{content:'';position:absolute;inset:-1px;border-radius:inherit;background:linear-gradient(135deg,rgba(59,130,246,.15),transparent,rgba(34,211,238,.1));z-index:-1;filter:blur(20px);opacity:0;transition:opacity .4s}
+.glow-box:hover::after{opacity:1}
+
+footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--border);margin-top:4rem}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim)}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<nav id="mainNav">
+  <div class="nav-inner">
+    <div class="nav-brand">HUNT<span> // DFIR</span></div>
+    <div class="nav-links">
+      <a href="#quees">Concepto</a>
+      <a href="#metodos">Metodologías</a>
+      <a href="#yara">YARA</a>
+      <a href="#sigma">Sigma</a>
+      <a href="#osquery">OSQuery</a>
+      <a href="#integracion">Integración</a>
+      <a href="#caso">Caso Práctico</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ████ HERO ████ -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Semana 5 — Maestría DFIR</div>
+  <h1>Threat<br><span class="accent">Hunting</span></h1>
+  <p class="hero-sub">Concepto, metodologías y herramientas operativas — YARA, Sigma y OSQuery — para la búsqueda proactiva de amenazas que evadieron los controles automatizados.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span class="label">Fecha</span> 23/05/2026</div>
+    <div class="hero-meta-item"><span class="label">Enfoque</span> Red Team ↔ Blue Team</div>
+    <div class="hero-meta-item"><span class="label">Módulo</span> Análisis Forense</div>
+  </div>
+  <div class="scroll-indicator"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg></div>
+</section>
+
+<!-- ████ QUE ES THREAT HUNTING ████ -->
+<section id="quees">
+  <div class="reveal">
+    <div class="section-label">01 — Fundamentos</div>
+    <h2 class="section-title">¿Qué es Threat Hunting?</h2>
+    <p class="section-desc">La búsqueda <strong style="color:var(--blue-light)">proactiva, iterativa y humano-dirigida</strong> de amenazas que han evadido los controles de seguridad automatizados (SIEM, EDR, IDS/IPS). Se parte de la hipótesis de que el atacante <strong style="color:var(--red)">ya está dentro</strong> de la red.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="card" style="border-left:3px solid var(--cyan);margin-bottom:2rem;">
+      <h3 style="color:var(--cyan);font-size:.95rem;">🔦 Analogía</h3>
+      <p>Si el SIEM/EDR es la <strong>alarma de la casa</strong> y el IDS es la <strong>cerradura</strong>, el threat hunting es el <strong style="color:var(--blue-light)">guardia de seguridad que recorre la casa con una linterna</strong> buscando señales de que alguien entró por una ventana que la alarma no cubría.</p>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">80%+</div>
+        <div class="stat-label">Intrusiones sin malware tradicional</div>
+        <div class="stat-source">CrowdStrike 2025</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:1.4rem;">Assume<br>Breach</div>
+        <div class="stat-label">Premisa fundamental del hunting</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">Proactivo</div>
+        <div class="stat-label">No espera alertas — busca amenazas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ES vs NO ES -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">¿Qué ES y qué NO ES threat hunting?</h3>
+    <div class="card-grid cols-2">
+      <div class="card" style="border-top:3px solid var(--green);">
+        <h3 style="color:var(--green);font-size:.9rem;">✓ ES Hunting</h3>
+        <ul style="list-style:none;font-size:.85rem;color:var(--text);line-height:2;">
+          <li>→ Formular una hipótesis y buscar evidencia proactivamente</li>
+          <li>→ Buscar TTPs de un grupo de amenaza en la red</li>
+          <li>→ Analizar datos buscando anomalías sin alerta previa</li>
+          <li>→ Investigar basándose en inteligencia de amenazas nueva</li>
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--red);">
+        <h3 style="color:var(--red);font-size:.9rem;">✗ NO ES Hunting</h3>
+        <ul style="list-style:none;font-size:.85rem;color:var(--text);line-height:2;">
+          <li>→ Responder a una alerta del SIEM (eso es triage)</li>
+          <li>→ Ejecutar un escaneo de vulnerabilidades</li>
+          <li>→ Revisar dashboards esperando que algo salte</li>
+          <li>→ Aplicar reglas de detección ya existentes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUNTING vs OTRAS DISCIPLINAS -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Threat Hunting vs otras disciplinas</h3>
+    <div class="matrix-scroll">
+      <table class="info-table" style="min-width:650px;">
+        <thead><tr><th>Disciplina</th><th>Enfoque</th><th>Trigger</th><th>Naturaleza</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-dim)">SOC / Monitoring</td><td>Detectar alertas conocidas</td><td>Alerta automática</td><td>Reactiva</td></tr>
+          <tr><td style="color:var(--text-dim)">Incident Response</td><td>Contener y erradicar amenazas confirmadas</td><td>Incidente confirmado</td><td>Reactiva</td></tr>
+          <tr><td style="color:var(--text-dim)">Vulnerability Mgmt</td><td>Identificar y parchear debilidades</td><td>Scan programado</td><td>Preventiva</td></tr>
+          <tr><td style="color:var(--blue-light);font-weight:700">Threat Hunting</td><td style="color:var(--text-bright)">Buscar amenazas que evadieron todo</td><td style="color:var(--text-bright)">Hipótesis humana + TI</td><td style="color:var(--blue-light);font-weight:700">Proactiva</td></tr>
+          <tr><td style="color:var(--text-dim)">Red Team</td><td>Simular ataques reales</td><td>Engagement autorizado</td><td>Ofensiva</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ████ HUNTING MATURITY MODEL ████ -->
+<section id="hmm">
+  <div class="reveal">
+    <div class="section-label">02 — Madurez</div>
+    <h2 class="section-title">Hunting Maturity Model (HMM)</h2>
+    <p class="section-desc">Creado por David Bianco (autor de la Pirámide del Dolor). Evalúa la madurez de la capacidad de hunting de una organización en 5 niveles.</p>
+  </div>
+  <div class="reveal">
+    <div class="hmm-bar" id="hmmBar">
+      <div class="hmm-level active" onclick="selectHMM(0)">
+        <div class="hmm-num" style="color:var(--red)">H0</div>
+        <div class="hmm-text"><h4>Initial</h4><p>Sin capacidad de hunting — solo alertas automatizadas</p></div>
+      </div>
+      <div class="hmm-level" onclick="selectHMM(1)">
+        <div class="hmm-num" style="color:var(--amber)">H1</div>
+        <div class="hmm-text"><h4>Minimal</h4><p>Busca IOCs de feeds pero sin metodología</p></div>
+      </div>
+      <div class="hmm-level" onclick="selectHMM(2)">
+        <div class="hmm-num" style="color:var(--text)">H2</div>
+        <div class="hmm-text"><h4>Procedural</h4><p>Sigue playbooks de hunting creados por otros</p></div>
+      </div>
+      <div class="hmm-level" onclick="selectHMM(3)">
+        <div class="hmm-num" style="color:var(--blue-light)">H3</div>
+        <div class="hmm-text"><h4>Innovative</h4><p>Crea sus propias hipótesis y procedimientos</p></div>
+      </div>
+      <div class="hmm-level" onclick="selectHMM(4)">
+        <div class="hmm-num" style="color:var(--green)">H4</div>
+        <div class="hmm-text"><h4>Leading</h4><p>Automatiza hallazgos como nuevas detecciones. Comparte con la comunidad.</p></div>
+      </div>
+    </div>
+    <div class="hmm-detail" id="hmmDetail">
+      <p>Solo responde a alertas. Sin telemetría centralizada. No hay proceso de hunting formal. La organización depende completamente de las herramientas automatizadas para la detección.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ████ METODOLOGÍAS ████ -->
+<section id="metodos">
+  <div class="reveal">
+    <div class="section-label">03 — Metodologías</div>
+    <h2 class="section-title">Metodologías de Threat Hunting</h2>
+    <p class="section-desc">Cuatro enfoques principales para buscar amenazas proactivamente, cada uno con triggers y contextos de uso diferentes.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="tabs" id="methTabs">
+      <button class="tab-btn active" onclick="switchTab('methTabs','methPanels',0)">Hypothesis-Driven</button>
+      <button class="tab-btn" onclick="switchTab('methTabs','methPanels',1)">Intel-Driven</button>
+      <button class="tab-btn" onclick="switchTab('methTabs','methPanels',2)">Baseline</button>
+      <button class="tab-btn" onclick="switchTab('methTabs','methPanels',3)">Entity-Driven</button>
+    </div>
+    <div id="methPanels">
+      <div class="tab-panel active">
+        <div class="card" style="border-left:3px solid var(--blue-primary);">
+          <h3>Hypothesis-Driven Hunting</h3>
+          <p style="margin-bottom:1rem;">El más estructurado y efectivo. Se formula una hipótesis basada en inteligencia, conocimiento del entorno o modelos de amenaza, y se busca evidencia.</p>
+          <div class="terminal">
+            <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">hypothesis.md</span></div>
+            <div class="terminal-body"><span class="keyword">Hipótesis:</span>
+"Creo que hay un <span class="alert">Cobalt Strike beacon</span> activo en nuestra red
+comunicándose vía HTTPS a intervalos regulares, porque nuestro
+sector (finanzas) es target activo de FIN7 y se documentaron
+campañas usando CS contra bancos en LATAM."
+
+<span class="highlight">→ Plan de búsqueda:</span>
+  1. Buscar <span class="string">beaconing</span> en logs de proxy (intervalos regulares)
+  2. Buscar <span class="string">JA3 hashes</span> de Cobalt Strike en logs TLS
+  3. Buscar procesos con conexiones ESTABLISHED a IPs no categorizadas
+  4. Buscar <span class="string">named pipes</span> de CS: \MSSE-*, \postex_*, \status_*</div>
+          </div>
+          <p style="margin-top:1rem;font-size:.85rem;color:var(--text-dim);"><strong style="color:var(--text-bright)">Fuentes para hipótesis:</strong> Reportes TI (CrowdStrike, Mandiant, Unit42), MITRE ATT&CK gaps, alertas previas del SOC, conferencias, actividad del Red Team interno.</p>
+        </div>
+      </div>
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--amber);">
+          <h3>Intel-Driven Hunting</h3>
+          <p style="margin-bottom:1rem;">Se basa directamente en inteligencia de amenazas: un nuevo reporte documenta TTPs/IOCs y el hunter busca esos indicadores en el entorno.</p>
+          <div class="terminal">
+            <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">intel_hunt.log</span></div>
+            <div class="terminal-body"><span class="keyword">Trigger:</span> "Unit42 publicó reporte sobre campaña de Lazarus usando
+         macro en .docm → PowerShell → certutil para descargar
+         payload desde dominio <span class="alert">*.workers.dev</span>"
+
+<span class="highlight">Hunt:</span>
+  1. Email gateway: adjuntos <span class="string">.docm</span> últimos 30 días
+  2. Sysmon: <span class="string">WINWORD.EXE → cmd.exe → powershell.exe</span> (EID 1)
+  3. Proxy: conexiones a <span class="string">*.workers.dev</span>
+  4. Sysmon: ejecución de <span class="string">certutil -urlcache</span> (EID 1)
+  5. IOCs específicos del reporte (hashes, IPs, dominios)</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--green);">
+          <h3>Baseline Hunting</h3>
+          <p style="margin-bottom:1rem;">Se establece qué es "normal" en el entorno y se buscan desviaciones. No requiere hipótesis específica — busca anomalías.</p>
+          <div class="terminal">
+            <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">baseline_examples.txt</span></div>
+            <div class="terminal-body"><span class="keyword">Baseline hunts:</span>
+
+→ "¿Qué procesos corren normalmente en nuestros servidores?"
+  Si aparece un proceso <span class="alert">nunca antes visto</span> → investigar
+
+→ "¿Cuáles son los User-Agents normales en nuestro proxy?"
+  Si aparece <span class="alert">"Go-http-client"</span> → investigar
+
+→ "¿Cuáles son los destinos DNS normales?"
+  Si un host resuelve dominios que <span class="alert">nadie más resuelve</span> → investigar
+
+→ "¿Cuál es el volumen normal de datos salientes por host?"
+  Si un host sube <span class="alert">5GB cuando normalmente sube 100MB</span> → investigar</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel">
+        <div class="card" style="border-left:3px solid var(--purple);">
+          <h3>Entity-Driven (Situational) Hunting</h3>
+          <p style="margin-bottom:1rem;">Se enfoca en activos específicos de alto valor: servidores críticos, cuentas privilegiadas, datos sensibles.</p>
+          <div class="terminal">
+            <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">entity_hunt.txt</span></div>
+            <div class="terminal-body"><span class="keyword">Entity hunts:</span>
+
+→ <span class="string">Domain Controller:</span> ¿hay Kerberoasting o DCSync?
+→ <span class="string">Cuentas admin:</span> ¿logons desde ubicaciones inusuales?
+→ <span class="string">Servidores DB:</span> ¿queries anómalos o exports masivos?
+→ <span class="string">Servidores web:</span> ¿webshells en el filesystem?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRAMEWORKS -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">Frameworks de Threat Hunting</h3>
+    <div class="card-grid cols-3">
+      <div class="card glow-box" style="border-top:3px solid var(--blue-primary);">
+        <h3 style="font-size:.95rem;">Sqrrl Hunting Loop</h3>
+        <div class="card-tag">2015 — Primer framework formal</div>
+        <p style="margin-top:.75rem;">Ciclo de 4 etapas: <strong style="color:var(--text-bright)">Generate Hypothesis → Investigate → Discover Patterns → Inform & Enrich</strong>. Cada hallazgo se convierte en nueva detección y la hipótesis se refina.</p>
+      </div>
+      <div class="card glow-box" style="border-top:3px solid var(--cyan);">
+        <h3 style="font-size:.95rem;">PEAK Framework</h3>
+        <div class="card-tag">Splunk — 2023</div>
+        <p style="margin-top:.75rem;">Evolución del Sqrrl. Define 3 tipos: <strong style="color:var(--text-bright)">Hypothesis-Driven, Baseline, Model-Assisted (M-ATH)</strong>. Organiza en fases: Prepare → Execute → Act with Knowledge.</p>
+      </div>
+      <div class="card glow-box" style="border-top:3px solid var(--amber);">
+        <h3 style="font-size:.95rem;">TaHiTI Framework</h3>
+        <div class="card-tag">Dutch Payments Association</div>
+        <p style="margin-top:.75rem;">Integra threat intelligence directamente en el ciclo de hunting. Ciclo bidireccional <strong style="color:var(--text-bright)">TI ↔ Hunting</strong>: los hallazgos generan nueva inteligencia.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROCESO PASO A PASO -->
+  <div class="reveal" style="margin-top:3rem;">
+    <h3 style="font-size:1.15rem;color:var(--text-bright);margin-bottom:1.5rem;">El proceso de un Hunt — Paso a Paso</h3>
+    <div class="hunt-steps">
+      <div class="hunt-step">
+        <div class="hunt-step-num">1</div>
+        <div class="hunt-step-content">
+          <h4>Preparar</h4>
+          <ul>
+            <li>Definir hipótesis clara y específica</li>
+            <li>Identificar datos necesarios (logs, telemetría, PCAPs)</li>
+            <li>Verificar que los datos existen y son accesibles</li>
+            <li>Seleccionar herramientas (SIEM, EDR, YARA, OSQuery)</li>
+            <li>Definir scope (tiempo, hosts, usuarios)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="hunt-step">
+        <div class="hunt-step-num">2</div>
+        <div class="hunt-step-content">
+          <h4>Ejecutar</h4>
+          <ul>
+            <li>Ejecutar queries/búsquedas contra los datos</li>
+            <li>Analizar resultados — separar señal de ruido</li>
+            <li>Pivoting: de un hallazgo, ampliar la búsqueda</li>
+            <li>Documentar cada paso y hallazgo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="hunt-step">
+        <div class="hunt-step-num">3</div>
+        <div class="hunt-step-content">
+          <h4>Evaluar</h4>
+          <ul>
+            <li><strong style="color:var(--green)">SÍ</strong> → Escalar a Incident Response inmediatamente</li>
+            <li><strong style="color:var(--red)">NO</strong> → Documentar resultado negativo (también tiene valor)</li>
+            <li><strong style="color:var(--amber)">PARCIAL</strong> → Refinar hipótesis y repetir</li>
+          </ul>
+        </div>
+      </div>
+      <div class="hunt-step">
+        <div class="hunt-step-num">4</div>
+        <div class="hunt-step-content">
+          <h4>Actuar</h4>
+          <ul>
+            <li>Convertir hallazgos en detecciones automatizadas (YARA, Sigma, SIEM rules)</li>
+            <li>Documentar el hunt completo (procedimiento, datos, hallazgos)</li>
+            <li>Compartir con el equipo y la comunidad si aplica</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████ YARA ████ -->
+<section id="yara">
+  <div class="reveal">
+    <div class="section-label">04 — Herramienta de Pattern Matching</div>
+    <h2 class="section-title">YARA</h2>
+    <p class="section-desc">Yet Another Ridiculous Acronym — herramienta de pattern matching para identificar y clasificar malware basándose en patrones textuales, binarios o estructurales. Creada por Víctor Álvarez (VirusTotal/Google).</p>
+  </div>
+
+  <div class="reveal">
+    <div class="card" style="border-left:3px solid var(--green);margin-bottom:2rem;">
+      <h3 style="color:var(--green);font-size:.95rem;">📐 Analogía</h3>
+      <p>"Lo que <strong>Snort</strong> es al tráfico de red, y <strong>Sigma</strong> es a los logs, <strong style="color:var(--green)">YARA</strong> es a los archivos."</p>
+    </div>
+    <div class="card-grid cols-2" style="margin-bottom:2rem;">
+      <div class="card"><h3 style="font-size:.9rem;">Input</h3><p>Archivos en disco, dumps de memoria, data streams</p></div>
+      <div class="card"><h3 style="font-size:.9rem;">Fortaleza</h3><p>Detecta variantes y familias de malware por patrones genéticos (no solo por hash)</p></div>
+    </div>
+  </div>
+
+  <!-- ESTRUCTURA YARA -->
+  <div class="reveal">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Estructura de una regla YARA</h3>
+    <div class="terminal">
+      <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">ejemplo_regla.yar</span></div>
+      <div class="terminal-body"><span class="keyword">import</span> <span class="string">"pe"</span>                          <span class="comment">← Módulos opcionales</span>
+
+<span class="keyword">rule</span> Nombre_De_La_Regla : tag1 tag2  <span class="comment">← Nombre + tags</span>
+{
+    <span class="highlight">meta:</span>                             <span class="comment">← Metadata (no afecta detección)</span>
+        author = <span class="string">"Toshiro"</span>
+        description = <span class="string">"Detecta..."</span>
+        mitre_attack = <span class="string">"T1059.001"</span>
+
+    <span class="highlight">strings:</span>                          <span class="comment">← Patrones a buscar</span>
+        $text1 = <span class="string">"MaliciousString"</span> ascii wide
+        $hex1 = { 4D 5A 90 00 03 00 }
+        $regex1 = <span class="string">/http:\/\/.*\.evil\./</span>
+
+    <span class="highlight">condition:</span>                        <span class="comment">← Lógica de match</span>
+        uint16(0) == 0x5A4D <span class="keyword">and</span>
+        ($text1 <span class="keyword">or</span> $hex1) <span class="keyword">and</span>
+        $regex1
+}</div>
+    </div>
+  </div>
+
+  <!-- STRINGS, CONDITIONS, MODULES -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Strings, Conditions y Módulos</h3>
+    <div id="yaraAccordion">
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">strings:</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Text, Hex y Regex patterns</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <div class="code-block"><span class="cm">// TEXT STRINGS</span>
+$s1 = <span class="str">"CreateRemoteThread"</span>            <span class="cm"># ASCII exacto</span>
+$s2 = <span class="str">"CreateRemoteThread"</span> <span class="kw">wide</span>       <span class="cm"># UTF-16 Windows</span>
+$s3 = <span class="str">"CreateRemoteThread"</span> <span class="kw">ascii wide</span> <span class="cm"># Ambos</span>
+$s4 = <span class="str">"createremotethread"</span> <span class="kw">nocase</span>     <span class="cm"># Case-insensitive</span>
+$s5 = <span class="str">"powershell"</span> <span class="kw">xor</span>               <span class="cm"># XOR single-byte todas las keys</span>
+$s6 = <span class="str">"payload"</span> <span class="kw">base64</span>                <span class="cm"># String en Base64</span>
+
+<span class="cm">// HEX STRINGS</span>
+$hex1 = { 4D 5A }                    <span class="cm"># MZ header (PE)</span>
+$hex2 = { 4D 5A <span class="kw">??</span> <span class="kw">??</span> 00 }           <span class="cm"># ?? = wildcard</span>
+$hex3 = { 4D 5A <span class="kw">[2-4]</span> 00 }           <span class="cm"># jump de 2 a 4 bytes</span>
+$hex4 = { FC 48 83 E4 F0 E8 }        <span class="cm"># Shellcode x64 típico</span>
+
+<span class="cm">// REGEX</span>
+$re1 = <span class="str">/http:\/\/[a-z0-9]{5,20}\.[a-z]{2,6}\//</span>
+$re2 = <span class="str">/powershell.*-enc\s+[A-Za-z0-9+\/=]+/</span></div>
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">condition:</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Lógica booleana, posición, tamaño, PE, entropía</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <div class="code-block"><span class="cm">// BOOLEANOS</span>
+$s1 <span class="kw">and</span> $s2                       <span class="cm"># Ambas presentes</span>
+<span class="kw">all of</span> ($s*)                      <span class="cm"># TODAS las $s*</span>
+<span class="kw">any of</span> ($s*)                      <span class="cm"># Al menos una</span>
+<span class="kw">2 of</span> ($s1, $s2, $s3)              <span class="cm"># Al menos 2 de 3</span>
+
+<span class="cm">// POSICIÓN Y TAMAÑO</span>
+$hex1 <span class="kw">at</span> 0                        <span class="cm"># En offset 0</span>
+$s1 <span class="kw">in</span> (0..1024)                  <span class="cm"># Primeros 1024 bytes</span>
+<span class="fn">filesize</span> < 500KB
+<span class="fn">filesize</span> > 1MB
+
+<span class="cm">// PE CHECKS</span>
+<span class="fn">uint16</span>(0) == 0x5A4D               <span class="cm"># MZ header → es PE</span>
+pe.<span class="fn">is_pe</span>
+pe.<span class="fn">number_of_sections</span> > 7         <span class="cm"># Posible packing</span>
+pe.<span class="fn">imports</span>(<span class="str">"kernel32.dll"</span>, <span class="str">"VirtualAlloc"</span>)
+
+<span class="cm">// ENTROPÍA</span>
+math.<span class="fn">entropy</span>(0, filesize) > 7.0   <span class="cm"># Cifrado/empaquetado</span>
+
+<span class="cm">// CONTEO</span>
+#s1 > 5                           <span class="cm"># $s1 aparece 5+ veces</span></div>
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">import</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Módulos: pe, elf, math, hash, dotnet</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <table class="info-table">
+            <thead><tr><th>Módulo</th><th>Import</th><th>Funcionalidad</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--blue-light)">pe</td><td><code>import "pe"</code></td><td>Estructura PE: secciones, imports, exports, timestamps, certificados</td></tr>
+              <tr><td style="color:var(--blue-light)">elf</td><td><code>import "elf"</code></td><td>Binarios ELF (Linux)</td></tr>
+              <tr><td style="color:var(--blue-light)">math</td><td><code>import "math"</code></td><td>Entropía, desviación, media</td></tr>
+              <tr><td style="color:var(--blue-light)">hash</td><td><code>import "hash"</code></td><td>Hashes de secciones del archivo</td></tr>
+              <tr><td style="color:var(--blue-light)">dotnet</td><td><code>import "dotnet"</code></td><td>Assemblies .NET</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECETARIO YARA -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Recetario de reglas YARA para Threat Hunting</h3>
+    <div class="tabs" id="yaraTabs">
+      <button class="tab-btn active" onclick="switchTab('yaraTabs','yaraPanels',0)">Cobalt Strike</button>
+      <button class="tab-btn" onclick="switchTab('yaraTabs','yaraPanels',1)">Mimikatz</button>
+      <button class="tab-btn" onclick="switchTab('yaraTabs','yaraPanels',2)">Shellcode</button>
+      <button class="tab-btn" onclick="switchTab('yaraTabs','yaraPanels',3)">Process Injection</button>
+    </div>
+    <div id="yaraPanels">
+      <div class="tab-panel active"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">cobalt_strike.yar</span></div><div class="terminal-body"><span class="keyword">rule</span> CobaltStrike_Beacon_Indicators {
+    <span class="highlight">meta:</span>
+        author = <span class="string">"Toshiro"</span>
+        description = <span class="string">"Detecta indicadores de Cobalt Strike beacon"</span>
+        mitre = <span class="string">"T1071.001"</span>
+    <span class="highlight">strings:</span>
+        $pipe1 = <span class="string">"\\.\pipe\MSSE-"</span> ascii
+        $pipe2 = <span class="string">"\\.\pipe\postex_"</span> ascii
+        $pipe3 = <span class="string">"\\.\pipe\status_"</span> ascii
+        $cfg1 = <span class="string">"sleeptime"</span> ascii
+        $cfg2 = <span class="string">"jitter"</span> ascii
+    <span class="highlight">condition:</span>
+        <span class="keyword">any of</span> ($pipe*) <span class="keyword">or</span> (2 <span class="keyword">of</span> ($cfg*))
+}</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">mimikatz.yar</span></div><div class="terminal-body"><span class="keyword">rule</span> Mimikatz_Strings {
+    <span class="highlight">meta:</span>
+        description = <span class="string">"Detecta strings de Mimikatz"</span>
+        mitre = <span class="string">"T1003.001"</span>
+    <span class="highlight">strings:</span>
+        $s1 = <span class="string">"sekurlsa::logonpasswords"</span> ascii nocase
+        $s2 = <span class="string">"privilege::debug"</span> ascii nocase
+        $s3 = <span class="string">"lsadump::sam"</span> ascii nocase
+        $s4 = <span class="string">"kerberos::list"</span> ascii nocase
+        $s5 = <span class="string">"mimikatz"</span> ascii nocase wide
+        $s6 = <span class="string">"gentilkiwi"</span> ascii wide
+    <span class="highlight">condition:</span>
+        2 <span class="keyword">of them</span>
+}</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">shellcode_x64.yar</span></div><div class="terminal-body"><span class="keyword">rule</span> Msfvenom_Shellcode_x64 {
+    <span class="highlight">meta:</span>
+        description = <span class="string">"Detecta shellcode común de msfvenom x64"</span>
+    <span class="highlight">strings:</span>
+        $sc_start = { FC 48 83 E4 F0 E8 C? 00 00 00 41 51 41 50 52 }
+    <span class="highlight">condition:</span>
+        $sc_start
+}</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">process_injection.yar</span></div><div class="terminal-body"><span class="keyword">import</span> <span class="string">"pe"</span>
+<span class="keyword">rule</span> Suspicious_PE_Injection_Imports {
+    <span class="highlight">meta:</span>
+        description = <span class="string">"PE con imports de process injection"</span>
+        mitre = <span class="string">"T1055"</span>
+    <span class="highlight">condition:</span>
+        pe.is_pe <span class="keyword">and</span>
+        pe.imports(<span class="string">"kernel32.dll"</span>, <span class="string">"VirtualAllocEx"</span>) <span class="keyword">and</span>
+        pe.imports(<span class="string">"kernel32.dll"</span>, <span class="string">"WriteProcessMemory"</span>) <span class="keyword">and</span>
+        pe.imports(<span class="string">"kernel32.dll"</span>, <span class="string">"CreateRemoteThread"</span>)
+}</div></div></div>
+    </div>
+  </div>
+
+  <!-- USO PRÁCTICO YARA -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Uso práctico en terminal</h3>
+    <div class="terminal">
+      <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">bash</span></div>
+      <div class="terminal-body"><span class="prompt">$</span> yara regla.yar archivo_sospechoso.exe       <span class="comment"># Escanear un archivo</span>
+<span class="prompt">$</span> yara -r reglas/ /directorio/a/escanear/      <span class="comment"># Recursivo</span>
+<span class="prompt">$</span> yara regla.yar &lt;PID&gt;                         <span class="comment"># Memoria de un proceso</span>
+<span class="prompt">$</span> yara -s regla.yar archivo.exe                <span class="comment"># Mostrar strings que matchearon</span>
+
+<span class="comment"># Integraciones:</span>
+<span class="comment"># YARA + OSQuery  → escanear procesos con YARA</span>
+<span class="comment"># YARA + Velociraptor → hunting remoto en toda la flota</span>
+<span class="comment"># YARA + Cuckoo → clasificar samples en sandbox</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ████ SIGMA ████ -->
+<section id="sigma">
+  <div class="reveal">
+    <div class="section-label">05 — Detección Universal para Logs</div>
+    <h2 class="section-title">Sigma</h2>
+    <p class="section-desc">Formato genérico y abierto para escribir reglas de detección sobre logs de eventos, de forma agnóstica al SIEM. Creado por Florian Roth y Thomas Patzke (2017).</p>
+  </div>
+
+  <div class="reveal">
+    <div class="card" style="border-left:3px solid var(--amber);margin-bottom:2rem;">
+      <h3 style="color:var(--amber);font-size:.95rem;">📐 Analogía</h3>
+      <p>"Lo que <strong>YARA</strong> es a los archivos y <strong>Snort</strong> a la red, <strong style="color:var(--amber)">Sigma</strong> es a los logs."</p>
+    </div>
+  </div>
+
+  <!-- PROBLEMA QUE RESUELVE -->
+  <div class="reveal">
+    <div class="card-grid cols-2" style="margin-bottom:2rem;">
+      <div class="card" style="border-top:3px solid var(--red);">
+        <h3 style="color:var(--red);font-size:.9rem;">Sin Sigma ✗</h3>
+        <p>Analista escribe regla en Splunk SPL → solo funciona en Splunk. Otro la necesita en Elastic KQL → reescribir. Otro en Sentinel Kusto → reescribir otra vez. ¿Compartir en la comunidad? ¿En qué formato?</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green);">
+        <h3 style="color:var(--green);font-size:.9rem;">Con Sigma ✓</h3>
+        <p>Analista escribe regla en YAML (formato universal). <code>sigma-cli</code> la convierte a Splunk SPL, Elastic KQL, Kusto, QRadar... Formato estándar que todos entienden y comparten.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTRUCTURA SIGMA -->
+  <div class="reveal">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Estructura de una regla Sigma</h3>
+    <div class="terminal">
+      <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">powershell_encoded.yml</span></div>
+      <div class="terminal-body"><span class="keyword">title:</span> Suspicious PowerShell Encoded Command
+<span class="keyword">id:</span> a1b2c3d4-e5f6-7890-abcd-ef1234567890
+<span class="keyword">status:</span> experimental
+<span class="keyword">description:</span> Detecta ejecución de PS con comandos Base64
+<span class="keyword">tags:</span>
+    - attack.execution
+    - attack.t1059.001
+
+<span class="highlight">logsource:</span>                     <span class="comment">← DÓNDE buscar</span>
+    category: process_creation
+    product: windows
+
+<span class="highlight">detection:</span>                     <span class="comment">← QUÉ buscar</span>
+    selection:
+        Image|endswith: <span class="string">'\powershell.exe'</span>
+        CommandLine|contains:
+            - <span class="string">'-encodedcommand'</span>
+            - <span class="string">'-enc'</span>
+            - <span class="string">'-e '</span>
+    condition: selection
+
+<span class="keyword">falsepositives:</span>
+    - Legitimate admin scripts using encoding
+<span class="keyword">level:</span> <span class="alert">high</span></div>
+    </div>
+  </div>
+
+  <!-- LOGSOURCE, DETECTION, MODIFIERS -->
+  <div class="reveal" style="margin-top:2rem;">
+    <div id="sigmaAccordion">
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">logsource:</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Dónde buscar — Category, Product, Service</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <div class="code-block"><span class="cm"># Por categoría (abstracción):</span>
+<span class="kw">logsource:</span>
+    category: <span class="str">process_creation</span>    <span class="cm"># Creación de procesos</span>
+    product: <span class="str">windows</span>
+
+<span class="kw">logsource:</span>
+    category: <span class="str">network_connection</span>   <span class="cm"># Conexiones de red</span>
+    product: <span class="str">windows</span>
+
+<span class="cm"># Por servicio específico:</span>
+<span class="kw">logsource:</span>
+    product: <span class="str">windows</span>
+    service: <span class="str">security</span>             <span class="cm"># Security.evtx</span>
+
+<span class="kw">logsource:</span>
+    product: <span class="str">windows</span>
+    service: <span class="str">sysmon</span>               <span class="cm"># Sysmon Operational</span>
+
+<span class="kw">logsource:</span>
+    product: <span class="str">windows</span>
+    service: <span class="str">powershell</span>            <span class="cm"># PowerShell Operational</span></div>
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">detection:</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">Qué buscar — Selecciones, filtros, conteos</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <div class="code-block"><span class="cm"># Selección simple:</span>
+<span class="kw">detection:</span>
+    selection:
+        EventID: <span class="fn">4625</span>              <span class="cm"># Failed logon</span>
+    condition: selection
+
+<span class="cm"># Múltiples selecciones combinadas:</span>
+<span class="kw">detection:</span>
+    selection_process:
+        Image|endswith: <span class="str">'\cmd.exe'</span>
+    selection_args:
+        CommandLine|contains:
+            - <span class="str">'/c'</span>
+            - <span class="str">'/k'</span>
+    condition: selection_process <span class="kw">and</span> selection_args
+
+<span class="cm"># Selección con exclusión (filtro):</span>
+<span class="kw">detection:</span>
+    selection:
+        Image|endswith: <span class="str">'\powershell.exe'</span>
+    filter:
+        User: <span class="str">'NT AUTHORITY\SYSTEM'</span>
+    condition: selection <span class="kw">and not</span> filter
+
+<span class="cm"># Conteo y agrupación:</span>
+<span class="kw">detection:</span>
+    selection:
+        EventID: <span class="fn">4625</span>
+    condition: selection | <span class="fn">count</span>(TargetUserName) by SourceIP > 10
+    timeframe: <span class="fn">5m</span></div>
+        </div></div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(this)">
+          <span style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;">modifiers</span>
+          <span style="color:var(--text-bright);font-weight:600;font-size:.9rem;">contains, startswith, endswith, re, base64offset, cidr</span>
+          <span class="accordion-chevron">▼</span>
+        </button>
+        <div class="accordion-body"><div class="accordion-body-inner">
+          <table class="info-table">
+            <thead><tr><th>Modifier</th><th>Descripción</th><th>Ejemplo</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--blue-light)">contains</td><td>El campo contiene el valor</td><td><code>CommandLine|contains: '-enc'</code></td></tr>
+              <tr><td style="color:var(--blue-light)">startswith</td><td>El campo empieza con</td><td><code>Image|startswith: 'C:\Users\Public'</code></td></tr>
+              <tr><td style="color:var(--blue-light)">endswith</td><td>El campo termina con</td><td><code>Image|endswith: '\powershell.exe'</code></td></tr>
+              <tr><td style="color:var(--blue-light)">all</td><td>AND entre items de lista</td><td><code>CommandLine|contains|all:</code></td></tr>
+              <tr><td style="color:var(--blue-light)">re</td><td>Expresión regular</td><td><code>CommandLine|re: '.*-e[nc]{0,2}\s+'</code></td></tr>
+              <tr><td style="color:var(--blue-light)">base64offset</td><td>Busca string en Base64</td><td><code>CommandLine|base64offset: 'cmd.exe'</code></td></tr>
+              <tr><td style="color:var(--blue-light)">cidr</td><td>Match de red CIDR</td><td><code>SourceIP|cidr: '10.0.0.0/8'</code></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONVERSIÓN Y RECETARIO -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Conversión a SIEM específico</h3>
+    <div class="terminal">
+      <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">bash — sigma-cli</span></div>
+      <div class="terminal-body"><span class="prompt">$</span> pip install sigma-cli
+
+<span class="prompt">$</span> sigma convert -t <span class="string">splunk</span> -p sysmon regla.yml           <span class="comment"># → Splunk SPL</span>
+<span class="prompt">$</span> sigma convert -t <span class="string">lucene</span> -p ecs_windows regla.yml      <span class="comment"># → Elastic KQL</span>
+<span class="prompt">$</span> sigma convert -t <span class="string">microsoft365defender</span> regla.yml       <span class="comment"># → Sentinel Kusto</span>
+<span class="prompt">$</span> sigma convert -t <span class="string">qradar</span> regla.yml                    <span class="comment"># → QRadar</span>
+<span class="prompt">$</span> sigma convert -t <span class="string">splunk</span> -p sysmon rules/ -o output/  <span class="comment"># Batch</span></div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Recetario de reglas Sigma</h3>
+    <div class="tabs" id="sigmaTabs">
+      <button class="tab-btn active" onclick="switchTab('sigmaTabs','sigmaPanels',0)">Office → Shell</button>
+      <button class="tab-btn" onclick="switchTab('sigmaTabs','sigmaPanels',1)">LSASS Access</button>
+      <button class="tab-btn" onclick="switchTab('sigmaTabs','sigmaPanels',2)">CS Named Pipes</button>
+    </div>
+    <div id="sigmaPanels">
+      <div class="tab-panel active"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">office_spawn_shell.yml</span></div><div class="terminal-body"><span class="keyword">title:</span> Microsoft Office Spawning Suspicious Process
+<span class="keyword">status:</span> stable
+<span class="keyword">tags:</span> [attack.execution, attack.t1204.002]
+<span class="highlight">logsource:</span>
+    category: process_creation
+    product: windows
+<span class="highlight">detection:</span>
+    selection_parent:
+        ParentImage|endswith:
+            - <span class="string">'\WINWORD.EXE'</span>
+            - <span class="string">'\EXCEL.EXE'</span>
+            - <span class="string">'\POWERPNT.EXE'</span>
+    selection_child:
+        Image|endswith:
+            - <span class="string">'\cmd.exe'</span>
+            - <span class="string">'\powershell.exe'</span>
+            - <span class="string">'\wscript.exe'</span>
+            - <span class="string">'\mshta.exe'</span>
+    condition: selection_parent <span class="keyword">and</span> selection_child
+<span class="keyword">level:</span> <span class="alert">high</span></div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">lsass_access.yml</span></div><div class="terminal-body"><span class="keyword">title:</span> LSASS Memory Access by Non-System Process
+<span class="keyword">status:</span> stable
+<span class="keyword">tags:</span> [attack.credential_access, attack.t1003.001]
+<span class="highlight">logsource:</span>
+    category: process_access
+    product: windows
+<span class="highlight">detection:</span>
+    selection:
+        TargetImage|endswith: <span class="string">'\lsass.exe'</span>
+        GrantedAccess|contains:
+            - <span class="string">'0x1010'</span>
+            - <span class="string">'0x1038'</span>
+            - <span class="string">'0x1FFFFF'</span>
+    filter_legitimate:
+        SourceImage|endswith:
+            - <span class="string">'\csrss.exe'</span>
+            - <span class="string">'\lsm.exe'</span>
+            - <span class="string">'\MsMpEng.exe'</span>
+    condition: selection <span class="keyword">and not</span> filter_legitimate
+<span class="keyword">level:</span> <span class="alert">critical</span></div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">cobalt_pipes.yml</span></div><div class="terminal-body"><span class="keyword">title:</span> Cobalt Strike Default Named Pipe
+<span class="keyword">status:</span> stable
+<span class="highlight">logsource:</span>
+    category: pipe_created
+    product: windows
+<span class="highlight">detection:</span>
+    selection:
+        PipeName|startswith:
+            - <span class="string">'\MSSE-'</span>
+            - <span class="string">'\postex_'</span>
+            - <span class="string">'\status_'</span>
+            - <span class="string">'\msagent_'</span>
+    condition: selection
+<span class="keyword">level:</span> <span class="alert">critical</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ████ OSQUERY ████ -->
+<section id="osquery">
+  <div class="reveal">
+    <div class="section-label">06 — SQL para Endpoints</div>
+    <h2 class="section-title">OSQuery</h2>
+    <p class="section-desc">Framework open-source (Facebook/Meta) que expone el estado del sistema operativo como tablas SQL consultables en tiempo real. Cada aspecto del OS — procesos, archivos, red, registry, usuarios — es una tabla.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="card-grid cols-4" style="margin-bottom:2rem;">
+      <div class="card" style="text-align:center;"><h3 style="font-size:.85rem;">osqueryi</h3><p style="font-size:.78rem;">Shell interactivo para queries ad-hoc</p></div>
+      <div class="card" style="text-align:center;"><h3 style="font-size:.85rem;">osqueryd</h3><p style="font-size:.78rem;">Daemon: queries programadas → logs/SIEM</p></div>
+      <div class="card" style="text-align:center;"><h3 style="font-size:.85rem;">Virtual Tables</h3><p style="font-size:.78rem;">Cientos de tablas del OS</p></div>
+      <div class="card" style="text-align:center;"><h3 style="font-size:.85rem;">Packs</h3><p style="font-size:.78rem;">Conjuntos de queries agrupadas</p></div>
+    </div>
+  </div>
+
+  <!-- TABLAS CLAVE -->
+  <div class="reveal">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Tablas clave para Threat Hunting</h3>
+    <div class="matrix-scroll">
+      <table class="info-table" style="min-width:650px;">
+        <thead><tr><th>Tabla</th><th>Qué expone</th><th>Uso en hunting</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--blue-light)">processes</td><td>PID, name, path, cmdline, parent</td><td>Procesos sospechosos, process tree</td></tr>
+          <tr><td style="color:var(--blue-light)">process_open_sockets</td><td>Conexiones de red por proceso</td><td>C2, reverse shells, exfiltración</td></tr>
+          <tr><td style="color:var(--blue-light)">listening_ports</td><td>Puertos en escucha</td><td>Backdoors, servicios no autorizados</td></tr>
+          <tr><td style="color:var(--blue-light)">scheduled_tasks</td><td>Tareas programadas</td><td>Persistencia</td></tr>
+          <tr><td style="color:var(--blue-light)">services</td><td>Servicios de Windows</td><td>Servicios maliciosos</td></tr>
+          <tr><td style="color:var(--blue-light)">registry</td><td>Claves del Registry</td><td>Persistencia en Run keys</td></tr>
+          <tr><td style="color:var(--blue-light)">file</td><td>Filesystem</td><td>Webshells, archivos sospechosos</td></tr>
+          <tr><td style="color:var(--blue-light)">hash</td><td>Hashes de archivos</td><td>Verificar IOCs por hash</td></tr>
+          <tr><td style="color:var(--blue-light)">certificates</td><td>Certificados instalados</td><td>Root certs maliciosos</td></tr>
+          <tr><td style="color:var(--blue-light)">yara</td><td>Resultados de scan YARA</td><td>Integración directa YARA+OSQuery</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RECETARIO OSQUERY -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Recetario de queries para Threat Hunting</h3>
+    <div class="tabs" id="osqTabs">
+      <button class="tab-btn active" onclick="switchTab('osqTabs','osqPanels',0)">Fileless</button>
+      <button class="tab-btn" onclick="switchTab('osqTabs','osqPanels',1)">C2 / Red</button>
+      <button class="tab-btn" onclick="switchTab('osqTabs','osqPanels',2)">Persistencia</button>
+      <button class="tab-btn" onclick="switchTab('osqTabs','osqPanels',3)">Office → Shell</button>
+    </div>
+    <div id="osqPanels">
+      <div class="tab-panel active"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">osqueryi — fileless detection</span></div><div class="terminal-body"><span class="comment">-- Procesos sin binario en disco (fileless/eliminado)</span>
+<span class="keyword">SELECT</span> pid, name, path, cmdline
+<span class="keyword">FROM</span> processes
+<span class="keyword">WHERE</span> on_disk = <span class="fn">0</span>;</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">osqueryi — network C2</span></div><div class="terminal-body"><span class="comment">-- Procesos con conexiones externas (posible C2)</span>
+<span class="keyword">SELECT DISTINCT</span> p.name, p.path, p.cmdline,
+       s.remote_address, s.remote_port
+<span class="keyword">FROM</span> process_open_sockets s
+<span class="keyword">JOIN</span> processes p <span class="keyword">ON</span> s.pid = p.pid
+<span class="keyword">WHERE</span> s.remote_address <span class="keyword">NOT LIKE</span> <span class="str">'10.%'</span>
+  <span class="keyword">AND</span> s.remote_address <span class="keyword">NOT LIKE</span> <span class="str">'172.16.%'</span>
+  <span class="keyword">AND</span> s.remote_address <span class="keyword">NOT LIKE</span> <span class="str">'192.168.%'</span>
+  <span class="keyword">AND</span> s.remote_address != <span class="str">'127.0.0.1'</span>
+  <span class="keyword">AND</span> s.remote_address != <span class="str">''</span>
+<span class="keyword">ORDER BY</span> s.remote_port;
+
+<span class="comment">-- Puertos en escucha no estándar</span>
+<span class="keyword">SELECT</span> lp.port, lp.protocol, p.name, p.path
+<span class="keyword">FROM</span> listening_ports lp
+<span class="keyword">JOIN</span> processes p <span class="keyword">ON</span> lp.pid = p.pid
+<span class="keyword">WHERE</span> lp.port <span class="keyword">NOT IN</span> (<span class="fn">22,80,443,135,445,3389,5985</span>);</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">osqueryi — persistence</span></div><div class="terminal-body"><span class="comment">-- Scheduled tasks sospechosas</span>
+<span class="keyword">SELECT</span> name, action, path, enabled
+<span class="keyword">FROM</span> scheduled_tasks
+<span class="keyword">WHERE</span> enabled = <span class="fn">1</span>
+  <span class="keyword">AND</span> (action <span class="keyword">LIKE</span> <span class="str">'%powershell%'</span>
+    <span class="keyword">OR</span> action <span class="keyword">LIKE</span> <span class="str">'%cmd%'</span>
+    <span class="keyword">OR</span> action <span class="keyword">LIKE</span> <span class="str">'%Temp%'</span>
+    <span class="keyword">OR</span> action <span class="keyword">LIKE</span> <span class="str">'%AppData%'</span>);
+
+<span class="comment">-- Registry Run keys (persistencia)</span>
+<span class="keyword">SELECT</span> name, path, data
+<span class="keyword">FROM</span> registry
+<span class="keyword">WHERE</span> key <span class="keyword">LIKE</span> <span class="str">'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run%'</span>
+   <span class="keyword">OR</span> key <span class="keyword">LIKE</span> <span class="str">'HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run%'</span>;
+
+<span class="comment">-- Servicios con paths sospechosos</span>
+<span class="keyword">SELECT</span> name, display_name, path, user_account
+<span class="keyword">FROM</span> services
+<span class="keyword">WHERE</span> path <span class="keyword">NOT LIKE</span> <span class="str">'%System32%'</span>
+  <span class="keyword">AND</span> path <span class="keyword">NOT LIKE</span> <span class="str">'%Program Files%'</span>
+  <span class="keyword">AND</span> path != <span class="str">''</span>;</div></div></div>
+      <div class="tab-panel"><div class="terminal"><div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">osqueryi — Office child processes</span></div><div class="terminal-body"><span class="comment">-- Procesos cuyo parent es Office → shell (IOA clásico)</span>
+<span class="keyword">SELECT</span> p.pid, p.name, p.cmdline, p.path,
+       pp.name <span class="keyword">AS</span> parent_name, pp.path <span class="keyword">AS</span> parent_path
+<span class="keyword">FROM</span> processes p
+<span class="keyword">JOIN</span> processes pp <span class="keyword">ON</span> p.parent = pp.pid
+<span class="keyword">WHERE</span> pp.name <span class="keyword">IN</span> (<span class="str">'WINWORD.EXE'</span>, <span class="str">'EXCEL.EXE'</span>, <span class="str">'POWERPNT.EXE'</span>)
+  <span class="keyword">AND</span> p.name <span class="keyword">IN</span> (<span class="str">'cmd.exe'</span>, <span class="str">'powershell.exe'</span>, <span class="str">'wscript.exe'</span>, <span class="str">'mshta.exe'</span>);</div></div></div>
+    </div>
+  </div>
+
+  <!-- INTEGRACIONES OSQUERY -->
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Integraciones</h3>
+    <div class="card-grid cols-3">
+      <div class="card"><h3 style="font-size:.9rem;color:var(--green)">OSQuery + YARA</h3><p>La tabla <code style="font-size:.75rem;background:rgba(59,130,246,.08);padding:.1rem .3rem;border-radius:3px;color:var(--blue-light)">yara</code> permite escanear archivos con reglas YARA directamente desde OSQuery.</p></div>
+      <div class="card"><h3 style="font-size:.9rem;color:var(--amber)">OSQuery + SIEM</h3><p>osqueryd genera logs JSON → SIEM (Splunk, Elastic, Sentinel) vía Filebeat, Fluentd o syslog. Alertas sobre queries programadas.</p></div>
+      <div class="card"><h3 style="font-size:.9rem;color:var(--cyan)">OSQuery + Fleet</h3><p>FleetDM: plataforma de gestión para ejecutar queries a escala en cientos/miles de endpoints desde interfaz central.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ████ INTEGRACIÓN DE LAS 3 ████ -->
+<section id="integracion">
+  <div class="reveal">
+    <div class="section-label">07 — Sinergia</div>
+    <h2 class="section-title">Integración de las 3 Herramientas</h2>
+    <p class="section-desc">YARA, Sigma y OSQuery se complementan — cada una opera en un dominio diferente. Un hunt completo usa las tres.</p>
+  </div>
+
+  <div class="reveal">
+    <div class="domains-grid">
+      <div class="domain-card glow-box" style="border-top:3px solid var(--green);">
+        <div class="domain-icon">📁</div>
+        <h4>Archivos y Memoria</h4>
+        <div class="domain-tool">YARA — Pattern Matching</div>
+        <p>Escanea archivos en disco y dumps de memoria buscando patrones de malware conocido.</p>
+      </div>
+      <div class="domain-card glow-box" style="border-top:3px solid var(--amber);">
+        <div class="domain-icon">📋</div>
+        <h4>Logs de Eventos</h4>
+        <div class="domain-tool">Sigma — Detection Rules</div>
+        <p>Busca en logs históricos (Security, Sysmon, PowerShell) eventos que matchean patrones de ataque.</p>
+      </div>
+      <div class="domain-card glow-box" style="border-top:3px solid var(--cyan);">
+        <div class="domain-icon">🖥️</div>
+        <h4>Estado Live del Endpoint</h4>
+        <div class="domain-tool">OSQuery — SQL Queries</div>
+        <p>Consulta en tiempo real: procesos, conexiones, registry, persistencia, servicios.</p>
+      </div>
+      <div class="domain-card glow-box" style="border-top:3px solid var(--blue-primary);">
+        <div class="domain-icon">🌐</div>
+        <h4>Tráfico de Red</h4>
+        <div class="domain-tool">Snort / Suricata / Zeek</div>
+        <p>Network signatures para detectar C2, exfiltración y movimiento lateral en la red.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:2rem;">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1.5rem;">Flujo de un hunt completo</h3>
+    <div class="int-flow">
+      <div class="int-step" style="border-left:3px solid var(--amber);">
+        <div class="int-num" style="color:var(--amber);">1</div>
+        <div class="int-text">
+          <h4>Sigma → Buscar en SIEM (logs históricos)</h4>
+          <p>Buscar eventos de ejecución sospechosa en los logs almacenados. Detectar patrones que ya ocurrieron.</p>
+        </div>
+      </div>
+      <div class="int-step" style="border-left:3px solid var(--cyan);">
+        <div class="int-num" style="color:var(--cyan);">2</div>
+        <div class="int-text">
+          <h4>OSQuery → Verificar estado actual de endpoints</h4>
+          <p>Consultar en tiempo real: procesos activos, conexiones de red, mecanismos de persistencia en los hosts identificados.</p>
+        </div>
+      </div>
+      <div class="int-step" style="border-left:3px solid var(--green);">
+        <div class="int-num" style="color:var(--green);">3</div>
+        <div class="int-text">
+          <h4>YARA → Escanear archivos sospechosos</h4>
+          <p>Analizar los archivos encontrados en los pasos anteriores con reglas de detección de malware específicas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ████ CASO PRÁCTICO ████ -->
+<section id="caso">
+  <div class="reveal">
+    <div class="section-label">08 — Caso Práctico</div>
+    <h2 class="section-title">Hunt Completo — Cobalt Strike</h2>
+    <p class="section-desc"><strong style="color:var(--text-bright)">Hipótesis:</strong> "Un atacante puede estar usando PowerShell encoded para ejecutar Cobalt Strike en nuestra red, persistiendo vía scheduled tasks."</p>
+  </div>
+
+  <div class="reveal">
+    <div class="terminal" style="margin-bottom:1.5rem;">
+      <div class="terminal-header"><span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span><span class="terminal-title">hunt_execution.log</span></div>
+      <div class="terminal-body"><span class="highlight">═══ PASO 1: Sigma — Buscar en SIEM (logs históricos) ═══</span>
+  → Regla: <span class="string">"PowerShell Encoded Command"</span> (EventID 4688 con -enc)
+  → Resultado: <span class="alert">3 hosts muestran ejecución de PS encoded</span> última semana
+  → Hosts: <span class="string">WS-FINANZAS-01, WS-FINANZAS-03, SRV-FILE-02</span>
+
+<span class="highlight">═══ PASO 2: OSQuery — Verificar estado actual ═══</span>
+  → Query: Procesos con conexiones externas
+  → Resultado: WS-FINANZAS-01 tiene <span class="alert">svchost.exe → 45.67.89.10:443</span>
+  → Query: Scheduled tasks sospechosas
+  → Resultado: Task <span class="alert">"WindowsUpdate"</span> ejecuta PS desde C:\Users\Public\
+  → Query: Registry Run keys
+  → Resultado: Run key <span class="alert">"OfficeSvc"</span> → C:\Users\Public\beacon.exe
+
+<span class="highlight">═══ PASO 3: YARA — Escanear archivos sospechosos ═══</span>
+  → Scan: C:\Users\Public\beacon.exe con reglas Cobalt Strike
+  → Resultado: <span class="alert">MATCH → CobaltStrike_Beacon_Indicators</span>
+  → Scan: C:\Users\Public\*.* con reglas Mimikatz
+  → Resultado: <span class="alert">MATCH en dump.bin → Mimikatz_Strings</span>
+
+<span class="keyword">══════════════════════════════════════════════════════</span>
+<span class="alert">VEREDICTO: COMPROMISO CONFIRMADO → Escalar a Incident Response</span>
+<span class="keyword">══════════════════════════════════════════════════════</span></div>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <h3 style="font-size:1.1rem;color:var(--text-bright);margin-bottom:1rem;">Acciones post-hunt</h3>
+    <div class="hunt-steps">
+      <div class="hunt-step"><div class="hunt-step-num" style="border-color:var(--red);color:var(--red);">!</div><div class="hunt-step-content"><h4>IR: Aislar los 3 hosts, revocar credenciales, hunting en toda la red</h4></div></div>
+      <div class="hunt-step"><div class="hunt-step-num">2</div><div class="hunt-step-content"><h4>Crear regla Sigma permanente para detectar este patrón</h4></div></div>
+      <div class="hunt-step"><div class="hunt-step-num">3</div><div class="hunt-step-content"><h4>Crear regla YARA permanente para el payload específico</h4></div></div>
+      <div class="hunt-step"><div class="hunt-step-num">4</div><div class="hunt-step-content"><h4>Añadir IOCs al SIEM (IP, dominio, hashes)</h4></div></div>
+      <div class="hunt-step"><div class="hunt-step-num">5</div><div class="hunt-step-content"><h4>Programar OSQuery query recurrente para persistencia similar</h4></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCIAS -->
+<section id="refs">
+  <div class="reveal">
+    <div class="section-label">09 — Referencias</div>
+    <h2 class="section-title">Herramientas y recursos</h2>
+  </div>
+  <div class="reveal">
+    <div class="card-grid cols-2">
+      <div class="card">
+        <h3 style="font-size:.95rem;margin-bottom:.75rem;">Herramientas</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+          <span class="card-tag">YARA</span><span class="card-tag">Sigma</span><span class="card-tag">sigma-cli</span><span class="card-tag">OSQuery</span><span class="card-tag">FleetDM</span><span class="card-tag">Velociraptor</span><span class="card-tag">RITA</span><span class="card-tag">YARA Rules Repo</span><span class="card-tag">SigmaHQ</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.95rem;margin-bottom:.75rem;">Frameworks y recursos</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+          <span class="card-tag">Sqrrl Hunting Loop</span><span class="card-tag">PEAK Framework (Splunk)</span><span class="card-tag">TaHiTI</span><span class="card-tag">Hunting Maturity Model</span><span class="card-tag">MITRE ATT&CK</span><span class="card-tag">TryHackMe</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer><p>DFIR — Maestría en Ciberseguridad — Semana 5 — Threat Hunting, YARA, Sigma & OSQuery</p></footer>
+
+<script>
+// Nav
+const nav=document.getElementById('mainNav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',window.scrollY>20));
+
+// Reveal
+const ro=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1,rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// Tabs
+function switchTab(tId,pId,idx){
+  document.querySelectorAll('#'+tId+' .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('#'+pId+' .tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// Accordion
+function toggleAccordion(h){
+  const wasOpen=h.classList.contains('open');
+  document.querySelectorAll('.accordion-header').forEach(x=>{x.classList.remove('open');x.nextElementSibling.style.maxHeight='0'});
+  if(!wasOpen){h.classList.add('open');const b=h.nextElementSibling;b.style.maxHeight=b.scrollHeight+'px';}
+}
+
+// HMM
+const hmmData=[
+  'Solo responde a alertas. Sin telemetría centralizada. No hay proceso de hunting formal. La organización depende completamente de herramientas automatizadas.',
+  'Puede buscar IOCs de feeds en las herramientas disponibles, pero sin metodología estructurada. Búsqueda ad-hoc, reactiva a feeds de inteligencia. Sin hipótesis formales.',
+  'Sigue procedimientos de hunting documentados creados por otros (playbooks, queries predefinidos). Ejecuta pero no crea nuevos procedimientos de hunting.',
+  'Crea sus propias hipótesis basadas en threat intelligence y conocimiento del entorno. Genera procedimientos de hunting originales. Automatiza hallazgos en nuevas detecciones.',
+  'Cada hunt exitoso se convierte automáticamente en una regla de detección (Sigma, YARA). Ciclo de mejora continuo. Comparte hallazgos y reglas con la comunidad. Nivel máximo de madurez.'
+];
+function selectHMM(idx){
+  document.querySelectorAll('.hmm-level').forEach((l,i)=>l.classList.toggle('active',i===idx));
+  document.getElementById('hmmDetail').innerHTML='<p>'+hmmData[idx]+'</p>';
+}
+</script>
+</body>
+</html>
