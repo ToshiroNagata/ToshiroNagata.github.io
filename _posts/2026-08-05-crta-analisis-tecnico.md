@@ -36,37 +36,9 @@ En las siguientes secciones se reconstruye ese recorrido de forma técnica, expl
 
 ## Certificación 
 
-La credencial oficial puede validarse desde el siguiente enlace:
+La credencial oficial puede validarse desde el siguiente enlace: [Ver certificado oficial](https://labs.cyberwarfare.live/credential/achievement/6a41e99d265336623faeb05a) 
 
-[Ver certificado oficial](https://labs.cyberwarfare.live/credential/achievement/6a41e99d265336623faeb05a)
-
-Este reel resume el feedback de forma más casual:
-
-<div style="
-  position: relative;
-  width: 100%;
-  max-width: 900px;
-  aspect-ratio: 16 / 9;
-  margin: 1.5rem auto 2rem auto;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #000;
-">
-  <iframe
-    src="https://www.youtube.com/embed/mFtNsrrXkkM"
-    title="Feedback sobre CRTA"
-    frameborder="0"
-    loading="lazy"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-    style="
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    ">
-  </iframe>
-</div>
+Este reel resume el feedback de forma más casual: {% include embed/youtube.html id='mFtNsrrXkkM' %}
 
 ---
 
