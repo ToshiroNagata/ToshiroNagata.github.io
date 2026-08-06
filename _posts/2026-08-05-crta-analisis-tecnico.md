@@ -34,10 +34,7 @@ En las siguientes secciones se reconstruye ese recorrido de forma técnica, expl
 
 ---
 
-## Certificación y resumen en video
-
-![Certificación CRTA](/img/CERTS/CRTA.png)
-_Certificación CRTA emitida por CyberWarFare Labs._
+## Certificación 
 
 La credencial oficial puede validarse desde el siguiente enlace:
 
@@ -45,14 +42,29 @@ La credencial oficial puede validarse desde el siguiente enlace:
 
 Este reel resume el feedback de forma más casual:
 
-<div style="position: relative; width: 100%; max-width: 420px; margin: 1.5rem auto 2rem auto; padding-bottom: 177.78%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 0 20px rgba(255,0,0,.18);">
+<div style="
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16 / 9;
+  margin: 1.5rem auto 2rem auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #000;
+">
   <iframe
     src="https://www.youtube.com/embed/mFtNsrrXkkM"
     title="Feedback sobre CRTA"
     frameborder="0"
+    loading="lazy"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     allowfullscreen
-    style="position: absolute; inset: 0; width: 100%; height: 100%;">
+    style="
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    ">
   </iframe>
 </div>
 
