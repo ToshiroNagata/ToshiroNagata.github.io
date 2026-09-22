@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>Conversión Binaria, Decimal, Hexadecimal e IPv4</title>
+  <style>
+    :root{
+      --bg:#050506;--bg2:#08080b;--panel:#0d0d11;--panel2:#121218;
+      --text:#f5f5f7;--muted:#9f9faa;--red:#ef233c;--redSoft:rgba(239,35,60,.11);
+      --green:#41e66b;--greenSoft:rgba(65,230,107,.11);--yellow:#f4c542;
+      --yellowSoft:rgba(244,197,66,.1);--line:#292932;--radius:17px;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;max-width:100%;overflow-x:hidden}
+    body{margin:0;min-height:100vh;max-width:100%;overflow-x:hidden;color:var(--text);font-family:var(--sans);line-height:1.45;background:
+      radial-gradient(circle at 10% 0%,rgba(239,35,60,.12),transparent 31%),
+      radial-gradient(circle at 92% 8%,rgba(239,35,60,.055),transparent 28%),
+      linear-gradient(180deg,var(--bg),var(--bg2));}
+    body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.11;background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:34px 34px;}
+    button,input{font:inherit} button{touch-action:manipulation}
+    .shell{width:min(1180px,calc(100% - 28px));margin-inline:auto;min-width:0}
+    header{padding:30px 0 24px;border-bottom:1px solid rgba(239,35,60,.22)}
+    h1{margin:0 0 12px;font-size:clamp(29px,4.5vw,52px);line-height:1;letter-spacing:-.045em}
+    .lead{max-width:980px;margin:0;color:#d4d4db;font-size:clamp(14px,1.6vw,17px)}
+    .lead strong{color:#fff}.mono{font-family:var(--mono)}.muted{color:var(--muted)}
+
+    .nav-wrap{position:sticky;top:0;z-index:50;background:rgba(5,5,6,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(239,35,60,.18)}
+    nav{display:flex;gap:7px;padding:10px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    nav::-webkit-scrollbar{display:none}
+    nav a{flex:0 0 auto;text-decoration:none;border:1px solid #2c2c35;background:#0d0d11;color:#c9c9d0;border-radius:999px;padding:8px 11px;font:700 11px/1 var(--mono)}
+    nav a:hover,nav a:focus-visible{border-color:var(--red);color:#fff;outline:none}
+
+    main{padding:28px 0 74px}
+    section{scroll-margin-top:74px;margin-bottom:26px;min-width:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:linear-gradient(180deg,rgba(18,18,24,.96),rgba(10,10,13,.96));box-shadow:0 20px 70px rgba(0,0,0,.32)}
+    .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:21px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(239,35,60,.09),transparent 55%)}
+    .section-number{margin-bottom:6px;color:var(--red);font:800 11px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase}
+    h2,h3{margin:0} h2{font-size:clamp(22px,3vw,34px);letter-spacing:-.028em} h3{font-size:clamp(17px,2vw,22px)}
+    .section-body{padding:21px;min-width:0}
+    .subsection+.subsection{margin-top:25px;padding-top:25px;border-top:1px solid #25252d}
+    .subsection-title{margin-bottom:13px}
+    .note{margin:0 0 18px;padding:12px 14px;border-left:3px solid var(--red);border-radius:0 11px 11px 0;background:rgba(239,35,60,.07);color:#e5e5ea;font-size:14px}
+
+    .grid-2,.grid-3{display:grid;gap:15px;min-width:0}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card,.output-box{min-width:0}.card{padding:16px;border:1px solid #292932;border-radius:15px;background:rgba(7,7,9,.82)}
+    .card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+    .tag{flex:0 0 auto;border-radius:999px;padding:5px 8px;font:700 9px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+    .tag.input{color:var(--yellow);background:var(--yellowSoft);border:1px solid rgba(244,197,66,.27)}
+    .tag.output{color:var(--green);background:var(--greenSoft);border:1px solid rgba(65,230,107,.26)}
+
+    .input-shell{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid rgba(244,197,66,.42);background:var(--yellowSoft);border-radius:11px}
+    .input-shell:focus-within{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(244,197,66,.08)}
+    .input-shell.error{border-color:var(--red)}
+    .input-shell input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff1a6;font:800 clamp(15px,1.8vw,19px)/1.1 var(--mono)}
+    .output-box{padding:14px;border:1px solid rgba(65,230,107,.28);border-radius:13px;background:linear-gradient(180deg,rgba(65,230,107,.085),rgba(65,230,107,.03))}
+    .output-label{margin-bottom:7px;color:#91f6aa;font:700 10px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase}
+    .output-value{color:#e8ffeb;font:800 clamp(18px,2.5vw,28px)/1.1 var(--mono);overflow-wrap:anywhere;word-break:break-word}
+    .output-value.small{font-size:clamp(13px,1.8vw,19px)}
+
+    .bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;width:100%;min-width:0}
+    .bit{min-width:0;width:100%;padding:7px 3px;border:1px solid #31313a;border-radius:10px;text-align:center;background:#101014;color:#d6d6dc;cursor:pointer;user-select:none;overflow:hidden;transition:.15s ease}
+    .bit:hover{transform:translateY(-1px);border-color:#555562}.bit.on{border-color:rgba(65,230,107,.58);background:rgba(65,230,107,.13)}
+    .bit-weight{margin-bottom:4px;color:#92929d;font:700 clamp(7px,1vw,9px)/1 var(--mono)}
+    .bit-value{font:900 clamp(14px,1.9vw,18px)/1 var(--mono)}.bit.on .bit-value{color:var(--green)}
+    .bit-contribution{margin-top:4px;color:#b7b7c0;font:700 clamp(6px,.85vw,8px)/1.1 var(--mono);overflow-wrap:anywhere}
+    .bit-static{cursor:default}.bit-static:hover{transform:none}
+
+    .octets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;min-width:0}
+    .octet{min-width:0}.octet label{display:block;margin-bottom:5px;color:#9c9ca8;font:700 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.07em}
+    .octet input{width:100%;min-width:0;padding:11px 7px;text-align:center;border:1px solid rgba(244,197,66,.4);border-radius:10px;background:rgba(244,197,66,.075);color:#fff0a4;outline:0;font:800 clamp(14px,1.8vw,17px)/1 var(--mono)}
+    .octet input:focus{border-color:var(--yellow)}.octet input.invalid{border-color:var(--red)}
+    .octet-binary{margin-top:7px;padding:7px 2px;border-radius:8px;text-align:center;color:#caffd5;background:rgba(65,230,107,.055);font:700 clamp(9px,1.2vw,12px)/1.05 var(--mono);overflow-wrap:anywhere}
+    .status-line{min-height:18px;margin-top:7px;color:#ff788b;font:700 10px/1.35 var(--mono)}
+    .mt-16{margin-top:16px}.mt-20{margin-top:20px}
+
+    .hex-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px}
+    .hex-ref{min-width:0;padding:9px 5px;border:1px solid #2b2b34;border-radius:10px;background:#0e0e12;text-align:center}
+    .hex-ref .d{color:#9d9da7;font:700 9px/1 var(--mono)}.hex-ref .h{margin:5px 0;color:#ff8999;font:900 16px/1 var(--mono)}.hex-ref .b{color:#aaffbd;font:700 9px/1 var(--mono)}
+
+    .examples-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .example-card{min-width:0;padding:14px;border:1px solid #2a2a33;border-radius:13px;background:#0a0a0e}
+    .example-type{margin-bottom:7px;color:#ff7e90;font:800 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+    .example-value{color:#fff;font:800 clamp(13px,1.7vw,17px)/1.35 var(--mono);overflow-wrap:anywhere;word-break:break-word}
+    .example-arrow{margin:6px 0;color:#6f6f79;font:800 11px/1 var(--mono)}
+    .example-result{color:#aaffbd;font:800 clamp(13px,1.7vw,17px)/1.35 var(--mono);overflow-wrap:anywhere;word-break:break-word}
+
+    .actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+    .btn{border:1px solid rgba(239,35,60,.46);background:rgba(239,35,60,.09);color:#ff9aaa;border-radius:10px;padding:10px 12px;cursor:pointer;font:800 10px/1 var(--mono);letter-spacing:.055em;text-transform:uppercase;transition:.15s ease}
+    .btn:hover,.btn:focus-visible{border-color:var(--red);color:#fff;outline:none}.btn.green{border-color:rgba(65,230,107,.48);background:rgba(65,230,107,.1);color:#99ffb1}.btn.green:hover{border-color:var(--green);color:#eaffee}
+    .btn.yellow{border-color:rgba(244,197,66,.45);background:rgba(244,197,66,.08);color:#ffe487}
+
+    .quiz-toolbar{position:sticky;top:55px;z-index:35;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:-4px 0 18px;padding:10px;border:1px solid #2b2b33;border-radius:13px;background:rgba(9,9,12,.94);backdrop-filter:blur(14px)}
+    .quiz-category{margin-top:20px}.quiz-category:first-of-type{margin-top:0}
+    .quiz-category-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.quiz-category-title span{color:#8e8e99;font:700 10px/1 var(--mono)}
+    .quiz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .quiz-card{min-width:0;padding:13px;border:1px solid #292932;border-radius:13px;background:#0a0a0e}
+    .quiz-number{color:#73737d;font:800 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em}
+    .quiz-prompt{margin:7px 0 10px;color:#fff;font:800 clamp(12px,1.6vw,15px)/1.35 var(--mono);overflow-wrap:anywhere;word-break:break-word}
+    .answer-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center}
+    .answer-input{width:100%;min-width:0;padding:9px 10px;border:1px solid rgba(244,197,66,.36);border-radius:9px;background:rgba(244,197,66,.06);color:#fff1a8;outline:0;font:700 12px/1.2 var(--mono)}
+    .answer-input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(244,197,66,.06)}
+    .answer-input.correct{border-color:var(--green);background:rgba(65,230,107,.07);color:#caffd5}.answer-input.wrong{border-color:var(--red);background:rgba(239,35,60,.07);color:#ffd1d8}
+    .validate-btn{white-space:nowrap;padding:9px 10px;border:1px solid #3a3a43;border-radius:9px;background:#121218;color:#ddd;cursor:pointer;font:800 9px/1 var(--mono);text-transform:uppercase}
+    .validate-btn:hover{border-color:#777782;color:#fff}
+    .feedback{min-height:16px;margin-top:6px;font:800 9px/1.25 var(--mono)}.feedback.ok{color:var(--green)}.feedback.bad{color:#ff7186}
+    .revealed-answer{display:none;margin-top:7px;padding:7px 8px;border-left:2px solid var(--green);border-radius:0 7px 7px 0;background:rgba(65,230,107,.055);color:#afffc0;font:800 10px/1.35 var(--mono);overflow-wrap:anywhere;word-break:break-word}
+    .answers-visible .revealed-answer{display:block}
+
+    footer{padding:0 0 40px;text-align:center;color:#6d6d76;font:700 10px/1.4 var(--mono);letter-spacing:.04em}
+
+    @media(max-width:900px){.grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.hex-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.quiz-grid{grid-template-columns:1fr}}
+    @media(max-width:680px){
+      .shell{width:min(100% - 16px,1180px)}header{padding:22px 0 18px}main{padding-top:18px}.section-head,.section-body{padding:15px}.card{padding:13px}
+      .octets{grid-template-columns:repeat(2,minmax(0,1fr))}.examples-grid{grid-template-columns:1fr}.bits{gap:3px}.bit{padding:6px 1px;border-radius:8px}.bit-weight{font-size:7px}.bit-value{font-size:15px}.bit-contribution{font-size:6px}
+      .quiz-toolbar{top:52px;display:grid;grid-template-columns:1fr 1fr}.quiz-toolbar .btn{width:100%;padding:10px 7px;font-size:9px}.answer-row{grid-template-columns:1fr}.validate-btn{width:100%;padding:9px}.hex-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+      .output-value.small{font-size:12px}h1{font-size:clamp(27px,9vw,39px)}
+    }
+    @media(max-width:430px){
+      .octets{grid-template-columns:1fr 1fr}.section-head,.section-body{padding:13px}.note{font-size:13px}.bits{gap:2px}.bit{padding:5px 1px}.bit-weight{font-size:6px}.bit-value{font-size:14px}.bit-contribution{font-size:5.5px}.hex-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.hex-ref{padding:8px 2px}.quiz-card{padding:11px}.quiz-toolbar{top:50px;padding:7px;gap:6px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell">
+    <h1>Conversión Binaria, Decimal, Hexadecimal e IPv4</h1>
+    <p class="lead">En binario, cada posición representa una potencia de 2: <strong>128, 64, 32, 16, 8, 4, 2 y 1</strong>. Un bit en <strong>1</strong> suma su peso y un bit en <strong>0</strong> no aporta. Ejemplo: <strong>88 = 64 + 16 + 8 = <span class="mono">01011000</span></strong>. En hexadecimal, cada grupo de 4 bits equivale a un dígito de <strong>0 a F</strong>.</p>
+  </div>
+</header>
+
+<div class="nav-wrap">
+  <nav class="shell" aria-label="Secciones">
+    <a href="#binario">1_Binario</a><a href="#ipv4">2_IPv4</a><a href="#hex">3_Hex</a><a href="#ejemplos">4_Ejemplos</a><a href="#practica">5_Ejercicios</a>
+  </nav>
+</div>
+
+<main class="shell">
+  <section id="binario">
+    <div class="section-head"><div><div class="section-number">1_Binario</div><h2>Binario ↔ Decimal</h2></div></div>
+    <div class="section-body">
+      <div class="subsection">
+        <h3 class="subsection-title">A) BINARIO → DECIMAL: cambia los bits</h3>
+        <div class="card">
+          <div class="card-title"><span class="muted mono">Peso · Bit · Aporta</span><span class="tag input">editable</span></div>
+          <div id="binaryBits" class="bits" aria-label="Bits binarios"></div>
+          <div class="grid-2 mt-16">
+            <div class="output-box"><div class="output-label">Decimal</div><div id="binaryDecimalResult" class="output-value">166</div></div>
+            <div class="output-box"><div class="output-label">Regla</div><div class="output-value small">Suma solo donde Bit = 1</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="subsection">
+        <h3 class="subsection-title">B) DECIMAL → BINARIO: cambia el decimal (0–255)</h3>
+        <div class="grid-2">
+          <div class="card"><div class="card-title"><strong>Decimal</strong><span class="tag input">editable</span></div><div id="decimalInputShell" class="input-shell"><input id="decimalToBinary" type="number" min="0" max="255" step="1" value="88" inputmode="numeric" /></div><div id="decimalStatus" class="status-line"></div></div>
+          <div class="output-box"><div class="output-label">Binario</div><div id="decimalBinaryResult" class="output-value">01011000</div></div>
+        </div>
+        <div id="decimalBits" class="bits mt-16"></div>
+        <p class="note mt-20"><strong>Ejemplo:</strong> 88 activa 64 + 16 + 8, por eso queda <span class="mono">01011000</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ipv4">
+    <div class="section-head"><div><div class="section-number">2_IPv4</div><h2>IPv4 — 4 octetos de 8 bits</h2></div></div>
+    <div class="section-body">
+      <p class="note"><strong>Regla:</strong> IPv4 = 32 bits = 4 octetos. Cada octeto tiene 8 bits y puede valer de 0 a 255.</p>
+      <div class="subsection">
+        <h3 class="subsection-title">A) IPv4 DECIMAL → BINARIO</h3>
+        <div class="card"><div class="card-title"><strong>Decimal</strong><span class="tag input">editable</span></div><div id="ipv4DecInputs" class="octets"></div><div class="output-box mt-16"><div class="output-label">Dirección binaria completa</div><div id="ipv4BinaryFull" class="output-value small"></div></div><div id="ipv4DecStatus" class="status-line"></div></div>
+      </div>
+      <div class="subsection">
+        <h3 class="subsection-title">B) BINARIO → IPv4 DECIMAL</h3>
+        <div class="card"><div class="card-title"><strong>Binario</strong><span class="tag input">editable</span></div><div id="ipv4BinInputs" class="octets"></div><div class="output-box mt-16"><div class="output-label">IPv4 decimal</div><div id="ipv4DecimalFull" class="output-value small"></div></div><div id="ipv4BinStatus" class="status-line"></div></div>
+      </div>
+      <p class="note mt-20"><strong>¿Por qué 255 es el máximo?</strong> <span class="mono">11111111 = 128+64+32+16+8+4+2+1</span>.</p>
+    </div>
+  </section>
+
+  <section id="hex">
+    <div class="section-head"><div><div class="section-number">3_Hex</div><h2>Hexadecimal — grupos de 4 bits</h2></div></div>
+    <div class="section-body">
+      <p class="note"><strong>Atajo:</strong> 1 dígito hexadecimal = 4 bits. Entonces 8 bits = 2 dígitos hexadecimales.</p>
+      <div class="grid-3">
+        <div class="card"><div class="card-title"><strong>Decimal (0–255)</strong><span class="tag input">editable</span></div><div id="hexDecShell" class="input-shell"><input id="hexDecimalInput" type="number" min="0" max="255" value="156" /></div><div id="hexDecStatus" class="status-line"></div><div class="output-box mt-16"><div class="output-label">Binario 8 bits</div><div id="hexDecimalBinary" class="output-value small"></div></div><div class="output-box mt-16"><div class="output-label">Hexadecimal</div><div id="hexDecimalHex" class="output-value"></div></div></div>
+        <div class="card"><div class="card-title"><strong>Binario 8 bits</strong><span class="tag input">editable</span></div><div id="hexBinShell" class="input-shell"><input id="hexBinaryInput" type="text" value="10001100" maxlength="8" inputmode="numeric" /></div><div id="hexBinStatus" class="status-line"></div><div class="output-box mt-16"><div class="output-label">Hexadecimal</div><div id="hexBinaryHex" class="output-value"></div></div></div>
+        <div class="card"><div class="card-title"><strong>Hexadecimal</strong><span class="tag input">editable</span></div><div id="hexHexShell" class="input-shell"><input id="hexInput" type="text" value="DB" maxlength="2" autocapitalize="characters" /></div><div id="hexHexStatus" class="status-line"></div><div class="output-box mt-16"><div class="output-label">Binario 8 bits</div><div id="hexToBinary" class="output-value small"></div></div></div>
+      </div>
+      <p class="note mt-20"><strong>Ejemplo:</strong> <span class="mono">1000 1100 → 8C</span>. Divide los 8 bits en dos grupos de 4.</p>
+      <div id="hexReference" class="hex-grid"></div>
+    </div>
+  </section>
+
+  <section id="ejemplos">
+    <div class="section-head"><div><div class="section-number">4_Ejemplos</div><h2>Ejemplos aleatorios</h2></div></div>
+    <div class="section-body">
+      <div id="randomExamples" class="examples-grid"></div>
+      <div class="actions"><button id="newExamples" class="btn yellow" type="button">Generar nuevos ejemplos</button></div>
+    </div>
+  </section>
+
+  <section id="practica">
+    <div class="section-head"><div><div class="section-number">5_Ejercicios</div><h2>Ejercicios</h2></div></div>
+    <div class="section-body" id="quizSection">
+      <div class="quiz-toolbar">
+        <button id="showAnswers" class="btn green" type="button">Mostrar respuestas</button>
+        <button id="resetQuiz" class="btn" type="button">Reiniciar ejercicios</button>
+      </div>
+      <div id="quizRoot"></div>
+    </div>
+  </section>
+</main>
+<footer class="shell">REDES 1 · CONVERSIONES</footer>
+
+<script>
+(()=>{'use strict';
+  const W=[128,64,32,16,8,4,2,1],$=id=>document.getElementById(id);
+  const rnd=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+  const pick=a=>a[rnd(0,a.length-1)];
+  const toB8=v=>{const n=Number(v);return Number.isInteger(n)&&n>=0&&n<=255?n.toString(2).padStart(8,'0'):null};
+  const fromB8=v=>{const s=String(v).replace(/\s+/g,'');return /^[01]{8}$/.test(s)?parseInt(s,2):null};
+  const toHex2=n=>Number.isInteger(Number(n))&&Number(n)>=0&&Number(n)<=255?Number(n).toString(16).toUpperCase().padStart(2,'0'):null;
+  const normalizeHex=s=>String(s).trim().toUpperCase().replace(/^0X/,'');
+  const fromHex=v=>{const s=normalizeHex(v);return /^[0-9A-F]{1,2}$/.test(s)?parseInt(s,16):null};
+  const ipDecParts=v=>{const p=String(v).trim().split('.').map(x=>x.trim());if(p.length!==4)return null;const n=p.map(x=>Number(x));return n.every(x=>Number.isInteger(x)&&x>=0&&x<=255)?n:null};
+  const ipBinParts=v=>{const p=String(v).trim().split('.').map(x=>x.replace(/\s+/g,''));return p.length===4&&p.every(x=>/^[01]{8}$/.test(x))?p:null};
+  const ipDecToBin=v=>{const p=ipDecParts(v);return p?p.map(toB8).join('.'):null};
+  const ipBinToDec=v=>{const p=ipBinParts(v);return p?p.map(x=>parseInt(x,2)).join('.'):null};
+  const randomIP=()=>[rnd(1,223),rnd(0,255),rnd(0,255),rnd(1,254)].join('.');
+
+  // BINARIO -> DECIMAL
+  let binaryState=[1,0,1,0,0,1,1,0];
+  function renderBinaryBits(){
+    const root=$('binaryBits');root.innerHTML='';
+    binaryState.forEach((b,i)=>{const x=document.createElement('button');x.type='button';x.className='bit'+(b?' on':'');x.setAttribute('aria-pressed',b?'true':'false');x.innerHTML=`<div class="bit-weight">${W[i]}</div><div class="bit-value">${b}</div><div class="bit-contribution">Aporta ${W[i]*b}</div>`;x.onclick=()=>{binaryState[i]=binaryState[i]?0:1;renderBinaryBits()};root.appendChild(x)});
+    $('binaryDecimalResult').textContent=binaryState.reduce((s,b,i)=>s+b*W[i],0);
+  }
+  function renderDecBits(bin){const r=$('decimalBits');r.innerHTML='';if(!bin)return;[...bin].forEach((b,i)=>{const x=document.createElement('div');x.className='bit bit-static'+(b==='1'?' on':'');x.innerHTML=`<div class="bit-weight">${W[i]}</div><div class="bit-value">${b}</div><div class="bit-contribution">${b==='1'?W[i]:0}</div>`;r.appendChild(x)})}
+  function updateDecBin(){const b=toB8(Number($('decimalToBinary').value)),bad=b===null;$('decimalInputShell').classList.toggle('error',bad);$('decimalStatus').textContent=bad?'Usa un número entero entre 0 y 255.':'';$('decimalBinaryResult').textContent=bad?'Error':b;renderDecBits(b)}
+
+  // IPv4
+  function buildIPv4Dec(vals=[192,168,1,10]){const r=$('ipv4DecInputs');r.innerHTML='';vals.forEach((v,i)=>{const w=document.createElement('div');w.className='octet';w.innerHTML=`<label>Octeto ${i+1}</label><input class="ipv4-dec" type="number" min="0" max="255" value="${v}"><div class="octet-binary"></div>`;r.appendChild(w)});r.querySelectorAll('input').forEach(x=>x.addEventListener('input',updateIPv4Dec));updateIPv4Dec()}
+  function updateIPv4Dec(){const a=[...document.querySelectorAll('.ipv4-dec')],bs=[];let ok=true;a.forEach(x=>{const b=toB8(Number(x.value));x.classList.toggle('invalid',b===null);x.parentElement.querySelector('.octet-binary').textContent=b??'Error';if(b===null)ok=false;bs.push(b)});$('ipv4BinaryFull').textContent=ok?bs.join('.'):'Error';$('ipv4DecStatus').textContent=ok?'':'Cada octeto debe estar entre 0 y 255.'}
+  function buildIPv4Bin(vals=['10101100','00010000','00001010','00000110']){const r=$('ipv4BinInputs');r.innerHTML='';vals.forEach((v,i)=>{const w=document.createElement('div');w.className='octet';w.innerHTML=`<label>Octeto ${i+1}</label><input class="ipv4-bin" type="text" maxlength="8" value="${v}" inputmode="numeric"><div class="octet-binary"></div>`;r.appendChild(w)});r.querySelectorAll('input').forEach(x=>x.addEventListener('input',updateIPv4Bin));updateIPv4Bin()}
+  function updateIPv4Bin(){const a=[...document.querySelectorAll('.ipv4-bin')],ds=[];let ok=true;a.forEach(x=>{const n=fromB8(x.value);x.classList.toggle('invalid',n===null);x.parentElement.querySelector('.octet-binary').textContent=n??'Error';if(n===null)ok=false;ds.push(n)});$('ipv4DecimalFull').textContent=ok?ds.join('.'):'Error';$('ipv4BinStatus').textContent=ok?'':'Cada octeto debe tener exactamente 8 bits.'}
+
+  // HEX
+  function updHexDec(){const n=Number($('hexDecimalInput').value),b=toB8(n),bad=b===null;$('hexDecShell').classList.toggle('error',bad);$('hexDecStatus').textContent=bad?'Usa un número entero entre 0 y 255.':'';$('hexDecimalBinary').textContent=bad?'Error':b;$('hexDecimalHex').textContent=bad?'Error':toHex2(n)}
+  function updHexBin(){const n=fromB8($('hexBinaryInput').value),bad=n===null;$('hexBinShell').classList.toggle('error',bad);$('hexBinStatus').textContent=bad?'Escribe exactamente 8 bits.':'';$('hexBinaryHex').textContent=bad?'Error':toHex2(n)}
+  function updHexHex(){const raw=normalizeHex($('hexInput').value);$('hexInput').value=raw;const n=fromHex(raw),bad=n===null;$('hexHexShell').classList.toggle('error',bad);$('hexHexStatus').textContent=bad?'Usa 1 o 2 dígitos entre 00 y FF.':'';$('hexToBinary').textContent=bad?'Error':toB8(n)}
+  function buildHexRef(){const r=$('hexReference');r.innerHTML='';for(let i=0;i<16;i++){const x=document.createElement('div');x.className='hex-ref';x.innerHTML=`<div class="d">${i}</div><div class="h">${i.toString(16).toUpperCase()}</div><div class="b">${i.toString(2).padStart(4,'0')}</div>`;r.appendChild(x)}}
+
+  // EJEMPLOS ALEATORIOS
+  function example(type,input,output){return `<article class="example-card"><div class="example-type">${type}</div><div class="example-value">${input}</div><div class="example-arrow">↓</div><div class="example-result">${output}</div></article>`}
+  function renderRandomExamples(){
+    const n1=rnd(0,255),n2=rnd(0,255),n3=rnd(16,255),n4=rnd(16,255),ip1=randomIP(),ip2=randomIP();
+    const b2=toB8(n2),h4=toHex2(n4),ip2b=ipDecToBin(ip2);
+    $('randomExamples').innerHTML=[
+      example('Decimal → Binario',n1,toB8(n1)),
+      example('Binario → Decimal',b2,String(n2)),
+      example('Decimal → Hexadecimal',n3,toHex2(n3)),
+      example('Hexadecimal → Binario',h4,toB8(n4)),
+      example('IPv4 decimal → binaria',ip1,ipDecToBin(ip1)),
+      example('IPv4 binaria → decimal',ip2b,ip2)
+    ].join('');
+  }
+
+  // EJERCICIOS
+  const defs=[
+    {id:'dec-bin',title:'Decimal → Binario',instruction:'Convierte a binario de 8 bits',gen:()=>{const n=rnd(0,255);return {q:String(n),a:toB8(n)}},norm:s=>String(s).replace(/\s+/g,'')},
+    {id:'bin-dec',title:'Binario → Decimal',instruction:'Convierte a decimal',gen:()=>{const n=rnd(0,255);return {q:toB8(n),a:String(n)}},norm:s=>String(Number(String(s).trim()))},
+    {id:'dec-hex',title:'Decimal → Hexadecimal',instruction:'Convierte a hexadecimal',gen:()=>{const n=rnd(16,255);return {q:String(n),a:toHex2(n)}},norm:s=>normalizeHex(s).replace(/^0+(?=[0-9A-F])/,'')},
+    {id:'hex-dec',title:'Hexadecimal → Decimal',instruction:'Convierte a decimal',gen:()=>{const n=rnd(16,255);return {q:toHex2(n),a:String(n)}},norm:s=>String(Number(String(s).trim()))},
+    {id:'bin-hex',title:'Binario → Hexadecimal',instruction:'Convierte a hexadecimal',gen:()=>{const n=rnd(16,255);return {q:toB8(n),a:toHex2(n)}},norm:s=>normalizeHex(s).replace(/^0+(?=[0-9A-F])/,'')},
+    {id:'hex-bin',title:'Hexadecimal → Binario',instruction:'Convierte a binario de 8 bits',gen:()=>{const n=rnd(16,255);return {q:toHex2(n),a:toB8(n)}},norm:s=>String(s).replace(/\s+/g,'')},
+    {id:'ip-dec-bin',title:'IPv4 decimal → Binaria',instruction:'Convierte los 4 octetos a binario',gen:()=>{const ip=randomIP();return {q:ip,a:ipDecToBin(ip)}},norm:s=>{const p=ipBinParts(s);return p?p.join('.') : String(s).replace(/\s+/g,'')}},
+    {id:'ip-bin-dec',title:'IPv4 binaria → Decimal',instruction:'Convierte los 4 octetos a decimal',gen:()=>{const ip=randomIP();return {q:ipDecToBin(ip),a:ip}},norm:s=>{const p=ipDecParts(s);return p?p.join('.') : String(s).replace(/\s+/g,'')}}
+  ];
+  let quizData=[];
+  function generateQuiz(){quizData=defs.map(d=>({def:d,items:Array.from({length:5},()=>d.gen())}));renderQuiz();$('quizSection').classList.remove('answers-visible');$('showAnswers').textContent='Mostrar respuestas'}
+  function renderQuiz(){const root=$('quizRoot');root.innerHTML='';quizData.forEach((cat,ci)=>{const sec=document.createElement('div');sec.className='quiz-category';sec.innerHTML=`<div class="quiz-category-title"><h3>${cat.def.title}</h3><span>5 ejercicios</span></div><div class="quiz-grid"></div>`;const grid=sec.querySelector('.quiz-grid');cat.items.forEach((it,ii)=>{const c=document.createElement('article');c.className='quiz-card';c.dataset.ci=ci;c.dataset.ii=ii;c.innerHTML=`<div class="quiz-number">Ejercicio ${ii+1}</div><div class="quiz-prompt">${cat.def.instruction}: <strong>${it.q}</strong></div><div class="answer-row"><input class="answer-input" type="text" autocomplete="off" spellcheck="false" placeholder="Escribe tu respuesta"><button class="validate-btn" type="button">Validar</button></div><div class="feedback"></div><div class="revealed-answer">Respuesta: ${it.a}</div>`;grid.appendChild(c)});root.appendChild(sec)});root.querySelectorAll('.validate-btn').forEach(b=>b.addEventListener('click',()=>validateCard(b.closest('.quiz-card'))));root.querySelectorAll('.answer-input').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter')validateCard(inp.closest('.quiz-card'))}))}
+  function validateCard(card){const ci=Number(card.dataset.ci),ii=Number(card.dataset.ii),cat=quizData[ci],it=cat.items[ii],inp=card.querySelector('.answer-input'),fb=card.querySelector('.feedback');const raw=inp.value.trim();inp.classList.remove('correct','wrong');fb.className='feedback';if(!raw){fb.textContent='Escribe una respuesta.';fb.classList.add('bad');return}let user,correct;try{user=cat.def.norm(raw);correct=cat.def.norm(it.a)}catch{user=raw;correct=it.a}if(user===correct){inp.classList.add('correct');fb.textContent='Correcto';fb.classList.add('ok')}else{inp.classList.add('wrong');fb.textContent='Incorrecto';fb.classList.add('bad')}}
+  function toggleAnswers(){const on=$('quizSection').classList.toggle('answers-visible');$('showAnswers').textContent=on?'Ocultar respuestas':'Mostrar respuestas'}
+
+  $('decimalToBinary').addEventListener('input',updateDecBin);$('hexDecimalInput').addEventListener('input',updHexDec);$('hexBinaryInput').addEventListener('input',updHexBin);$('hexInput').addEventListener('input',updHexHex);$('newExamples').addEventListener('click',renderRandomExamples);$('resetQuiz').addEventListener('click',generateQuiz);$('showAnswers').addEventListener('click',toggleAnswers);
+
+  renderBinaryBits();updateDecBin();buildIPv4Dec();buildIPv4Bin();updHexDec();updHexBin();updHexHex();buildHexRef();renderRandomExamples();generateQuiz();
+})();
+</script>
+</body>
+</html>
